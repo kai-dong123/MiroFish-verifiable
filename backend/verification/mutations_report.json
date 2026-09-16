@@ -1,0 +1,606 @@
+{
+  "generated_at": "2026-09-16 23:19:29",
+  "not_a_pass_rate": true,
+  "what_this_is": "逐条改坏被测代码、看测试红不红的对照表。**红色是期望的结果**；这不是通过率、不是覆盖率、不是得分。",
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "cwd": "backend/",
+    "pytest_command": "-m pytest verification/tests -q --tb=no -rf -p no:cacheprovider"
+  },
+  "script": {
+    "path": "verification/mutations.py",
+    "sha256": "9ebcb729627b84ef8df53d322874c71832c92006b7d6aa0204c30ed382bb8906"
+  },
+  "sources": {
+    "verification/camel_guards.py": "efebead6cfbbc57576d7741952ce57f64b1e8ad19f412724c430a050f0fbb795",
+    "verification/repro_02_timestamp.py": "85bf8a43fa5f7291498b0c6add19b77f7475169aba275412acd5edaac8c17607",
+    "verification/tests/test_citations.py": "9365148c9fdbc93e159bca5ca956e7c2f7ec66eb9676c5a60fa1fb1b9d5c3c00"
+  },
+  "sources_after": {
+    "verification/camel_guards.py": "efebead6cfbbc57576d7741952ce57f64b1e8ad19f412724c430a050f0fbb795",
+    "verification/repro_02_timestamp.py": "85bf8a43fa5f7291498b0c6add19b77f7475169aba275412acd5edaac8c17607",
+    "verification/tests/test_citations.py": "9365148c9fdbc93e159bca5ca956e7c2f7ec66eb9676c5a60fa1fb1b9d5c3c00"
+  },
+  "suite_sha256": "f7ca3414d2d3425e771ee3269bfaf5820a9a471dfaacbe17f573ce2d686cb90a",
+  "baseline": {
+    "returncode": 0,
+    "failed": 0,
+    "passed": 83,
+    "skipped": 5,
+    "errors": 0,
+    "failed_ids": [],
+    "failed_by_file": {},
+    "seconds": 2.14,
+    "raw_tail": ".................................................sssss.................. [ 81%]\n................                                                         [100%]\n83 passed, 5 skipped in 1.51s"
+  },
+  "mutations": [
+    {
+      "id": "G1",
+      "group": "守卫",
+      "what": "判据的边界写成 `>=`（顶格的消息会被误判成超限）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    if own_tokens > limit:",
+          "new": "    if own_tokens >= limit:"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 1
+      },
+      "seconds": 2.18,
+      "raw_tail": ".......F.........................................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 82 passed, 5 skipped in 1.59s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "G2",
+      "group": "守卫",
+      "what": "整个守卫变成空操作（开头就把活原样交回原方法）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    \"\"\"替换 `ChatAgent.update_memory` 的那个函数。两个开关在这里读。\"\"\"\n    original = _state[\"original\"]",
+          "new": "    \"\"\"替换 `ChatAgent.update_memory` 的那个函数。两个开关在这里读。\"\"\"\n    original = _state[\"original\"]\n    return original(self, message, role, timestamp)  # 变异：空操作"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 10,
+      "passed": 73,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_install_is_idempotent",
+        "verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters",
+        "verification/tests/test_camel_guards.py::test_whole_write_when_message_fits",
+        "verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit",
+        "verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal",
+        "verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched",
+        "verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock",
+        "verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls",
+        "verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted",
+        "verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 10
+      },
+      "seconds": 2.18,
+      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 73 passed, 5 skipped in 1.57s",
+      "failed_in_target": 10,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "G3",
+      "group": "守卫",
+      "what": "变成「一律不切」（该切的那条路被永远关掉）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    if own_tokens > limit:",
+          "new": "    if False:"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 2,
+      "passed": 81,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit",
+        "verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 2
+      },
+      "seconds": 2.22,
+      "raw_tail": "......FF.........................................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 81 passed, 5 skipped in 1.61s",
+      "failed_in_target": 2,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "G4",
+      "group": "守卫",
+      "what": "逻辑步长调到比 camel 那个 `1e-6` 还细",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "STEP = 1e-3",
+          "new": "STEP = 1e-7"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 1
+      },
+      "seconds": 2.23,
+      "raw_tail": ".................F...............................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 82 passed, 5 skipped in 1.62s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "G5",
+      "group": "守卫",
+      "what": "时间戳不再往后推（拿掉严格递增那一步）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    if last is not None and value < last + STEP:\n        value = last + STEP\n    agent._ts_guard_last = value",
+          "new": "    agent._ts_guard_last = value"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 4,
+      "passed": 79,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock",
+        "verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls",
+        "verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted",
+        "verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 4
+      },
+      "seconds": 2.16,
+      "raw_tail": "...........F..FFF................................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 79 passed, 5 skipped in 1.54s",
+      "failed_in_target": 4,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "G6",
+      "group": "守卫",
+      "what": "去掉兜底（算不出 token 时不再交回原方法，直接抛）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    except Exception:  # noqa: BLE001\n        # 算不出来就别自作聪明 —— 交回原方法。\n        if _state[\"timestamp\"]:\n            _note_timestamp(self, timestamp)\n        return original(self, message, role, timestamp)",
+          "new": "    except Exception:  # noqa: BLE001\n        raise"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 1
+      },
+      "seconds": 2.09,
+      "raw_tail": "........F........................................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 82 passed, 5 skipped in 1.47s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "G7",
+      "group": "守卫",
+      "what": "`install` 不再幂等（第二次调用会套第二层补丁）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    if _state[\"patched\"]:\n        _state[\"slicing\"] = slicing\n        _state[\"timestamp\"] = timestamp\n        return _state",
+          "new": "    if False:\n        _state[\"slicing\"] = slicing\n        _state[\"timestamp\"] = timestamp\n        return _state"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_install_is_idempotent"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 1
+      },
+      "seconds": 2.16,
+      "raw_tail": "F................................................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 82 passed, 5 skipped in 1.55s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "V1",
+      "group": "判词",
+      "what": "判词写死（直接把结论摆在预期那一侧，不再由读数算）",
+      "target": "verification/tests/test_repro_verdicts.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\repro_02_timestamp.py",
+          "old": "    same = (gap / tick) < 1.0 if tick > 0 else False",
+          "new": "    same = want_same"
+        }
+      ],
+      "expect_failed": 16,
+      "claim": "README「判词」：判词写死 → 红 16 条",
+      "returncode": 1,
+      "failed": 16,
+      "passed": 67,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00041-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.001-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.01-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.12-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]",
+        "verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed",
+        "verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported",
+        "verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_repro_verdicts.py": 16
+      },
+      "seconds": 2.17,
+      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 67 passed, 5 skipped in 1.55s",
+      "failed_in_target": 16,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "V2",
+      "group": "判词",
+      "what": "判据的 `<` 写成 `<=`（`gap == tick` 会被算成同一拍）",
+      "target": "verification/tests/test_repro_verdicts.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\repro_02_timestamp.py",
+          "old": "    same = (gap / tick) < 1.0 if tick > 0 else False",
+          "new": "    same = (gap / tick) <= 1.0 if tick > 0 else False"
+        }
+      ],
+      "expect_failed": 3,
+      "claim": "README「判词」：`<` 写成 `<=` → 红 3 条",
+      "returncode": 1,
+      "failed": 3,
+      "passed": 80,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]",
+        "verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_repro_verdicts.py": 3
+      },
+      "seconds": 2.14,
+      "raw_tail": ".................................................sssss....F............F [ 81%]\n.............F..                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 80 passed, 5 skipped in 1.54s",
+      "failed_in_target": 3,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "V3",
+      "group": "判词",
+      "what": "去掉「与预期相反」那一支（与预期不符时折回预期那一侧的话术）",
+      "target": "verification/tests/test_repro_verdicts.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\repro_02_timestamp.py",
+          "old": "    n = gap / tick if tick > 0 else float(\"nan\")\n    return (\"**同一拍**（与预期相反）\" if same\n            else f\"**跨到 {n:,.0f} 拍**（与预期相反）\")",
+          "new": "    return (\"同拍 → 碰撞才发生\" if same\n            else \"跨拍 → 误打误撞免疫\")"
+        }
+      ],
+      "expect_failed": 3,
+      "claim": "README「判词」：去掉「与预期相反」那一支 → 红 3 条",
+      "returncode": 1,
+      "failed": 3,
+      "passed": 80,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed",
+        "verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported",
+        "verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_repro_verdicts.py": 3
+      },
+      "seconds": 2.24,
+      "raw_tail": ".................................................sssss.................. [ 81%]\n.........FF...F.                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 80 passed, 5 skipped in 1.63s",
+      "failed_in_target": 3,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C1",
+      "group": "引文·上半",
+      "what": "行号错开一格（933 → 934）",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "old": "(\"camel.agents.chat_agent\", 933,",
+          "new": "(\"camel.agents.chat_agent\", 934,"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 2.2,
+      "raw_tail": ".........................F.......................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 82 passed, 5 skipped in 1.60s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C2",
+      "group": "引文·上半",
+      "what": "引一个越界的行号（884 → 999999）",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "old": "(\"camel.agents.chat_agent\", 884,",
+          "new": "(\"camel.agents.chat_agent\", 999999,"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 2.17,
+      "raw_tail": ".......................F.........................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 82 passed, 5 skipped in 1.56s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C3",
+      "group": "引文·上半",
+      "what": "换成那一行没有的片段（`// 10` 写成 `// 100`）",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "old": "\"base_chunk_size = max(1, remaining_budget) // 10\",",
+          "new": "\"base_chunk_size = max(1, remaining_budget) // 100\","
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 2.12,
+      "raw_tail": ".........................F.......................sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 82 passed, 5 skipped in 1.54s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C4",
+      "group": "引文·上半",
+      "what": "引一个不存在的模块（`camel.memories.base` → `..._missing`）",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "old": "(\"camel.memories.base\", 143,",
+          "new": "(\"camel.memories.base_missing\", 143,"
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 81,
+      "skipped": 6,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_every_citation_module_is_reachable"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 2.07,
+      "raw_tail": "....................................s.......F....sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 81 passed, 6 skipped in 1.47s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C5",
+      "group": "引文·上半",
+      "what": "同一行引两遍（把 env:55 那条改成 env:193，片段也跟着改成 193 行的）",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "old": "(\"oasis.environment.env\", 55,",
+          "new": "(\"oasis.environment.env\", 193,"
+        },
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "old": "\"semaphore: int = 128\",",
+          "new": "\"await asyncio.gather(*tasks)\","
+        }
+      ],
+      "expect_failed": null,
+      "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_no_duplicate_citations"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 2.19,
+      "raw_tail": ".............................................F...sssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 82 passed, 5 skipped in 1.57s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C6",
+      "group": "引文·下半",
+      "what": "把那个错引写法**植回 `camel_guards.py`**，看扫描抓不抓",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "base_chunk_size - prefix_token_len",
+          "new": "base_chunk_size - 12"
+        }
+      ],
+      "expect_failed": 1,
+      "claim": "README「引文」：下半把那个写法植回 `camel_guards.py`，当场红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 82,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 2.2,
+      "raw_tail": "................................................Fsssss.................. [ 81%]\n................                                                         [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 82 passed, 5 skipped in 1.61s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "K0",
+      "group": "阴性对照",
+      "what": "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "STEP = 1e-3",
+          "new": "STEP = 1e-3  # 阴性对照：这行不该有行为差异"
+        }
+      ],
+      "expect_failed": 0,
+      "claim": "本模块自己的纪律：不做任何语义改动的编辑，一条都不许红",
+      "returncode": 0,
+      "failed": 0,
+      "passed": 83,
+      "skipped": 5,
+      "errors": 0,
+      "failed_ids": [],
+      "failed_by_file": {},
+      "seconds": 2.07,
+      "raw_tail": ".................................................sssss.................. [ 81%]\n................                                                         [100%]\n83 passed, 5 skipped in 1.50s",
+      "failed_in_target": 0,
+      "matched": true,
+      "reverted": true
+    }
+  ],
+  "summary": {
+    "total": 17,
+    "matched": 17,
+    "mismatches": [],
+    "all_sources_reverted": true,
+    "baseline_green": true
+  }
+}
