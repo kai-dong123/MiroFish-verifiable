@@ -1,8 +1,8 @@
 # 裁决留痕（自动生成，别手改）
 
-> 生成时间 **2026-09-17 01:43:46** · Python 3.11.9 · `cd backend && python -m verification.adjudicate`（0.05s）
+> 生成时间 **2026-09-17 01:53:26** · Python 3.11.9 · `cd backend && python -m verification.adjudicate`（0.16s）
 
-> 判的是 **`verification_report.json`** 里那一次运行的读数（那份报告生成于 2026-09-17T01:43:12，读数指纹 `69c920927cae…`）—— **不重跑**。**钉的是读数不是文件**：报告重写一遍、数没变，这份产物就没过期。
+> 判的是 **`verification_report.json`** 里那一次运行的读数（那份报告生成于 2026-09-17T01:51:51，读数指纹 `a95e3638e923…`）—— **不重跑**。**钉的是读数不是文件**：报告重写一遍、数没变，这份产物就没过期。
 
 ## 这份产物是什么、不是什么
 
@@ -30,7 +30,7 @@
 | `B8` | 复现一 | ○ 不可判定 | —（判不了） | guard_on.write_seconds=—（**读数里没有这一格**）、guard_off_1.write_seconds=—（**读数里没有这一格**） |
 | `E1` | 端到端 | √ 通过 | 采信 | roomy_e2e.written_whole=8 |
 | `E2` | 端到端 | √ 通过 | 采信 | bigtext_e2e.still_sliced=2、roomy_e2e.still_sliced=0 |
-| `E3` | 端到端 | √ 通过 | 采信 | two_e2e.timestamp_pushed=2 |
+| `E3` | 端到端 | √ 通过 | 采信 | two_e2e.timestamp_pushed=1 |
 | `E4` | 端到端 | √ 通过 | 采信 | two_e2e.db_posts=4、roomy_e2e.db_posts=2 |
 | `E5` | 端到端 | √ 通过 | **不采信**（贴界） | bigtext_e2e.timestamp_pushed=0 |
 

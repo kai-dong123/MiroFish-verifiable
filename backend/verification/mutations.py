@@ -314,18 +314,27 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _suite_fingerprint() -> str:
+def _suite_fingerprint(root=None) -> str:
     """整个测试目录的指纹。
 
     报告里那些「红了几条、绿了几条」只对**跑的时候那套测试**成立。测试文件
     增删改一条，这些数字就全是旧的了 —— 而报告本身不会因此变红。所以把整个
     `tests/` 的指纹一起记下来：测试一动，指纹就对不上，`test_the_recorded_hashes_
     still_describe_the_files_on_disk` 会先红，逼着重新跑一遍。
+
+    **按文本算，不按字节算** —— 见 `_probe.sha256_text`：`core.autocrlf` 会在
+    clone 时把 LF 换成 CRLF，**字节哈希于是钉住了「谁的检出配置」，不是「测试
+    有没有变」**。这一处原先正是 `read_bytes()`，实测在一个干净 clone 里当场
+    红过（2026-09-17）—— 而它报的是一个不存在的问题。
     """
     h = hashlib.sha256()
-    for path in sorted((HERE / "tests").rglob("*.py")):
-        h.update(str(path.relative_to(BACKEND)).replace("\\", "/").encode())
-        h.update(path.read_bytes())
+    for path in sorted((root or HERE / "tests").rglob("*.py")):
+        try:                       # 传别处的 root 时（测试用），退到文件名
+            name = str(path.relative_to(BACKEND)).replace("\\", "/")
+        except ValueError:
+            name = path.name
+        h.update(name.encode())
+        h.update(path.read_text(encoding="utf-8").encode("utf-8"))
     return h.hexdigest()
 
 

@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import pathlib
 import re
@@ -169,6 +170,31 @@ def test_the_child_env_blocks_the_boost_model_path(monkeypatch):
     assert env["LLM_API_KEY"] and "sk-" not in env["LLM_API_KEY"]
     assert env["GUARD_COUNTERS_OUT"] == "c.json"
     assert env["PYTHONIOENCODING"] == "utf-8"
+
+
+def test_the_recorded_entry_script_hash_is_a_text_hash(tmp_path):
+    """产物里记的入口脚本 sha256 **按文本算**，不按字节。
+
+    入口脚本是受版本控制的：`core.autocrlf`（Windows 上默认开）会在 clone 时把
+    它换成 CRLF。拿 `read_bytes()` 去算，记下来的就是**造这份产物那台机器的检出
+    配置**，而不是脚本的内容 —— 换个人 clone 就对不上，而脚本一个字没动。
+    这条与 `mutations._suite_fingerprint` 那处是同一个毛病（2026-09-17 在一个
+    干净 clone 里当场红过），所以两处一起按文本算，见 `_probe.sha256_text`。
+    """
+    assert E._environment()["script_sha256"] == P.sha256_text(E.SCRIPT)
+
+    # 差分对照：**同一份内容**，一份 LF 一份 CRLF —— 文本哈希不动、字节哈希会动。
+    # 没有这一半，「按文本算」和「这儿碰巧两边一样」看起来是一回事。
+    #
+    # （两个副本都现造，不拿工作区里那个当基准：本机工作区正是 `autocrlf` 的
+    # 现场，而它是**混的** —— clone 下来的文件是 CRLF、后来手写的文件是 LF。
+    # 拿它当基准，这一条就变成在测「谁最后碰过哪个文件」。）
+    text = E.SCRIPT.read_text(encoding="utf-8")
+    lf, crlf = tmp_path / "lf.py", tmp_path / "crlf.py"
+    lf.write_bytes(text.encode("utf-8"))
+    crlf.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    assert P.sha256_text(lf) == P.sha256_text(crlf)
+    assert hashlib.sha256(lf.read_bytes()) != hashlib.sha256(crlf.read_bytes())
 
 
 # --------------------------------------------------------------------------

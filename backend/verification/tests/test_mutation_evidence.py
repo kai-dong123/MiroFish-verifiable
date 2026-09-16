@@ -21,6 +21,7 @@ import pathlib
 
 import pytest
 
+from verification import _probe as P
 from verification import mutations as MU
 
 HERE = pathlib.Path(__file__).resolve().parent          # verification/tests
@@ -120,3 +121,44 @@ def test_the_recorded_hashes_still_describe_the_files_on_disk(report):
 
     assert report["sources"] == report["sources_after"], (
         "跑完之后文件没回到原样，这份报告记录的是一个被改坏过的状态。先 `git diff`")
+
+
+def test_the_suite_fingerprint_does_not_depend_on_line_endings(tmp_path):
+    """**这一条是踩出来的，不是想出来的。**
+
+    2026-09-17 在一个干净 clone 里，普通 `pytest` 第一条就红：上面那一条
+    `test_the_recorded_hashes_still_describe_the_files_on_disk` 说「测试目录
+    动过了」—— 而其实**一个字都没动**。
+
+    真正发生的事：`core.autocrlf` 在 Windows 上默认开着，clone 时 git 把仓库里的
+    LF 换成了 CRLF，而那个指纹当时是拿 `read_bytes()` 算的。于是它钉住的是
+    **「谁的检出配置」**，不是「测试有没有变」—— 换句话说，它给**每一个用默认
+    配置 clone 的人**报了一个**不存在的问题**。
+
+    这与本装置已经踩过两次的毛病同源（`README.md`「产物没过期」那一节、`D-21`）：
+    别去钉一个**本来就会合法地变**的东西，然后说它变了就是有问题。
+
+    这一条把「换行符不算改动」钉死：同一份测试内容，两种换行，指纹必须一样。
+    """
+    lf, crlf = tmp_path / "lf", tmp_path / "crlf"
+    lf.mkdir()
+    crlf.mkdir()
+    body = "def test_示例():\n    assert 1 + 1 == 2\n"
+    (lf / "test_sample.py").write_bytes(body.encode("utf-8"))
+    (crlf / "test_sample.py").write_bytes(
+        body.replace("\n", "\r\n").encode("utf-8"))
+    # 先证明这两个文件在**字节**上确实不同 —— 否则这一条测了个空气：
+    assert ((crlf / "test_sample.py").read_bytes()
+            != (lf / "test_sample.py").read_bytes())
+    assert MU._suite_fingerprint(lf) == MU._suite_fingerprint(crlf), (
+        "指纹又按字节算了 —— 它会在**每一个用默认 git 配置 clone 的人**"
+        "那里先红一次，而那里根本没有问题")
+
+
+def test_the_text_sha_ignores_line_endings(tmp_path):
+    """上面那条依赖的口径本身：受版本控制的**文本**文件，sha 按文本算。"""
+    a, b = tmp_path / "a.py", tmp_path / "b.py"
+    a.write_bytes(b"x = 1\ny = 2\n")
+    b.write_bytes(b"x = 1\r\ny = 2\r\n")
+    assert a.read_bytes() != b.read_bytes()
+    assert P.sha256_text(a) == P.sha256_text(b)

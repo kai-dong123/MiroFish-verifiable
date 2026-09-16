@@ -1,6 +1,6 @@
 # 端到端读数：替身模型 · 真入口脚本
 
-生成时间：2026-09-17T01:36:52
+生成时间：2026-09-17T01:53:07
 
 > 这一份**不是通过率**，没有分母。三档臂装的是同一套守卫，
 > 差别只在两个受控旋钮上。它回答的是「守卫的分支有没有被真实流量走到」。
@@ -9,9 +9,9 @@
 
 | 臂 | 旋钮 | 想走到守卫的哪一支 | 耗时 |
 |---|---|---|---|
-| `roomy_e2e` | 基线：一次响应一个动作、消息放得下 | `{"E2E_STUB_N_CALLS": "1", "E2E_STUB_CONTENT_LEN": "40", "E2E_STUB_TEXT_LEN": "0"}` | 12.4 秒 |
-| `bigtext_e2e` | 助手消息文本 20000 字：逼出「自己就超上限」的回落支 | `{"E2E_STUB_N_CALLS": "1", "E2E_STUB_CONTENT_LEN": "40", "E2E_STUB_TEXT_LEN": "20000"}` | 17.3 秒 |
-| `two_e2e` | 一次响应两个动作：逼出同拍写入 | `{"E2E_STUB_N_CALLS": "2", "E2E_STUB_CONTENT_LEN": "40", "E2E_STUB_TEXT_LEN": "0"}` | 13.4 秒 |
+| `roomy_e2e` | 基线：一次响应一个动作、消息放得下 | `{"E2E_STUB_N_CALLS": "1", "E2E_STUB_CONTENT_LEN": "40", "E2E_STUB_TEXT_LEN": "0"}` | 21.7 秒 |
+| `bigtext_e2e` | 助手消息文本 20000 字：逼出「自己就超上限」的回落支 | `{"E2E_STUB_N_CALLS": "1", "E2E_STUB_CONTENT_LEN": "40", "E2E_STUB_TEXT_LEN": "20000"}` | 29.4 秒 |
+| `two_e2e` | 一次响应两个动作：逼出同拍写入 | `{"E2E_STUB_N_CALLS": "2", "E2E_STUB_CONTENT_LEN": "40", "E2E_STUB_TEXT_LEN": "0"}` | 22.1 秒 |
 
 全部 `--guards both`。**没有「守卫关」这条臂** —— 不装守卫时
 `counters()` 恒为全 0，读不出东西。守卫「装上前后差多少」那件事由三条
@@ -51,7 +51,7 @@
     "two_e2e": {
       "db_posts": 4,
       "still_sliced": 0,
-      "timestamp_pushed": 2,
+      "timestamp_pushed": 1,
       "written_whole": 12
     }
   },
@@ -65,7 +65,7 @@
 }
 ```
 
-- 读数块在正文里的 `sha256`：`a20e25bac0920f2dbf6d9fba6ab4135281119073fd4e38761bca68c69863fc08`
+- 读数块在正文里的 `sha256`：`e43f49bf697af6cb94bd93b677265be560b13bd688d6be8fae808b371ed2f76b`
 
 ## 边界（照实说）
 
@@ -92,7 +92,7 @@
 | `seed` | 20260917 |
 | `camel_ai` | 0.2.78 |
 | `camel_oasis` | 0.2.5 |
-| `script_sha256` | c24c94b5882998f9b51e833a534862627ddd5bbf0fc261f5445cb4cf94ca56bd |
+| `script_sha256` | caaee04c0d0089e60d51d42ffd27f192879d16d442ca0e6f4b19dbe85b82d35f |
 
 ## 转录（**抹过，不是逐字**）
 
@@ -108,14 +108,14 @@
 > 计数，不从这段文本里抠 —— 所以抹痕不影响上面任何一个数。
 
 ```text
-===== 臂 roomy_e2e（12.4 秒，退出码 0）=====
+===== 臂 roomy_e2e（21.7 秒，退出码 0）=====
 [Reddit] 初始化...
 [通用LLM] model=stub, base_url=默认...
 {'user_profile': '学生', 'mbti': 'INTJ', 'gender': 'female', 'age': 20, 'country': 'China'}
 {'user_profile': '教职工', 'mbti': 'ENFP', 'gender': 'male', 'age': 35, 'country': 'China'}
 db_path <运行目录>\roomy_e2e\reddit_simulation.db
 [Reddit] 环境已启动
-[Reddit] 模拟循环完成! 耗时: 0.6秒, 总动作: 2
+[Reddit] 模拟循环完成! 耗时: 0.5秒, 总动作: 2
 模拟进程已退出
 
 替身模型已接管: model_type='stub', random.seed(20260917)
@@ -139,9 +139,9 @@ OASIS 双平台并行模拟
 ============================================================
 [Reddit] 初始化...
 [Reddit] 环境已启动
-[Reddit] 模拟循环完成! 耗时: 0.6秒, 总动作: 2
+[Reddit] 模拟循环完成! 耗时: 0.5秒, 总动作: 2
 ============================================================
-模拟循环完成! 总耗时: 1.6秒
+模拟循环完成! 总耗时: 2.0秒
 [Reddit] 环境已关闭
 ============================================================
 全部完成!
@@ -152,16 +152,16 @@ OASIS 双平台并行模拟
 ============================================================
 
 
-===== 臂 bigtext_e2e（17.3 秒，退出码 0）=====
+===== 臂 bigtext_e2e（29.4 秒，退出码 0）=====
 [Reddit] 初始化...
 [通用LLM] model=stub, base_url=默认...
 {'user_profile': '学生', 'mbti': 'INTJ', 'gender': 'female', 'age': 20, 'country': 'China'}
 {'user_profile': '教职工', 'mbti': 'ENFP', 'gender': 'male', 'age': 35, 'country': 'China'}
 db_path <运行目录>\bigtext_e2e\reddit_simulation.db
 [Reddit] 环境已启动
-2026-09-17 01:36:34,674 - camel.camel.agents.chat_agent - WARNING - Message with 5007 tokens exceeds remaining budget of 3721. Slicing into smaller chunks.
-2026-09-17 01:36:36,718 - camel.camel.agents.chat_agent - WARNING - Message with 5007 tokens exceeds remaining budget of 3722. Slicing into smaller chunks.
-[Reddit] 模拟循环完成! 耗时: 4.7秒, 总动作: 2
+2026-09-17 01:52:37,124 - camel.camel.agents.chat_agent - WARNING - Message with 5007 tokens exceeds remaining budget of 3721. Slicing into smaller chunks.
+2026-09-17 01:52:41,079 - camel.camel.agents.chat_agent - WARNING - Message with 5007 tokens exceeds remaining budget of 3722. Slicing into smaller chunks.
+[Reddit] 模拟循环完成! 耗时: 8.4秒, 总动作: 2
 模拟进程已退出
 
 替身模型已接管: model_type='stub', random.seed(20260917)
@@ -185,9 +185,9 @@ OASIS 双平台并行模拟
 ============================================================
 [Reddit] 初始化...
 [Reddit] 环境已启动
-[Reddit] 模拟循环完成! 耗时: 4.7秒, 总动作: 2
+[Reddit] 模拟循环完成! 耗时: 8.4秒, 总动作: 2
 ============================================================
-模拟循环完成! 总耗时: 5.7秒
+模拟循环完成! 总耗时: 9.9秒
 [Reddit] 环境已关闭
 ============================================================
 全部完成!
@@ -198,14 +198,14 @@ OASIS 双平台并行模拟
 ============================================================
 
 
-===== 臂 two_e2e（13.4 秒，退出码 0）=====
+===== 臂 two_e2e（22.1 秒，退出码 0）=====
 [Reddit] 初始化...
 [通用LLM] model=stub, base_url=默认...
 {'user_profile': '学生', 'mbti': 'INTJ', 'gender': 'female', 'age': 20, 'country': 'China'}
 {'user_profile': '教职工', 'mbti': 'ENFP', 'gender': 'male', 'age': 35, 'country': 'China'}
 db_path <运行目录>\two_e2e\reddit_simulation.db
 [Reddit] 环境已启动
-[Reddit] 模拟循环完成! 耗时: 0.6秒, 总动作: 4
+[Reddit] 模拟循环完成! 耗时: 0.8秒, 总动作: 4
 模拟进程已退出
 
 替身模型已接管: model_type='stub', random.seed(20260917)
@@ -229,9 +229,9 @@ OASIS 双平台并行模拟
 ============================================================
 [Reddit] 初始化...
 [Reddit] 环境已启动
-[Reddit] 模拟循环完成! 耗时: 0.6秒, 总动作: 4
+[Reddit] 模拟循环完成! 耗时: 0.8秒, 总动作: 4
 ============================================================
-模拟循环完成! 总耗时: 1.7秒
+模拟循环完成! 总耗时: 2.2秒
 [Reddit] 环境已关闭
 ============================================================
 全部完成!
@@ -275,7 +275,7 @@ OASIS 双平台并行模拟
     "two_e2e": {
       "db_posts": 4,
       "still_sliced": 0,
-      "timestamp_pushed": 2,
+      "timestamp_pushed": 1,
       "written_whole": 12
     }
   },

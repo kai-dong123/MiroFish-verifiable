@@ -442,6 +442,32 @@ def readings_sha256(text: str) -> str | None:
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
+def sha256_text(path) -> str:
+    """一个**受版本控制的文本文件**的 sha256。读的是文本，不是字节。
+
+    **为什么不是 `read_bytes()`** —— 这条是踩出来的，而且踩得很难看：
+
+    `core.autocrlf` 在 Windows 上是**默认开的**，clone 下来时 git 会把仓库里
+    的 LF 换成 CRLF。于是同一个文件在两个人的工作区里**字节不同、文本相同**。
+    谁要是拿字节哈希去钉一个「报告有没有过期」，那条测试就会在**每一个用默认
+    配置 clone 的人**那里先红一次 —— 而它报的是一个**根本不存在的问题**：
+    测试集没变，只是换行符变了。
+
+    这与本装置已经踩过两次的那个毛病同源（见 `README.md` 里「产物没过期」那一节，
+    以及 `数字底稿` D-21）：**别去钉一个「本来就会合法地变」的东西，然后说它变了
+    就是有问题。** 换行符是 git 的合法产物，不是内容的改动。
+
+    另外三处哈希（`adjudicate` / `mutations._sha` / `reconcile_selfcheck`）本来就
+    是拿文本算的 —— 这个函数把剩下的两类也归到同一条口径上，免得同一份材料里
+    有两种「sha256」，读的人还得猜是哪一种。
+    """
+    import hashlib
+    import pathlib
+
+    text = pathlib.Path(path).read_text(encoding="utf-8")
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 # --------------------------------------------------------------------------
 # 5. 出口：**三种退出码，不是两种**
 # --------------------------------------------------------------------------

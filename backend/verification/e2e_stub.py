@@ -91,7 +91,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import pathlib
@@ -491,8 +490,10 @@ def _environment() -> dict:
         except Exception:  # noqa: BLE001
             env[key] = "未知"
     try:
-        env["script_sha256"] = hashlib.sha256(
-            SCRIPT.read_bytes()).hexdigest()
+        # 按**文本**算，不按字节 —— 入口脚本也受 `core.autocrlf` 支配，
+        # 字节哈希会把「谁的检出配置」记成一个看着像指纹的东西。见
+        # `_probe.sha256_text`。
+        env["script_sha256"] = P.sha256_text(SCRIPT)
     except OSError:
         env["script_sha256"] = None
     return env
