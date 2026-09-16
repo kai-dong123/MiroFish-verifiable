@@ -58,3 +58,7 @@ backend/uploads/
 
 # Docker 数据
 data/
+
+# 装置自检产物（每次运行重新生成，不入库）
+verification_report.md
+verification_report.json

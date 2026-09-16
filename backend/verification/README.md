@@ -23,6 +23,26 @@ python -m verification.run_all
 预期看到：三条复现各自打印它量到的数，结尾一张汇总，退出码 `0`。
 退出码有三种，见下。
 
+跑完会在当前目录落下两个文件（已 gitignore）：
+
+```
+verification_report.md    给人看的：汇总 + 环境 + 三条的原样转录
+verification_report.json  同一份内容的结构化版本
+```
+
+```bash
+python -m verification.run_all --out /tmp/rep    # 换个落点
+python -m verification.run_all --no-report       # 只看屏幕，不落文件
+```
+
+报告里每一条的正文，就是那条命令**当时打在屏幕上的原话**，逐字转录 ——
+**不做二次解析**。这是刻意的：报告里的数字如果是「再算一遍」来的，就可能和
+产生它的那次运行对不上，而这份报告的全部意义就是「我看到的和它说的是同一件事」。
+报告另附一节**环境**（Python、平台、camel/oasis 版本、现场量到的时钟步长、
+工作目录），也就是「这批数字是用什么跑的」的凭据。
+
+汇总里**不出现通过率** —— 理由见下。
+
 ### 只想跑一条
 
 ```bash
@@ -223,5 +243,5 @@ verification/
   repro_01_slicing.py   ① 切片正反馈环
   repro_02_timestamp.py ② 同拍碰撞
   repro_03_concurrency.py ③ 并发次序（边界）
-  run_all.py            一条命令跑三个
+  run_all.py            一条命令跑三个，并落一份可验证性报告
 ```
