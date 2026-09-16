@@ -94,7 +94,7 @@ agent.memory = ...                       # 塞一个真的 ScoreBasedContextCrea
 ### 守卫自己的测试
 
 ```bash
-python -m pytest verification/tests -q         # 当前 82 条，两秒
+python -m pytest verification/tests -q         # 当前 83 条，两秒
 ```
 
 **只需要 camel**，不需要 flask / zep / API key（上游 `backend/tests/` 里那些要完整
@@ -197,7 +197,7 @@ python scripts/run_parallel_simulation.py --config your_config.json --guards bot
 > 那要 API key。
 >
 > 所以本装置验证到的地方到「守卫」这一层为止：守卫自己的行为有测试钉着
-> （82 条），守卫在两个复现脚本里跑的是**真的 `ChatAgent` 和真的记忆**
+> （83 条），守卫在两个复现脚本里跑的是**真的 `ChatAgent` 和真的记忆**
 > （只是不发 LLM）。**再往下——一整局仿真跑出来什么——本装置没验，也不声称。**
 
 ---
@@ -458,6 +458,6 @@ verification/
   repro_02_timestamp.py ② 同拍碰撞
   repro_03_concurrency.py ③ 并发次序（边界）
   run_all.py            一条命令跑三个，**再和上游草稿对一次账**，并落一份报告
-  tests/                守卫、判词、引文、错引扫描的测试（82 条，只要 camel 就能跑）
+  tests/                守卫、判词、引文、错引扫描的测试（83 条，只要 camel 就能跑）
   upstream/             准备发给上游的原文（草稿，尚未提交）与两份最小复现
 ```

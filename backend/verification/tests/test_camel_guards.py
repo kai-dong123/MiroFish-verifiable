@@ -136,6 +136,31 @@ def test_install_is_idempotent():
     assert G.counters()["written_whole"] == 1
 
 
+def test_install_defaults_are_both_on():
+    """不传开关时**两个都开** —— 这是 README 对外写的默认值。
+
+    容易悄悄坏掉的一种改法：把签名里的默认值改成 `False`。那时 README 说的
+    和代码做的就不是一回事了，而**其余测试一条都不会红**（它们全部显式传参）。
+    所以这里连签名一起钉：**别只钉行为，行为默认值也算对外承诺的一部分。**
+    """
+    import inspect
+
+    sig = inspect.signature(G.install)
+    assert sig.parameters["slicing"].default is True
+    assert sig.parameters["timestamp"].default is True
+
+    T = stand_in()
+    G.install(T)                        # 一个开关都不传
+    c = G.counters()
+    assert (c["slicing"], c["timestamp"]) == (True, True), \
+        "install() 的默认值不再是「两个都开」，README:402 那句就成假的了"
+
+    # 幂等那条路也要守住默认：第二次仍不传，不该把开关关掉
+    G.install(T)
+    c = G.counters()
+    assert (c["slicing"], c["timestamp"]) == (True, True)
+
+
 def test_uninstall_restores_original_and_clears_counters():
     T = stand_in()
     original = T.update_memory
