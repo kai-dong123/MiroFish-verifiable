@@ -11,11 +11,14 @@
 （884 行）里的 `ctx_tokens` 是**截断之后**的上下文大小 —— 而截断干的事正是把
 上下文填到贴着上限，所以这个残余预算**按构造就远小于待写的消息**。它还要再被
 砍两刀：`base_chunk_size = max(1, remaining_budget) // 10`（933 行），
-`chunk_body_limit = max(1, base_chunk_size - 12)`（948 行，那 12 是给
-`"[chunk 3/412 of a long message]\\n"` 这个前缀留的扣减）。
-这三步之后，每块的正文容量会被压到**个位数 token**（上限 4000 时实测落到 1），
-每块还各带一个十几个 token 的前缀，于是**一次写入膨胀一个数量级**，记录条数
-1 条变几百条。这是个反馈环：记忆满 → 残余预算小 → 切片 → 膨胀 → 记忆更满。
+`chunk_body_limit = max(1, base_chunk_size - prefix_token_len)`（948 行，
+`prefix_token_len` 是那个块前缀 `"[chunk 1/1000 of a long message]\\n"` 的
+实测 token 数（943 行），在 `gpt-4o-mini` 的编码下是 **12**——但那是量出来的，
+换个分词器就不是 12，所以这里不写死）。
+这两刀之后，正文容量落到下界 `max(1, …)` 上 —— **只要残余预算不到 140 token，
+`chunk_body_limit` 就恒为 1**，每块还各带一个十几 token 的前缀。于是**一次写入
+膨胀一个数量级**，记录条数 1 条变几百条。这是个反馈环：记忆满 → 残余预算小 →
+切片 → 膨胀 → 记忆更满。
 
 收严后的判据是「**只有这条消息自己就超上限才该切**」。「预算只是紧」本该交给
 `ScoreBasedContextCreator` —— 它的职责就是按分数驱逐旧记录。camel 把两种情形
@@ -159,8 +162,10 @@ def install(target=None, *, slicing: bool = True, timestamp: bool = True):
 
     Args:
         target: 带 `update_memory` 的类，默认 camel 的 `ChatAgent`。
-            **这是给测试用的注入口**：传一个替身类就能在不碰 camel、不发 LLM
-            的前提下把「该拦的拦、该切的不切」两个方向都测到。
+            **这是给测试用的注入口**：传一个替身类就能在**不改真的 `ChatAgent`**、
+            不发 LLM 的前提下把「该拦的拦、该切的不切」两个方向都测到。替身只需
+            提供 `memory` / `agent_id` 两个属性（写入用的 `MemoryRecord` 是 camel
+            的普通数据类，不需要模型）。见 `tests/test_camel_guards.py`。
         slicing: 切片守卫。
         timestamp: 时间戳守卫。**两个开关独立** —— 这是本模块存在的主要理由：
             第二个失效是第一个的代价，不拆开就分不清是谁动了什么。
