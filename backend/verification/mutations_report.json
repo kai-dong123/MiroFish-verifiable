@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17 00:38:40",
+  "generated_at": "2026-09-17 01:42:05",
   "not_a_pass_rate": true,
   "what_this_is": "逐条改坏被测代码、看测试红不红的对照表。**红色是期望的结果**；这不是通过率、不是覆盖率、不是得分。",
   "environment": {
@@ -10,31 +10,31 @@
   },
   "script": {
     "path": "verification/mutations.py",
-    "sha256": "b5943c95f0a33c2e52c1bd099cfc6e8f31795ba09c3403aaea5817da957a3734"
+    "sha256": "d60bdcb27ef711f1a8a17caa31b478be22924c2ba657f93ad8211c8e16327c3b"
   },
   "sources": {
-    "verification/adjudicate.py": "ba6ef8a93b8dc24ae76b5331f072317637973553dff9c44a6789ba15611d3545",
-    "verification/camel_guards.py": "efebead6cfbbc57576d7741952ce57f64b1e8ad19f412724c430a050f0fbb795",
+    "verification/adjudicate.py": "666dd074a46f97f4e033e742cbb667aa575c7a950867d8c179563aee7860d4c9",
+    "verification/camel_guards.py": "eca0e2c41c00ced7e57cbe83fbbce94aecb40b9cce155530a393560abdb898c2",
     "verification/repro_02_timestamp.py": "3e4f5b210dc093b7bce3983c3654c5a9dcb9bc146e42389ccf83234ee160e3c9",
-    "verification/tests/test_citations.py": "9365148c9fdbc93e159bca5ca956e7c2f7ec66eb9676c5a60fa1fb1b9d5c3c00"
+    "verification/tests/test_citations.py": "a0c97d8bccd82fdad6c63174c0dc59ce75319624d4e8b138e1e2fdc21cfd32c3"
   },
   "sources_after": {
-    "verification/adjudicate.py": "ba6ef8a93b8dc24ae76b5331f072317637973553dff9c44a6789ba15611d3545",
-    "verification/camel_guards.py": "efebead6cfbbc57576d7741952ce57f64b1e8ad19f412724c430a050f0fbb795",
+    "verification/adjudicate.py": "666dd074a46f97f4e033e742cbb667aa575c7a950867d8c179563aee7860d4c9",
+    "verification/camel_guards.py": "eca0e2c41c00ced7e57cbe83fbbce94aecb40b9cce155530a393560abdb898c2",
     "verification/repro_02_timestamp.py": "3e4f5b210dc093b7bce3983c3654c5a9dcb9bc146e42389ccf83234ee160e3c9",
-    "verification/tests/test_citations.py": "9365148c9fdbc93e159bca5ca956e7c2f7ec66eb9676c5a60fa1fb1b9d5c3c00"
+    "verification/tests/test_citations.py": "a0c97d8bccd82fdad6c63174c0dc59ce75319624d4e8b138e1e2fdc21cfd32c3"
   },
-  "suite_sha256": "76ea46c2ab45b2ca74a8744ba65bc0064de80eac046c38ca7c81ed9abcda105c",
+  "suite_sha256": "e4f93a2b14b7880656fe9e346b471ca18c18f9b2de3f3607ce801d4269243916",
   "baseline": {
     "returncode": 0,
     "failed": 0,
-    "passed": 98,
+    "passed": 127,
     "skipped": 24,
     "errors": 0,
     "failed_ids": [],
     "failed_by_file": {},
-    "seconds": 2.33,
-    "raw_tail": "...............ssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n98 passed, 24 skipped in 1.67s"
+    "seconds": 12.28,
+    "raw_tail": "...............ssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n127 passed, 24 skipped in 10.01s"
   },
   "mutations": [
     {
@@ -53,7 +53,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -62,8 +62,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 2.18,
-      "raw_tail": "...............ssssssssssss.......F..................................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 97 passed, 24 skipped in 1.58s",
+      "seconds": 11.67,
+      "raw_tail": "...............ssssssssssss.......F..................................... [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 126 passed, 24 skipped in 9.54s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -84,7 +84,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 10,
-      "passed": 88,
+      "passed": 117,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -102,8 +102,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 10
       },
-      "seconds": 2.35,
-      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 88 passed, 24 skipped in 1.69s",
+      "seconds": 12.15,
+      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 117 passed, 24 skipped in 9.77s",
       "failed_in_target": 10,
       "matched": true,
       "reverted": true
@@ -124,7 +124,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 2,
-      "passed": 96,
+      "passed": 125,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -134,8 +134,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 2
       },
-      "seconds": 2.3,
-      "raw_tail": "...............ssssssssssss......FF..................................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 96 passed, 24 skipped in 1.69s",
+      "seconds": 11.97,
+      "raw_tail": "...............ssssssssssss......FF..................................... [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 125 passed, 24 skipped in 9.69s",
       "failed_in_target": 2,
       "matched": true,
       "reverted": true
@@ -156,7 +156,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -165,8 +165,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 2.32,
-      "raw_tail": "...............ssssssssssss.................F........................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 97 passed, 24 skipped in 1.69s",
+      "seconds": 12.05,
+      "raw_tail": "...............ssssssssssss.................F........................... [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 126 passed, 24 skipped in 9.77s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -187,7 +187,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 4,
-      "passed": 94,
+      "passed": 123,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -199,8 +199,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 4
       },
-      "seconds": 2.27,
-      "raw_tail": "...............ssssssssssss...........F..FFF............................ [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 94 passed, 24 skipped in 1.64s",
+      "seconds": 11.97,
+      "raw_tail": "...............ssssssssssss...........F..FFF............................ [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 123 passed, 24 skipped in 9.65s",
       "failed_in_target": 4,
       "matched": true,
       "reverted": true
@@ -221,7 +221,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -230,8 +230,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 2.32,
-      "raw_tail": "...............ssssssssssss........F.................................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 97 passed, 24 skipped in 1.68s",
+      "seconds": 12.12,
+      "raw_tail": "...............ssssssssssss........F.................................... [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 126 passed, 24 skipped in 9.78s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -252,7 +252,7 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -261,8 +261,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 2.22,
-      "raw_tail": "...............ssssssssssssF............................................ [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 97 passed, 24 skipped in 1.58s",
+      "seconds": 12.18,
+      "raw_tail": "...............ssssssssssssF............................................ [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 126 passed, 24 skipped in 9.94s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -283,7 +283,7 @@
       "claim": "README「判词」：判词写死 → 红 16 条",
       "returncode": 1,
       "failed": 16,
-      "passed": 82,
+      "passed": 111,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -307,8 +307,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 16
       },
-      "seconds": 2.26,
-      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 82 passed, 24 skipped in 1.60s",
+      "seconds": 12.01,
+      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 111 passed, 24 skipped in 9.73s",
       "failed_in_target": 16,
       "matched": true,
       "reverted": true
@@ -329,7 +329,7 @@
       "claim": "README「判词」：`<` 写成 `<=` → 红 3 条",
       "returncode": 1,
       "failed": 3,
-      "passed": 95,
+      "passed": 124,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -340,8 +340,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 2.25,
-      "raw_tail": "...............ssssssssssss............................................. [ 59%]\n....ssssssssssss....F............F.............F..                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 95 passed, 24 skipped in 1.61s",
+      "seconds": 11.85,
+      "raw_tail": "...............ssssssssssss............................................. [ 47%]\n.................................ssssssssssss....F............F......... [ 95%]\n....F..                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 124 passed, 24 skipped in 9.69s",
       "failed_in_target": 3,
       "matched": true,
       "reverted": true
@@ -362,7 +362,7 @@
       "claim": "README「判词」：去掉「与预期相反」那一支 → 红 3 条",
       "returncode": 1,
       "failed": 3,
-      "passed": 95,
+      "passed": 124,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -373,8 +373,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 2.26,
-      "raw_tail": "...............ssssssssssss............................................. [ 59%]\n....ssssssssssss...........................FF...F.                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 95 passed, 24 skipped in 1.66s",
+      "seconds": 11.73,
+      "raw_tail": "...............ssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\nFF...F.                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 124 passed, 24 skipped in 9.53s",
       "failed_in_target": 3,
       "matched": true,
       "reverted": true
@@ -395,7 +395,7 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -404,8 +404,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 2.32,
-      "raw_tail": "...............ssssssssssss.........................F................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 97 passed, 24 skipped in 1.72s",
+      "seconds": 11.83,
+      "raw_tail": "...............ssssssssssss............................F................ [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 126 passed, 24 skipped in 9.62s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -426,7 +426,7 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -435,8 +435,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 2.17,
-      "raw_tail": "...............ssssssssssss.......................F..................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 97 passed, 24 skipped in 1.57s",
+      "seconds": 12.33,
+      "raw_tail": "...............ssssssssssss..........................F.................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 126 passed, 24 skipped in 9.96s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -457,7 +457,7 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -466,8 +466,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 2.15,
-      "raw_tail": "...............ssssssssssss.........................F................... [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 97 passed, 24 skipped in 1.50s",
+      "seconds": 11.89,
+      "raw_tail": "...............ssssssssssss............................F................ [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 126 passed, 24 skipped in 9.66s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -488,7 +488,7 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 96,
+      "passed": 125,
       "skipped": 25,
       "errors": 0,
       "failed_ids": [
@@ -497,8 +497,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 2.25,
-      "raw_tail": "...............ssssssssssss....................................s.......F [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 96 passed, 25 skipped in 1.64s",
+      "seconds": 12.19,
+      "raw_tail": "...............ssssssssssss.......................................s..... [ 47%]\n......F..........................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 125 passed, 25 skipped in 9.87s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -524,7 +524,7 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -533,8 +533,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 2.27,
-      "raw_tail": "...............ssssssssssss............................................. [ 59%]\nF...ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 97 passed, 24 skipped in 1.65s",
+      "seconds": 12.17,
+      "raw_tail": "...............ssssssssssss............................................. [ 47%]\n.......F.........................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 126 passed, 24 skipped in 9.91s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -555,7 +555,7 @@
       "claim": "README「引文」：下半把那个写法植回 `camel_guards.py`，当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -564,8 +564,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 2.23,
-      "raw_tail": "...............ssssssssssss............................................. [ 59%]\n...Fssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 97 passed, 24 skipped in 1.62s",
+      "seconds": 11.87,
+      "raw_tail": "...............ssssssssssss............................................. [ 47%]\n..........F......................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 126 passed, 24 skipped in 9.53s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -586,7 +586,7 @@
       "claim": "README「裁决：三种结果不是两种」：贴界按单元格判，退化成乘积当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -595,8 +595,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 2.27,
-      "raw_tail": ".F.............ssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets\n1 failed, 97 passed, 24 skipped in 1.66s",
+      "seconds": 12.16,
+      "raw_tail": ".F.............ssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets\n1 failed, 126 passed, 24 skipped in 9.83s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -616,20 +616,22 @@
       "expect_failed": 3,
       "claim": "README「裁决」：缺读数判不可判定，折进「否决」当场红",
       "returncode": 1,
-      "failed": 3,
-      "passed": 95,
+      "failed": 4,
+      "passed": 123,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous",
         "verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed",
-        "verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous"
+        "verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous",
+        "verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided"
       ],
       "failed_by_file": {
-        "verification/tests/test_adjudicate.py": 3
+        "verification/tests/test_adjudicate.py": 3,
+        "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 2.23,
-      "raw_tail": "F.F....F.......ssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous\nFAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed\nFAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous\n3 failed, 95 passed, 24 skipped in 1.62s",
+      "seconds": 11.93,
+      "raw_tail": "F.F....F.......ssssssssssss............................................. [ 47%]\n..............................F..ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous\nFAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed\nFAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided\n4 failed, 123 passed, 24 skipped in 9.73s",
       "failed_in_target": 3,
       "matched": true,
       "reverted": true
@@ -650,7 +652,7 @@
       "claim": "README「裁决·非空泛」：falsifier 必须实例化，只查在不在当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -659,8 +661,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 2.27,
-      "raw_tail": ".....F.........ssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous\n1 failed, 97 passed, 24 skipped in 1.64s",
+      "seconds": 12.04,
+      "raw_tail": ".....F.........ssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous\n1 failed, 126 passed, 24 skipped in 9.83s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -681,7 +683,7 @@
       "claim": "README「裁决：恒真就不许退 0」：判据恒真时退出码必须非 0",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -690,8 +692,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 2.23,
-      "raw_tail": "..............Fssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green\n1 failed, 97 passed, 24 skipped in 1.64s",
+      "seconds": 11.97,
+      "raw_tail": "..............Fssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green\n1 failed, 126 passed, 24 skipped in 9.76s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -712,7 +714,7 @@
       "claim": "README「退出码：三种不是两种」：前提不成立退 2，折成 1 当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 97,
+      "passed": 126,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [
@@ -721,8 +723,70 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 2.24,
-      "raw_tail": ".............F.ssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback\n1 failed, 97 passed, 24 skipped in 1.61s",
+      "seconds": 12.09,
+      "raw_tail": ".............F.ssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback\n1 failed, 126 passed, 24 skipped in 9.82s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "J6",
+      "group": "守卫·计数落盘",
+      "what": "**装守卫时不安排落盘** —— 计数照样烂在内存里，一次真跑还是什么都看不见（回到补它之前那个状态）",
+      "target": "verification/tests/test_camel_guards.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "old": "    _state[\"patched\"] = True\n    _arrange_counters_dump()",
+          "new": "    _state[\"patched\"] = True  # 变异：不安排落盘"
+        }
+      ],
+      "expect_failed": 1,
+      "claim": "README「守卫端到端」：装了守卫就得安排落盘，拿掉当场红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 126,
+      "skipped": 24,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_camel_guards.py": 1
+      },
+      "seconds": 12.08,
+      "raw_tail": "...............ssssssssssss...................F......................... [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit\n1 failed, 126 passed, 24 skipped in 9.85s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "J7",
+      "group": "裁决·端到端",
+      "what": "端到端报告不在时**编一份读数**出来 —— 最容易写下的那种「补全」，而且编完那张表看着更完整",
+      "target": "verification/tests/test_e2e_stub.py",
+      "edits": [
+        {
+          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "old": "    if not path.is_file():\n        return None\n    try:",
+          "new": "    if not path.is_file():\n        # 变异：没跑过就编一份读数 —— 于是那五条照判「通过」\n        return {\"results\": [{\"readings\": {\n            \"readings\": {\n                \"roomy_e2e\": {\"written_whole\": 1, \"still_sliced\": 0,\n                              \"timestamp_pushed\": 1, \"db_posts\": 1},\n                \"bigtext_e2e\": {\"written_whole\": 1, \"still_sliced\": 1,\n                               \"timestamp_pushed\": 0, \"db_posts\": 1},\n                \"two_e2e\": {\"written_whole\": 2, \"still_sliced\": 0,\n                            \"timestamp_pushed\": 1, \"db_posts\": 2}},\n            \"boundaries\": []}}]}\n    try:"
+        }
+      ],
+      "expect_failed": 1,
+      "claim": "README「裁决：三种结果不是两种」：端到端读数缺了要判不可判定，编一份补上当场红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 126,
+      "skipped": 24,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_e2e_stub.py": 1
+      },
+      "seconds": 12.2,
+      "raw_tail": "...............ssssssssssss............................................. [ 47%]\n.............................F...ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception\n1 failed, 126 passed, 24 skipped in 9.90s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -743,21 +807,21 @@
       "claim": "本模块自己的纪律：不做任何语义改动的编辑，一条都不许红",
       "returncode": 0,
       "failed": 0,
-      "passed": 98,
+      "passed": 127,
       "skipped": 24,
       "errors": 0,
       "failed_ids": [],
       "failed_by_file": {},
-      "seconds": 2.21,
-      "raw_tail": "...............ssssssssssss............................................. [ 59%]\n....ssssssssssss..................................                       [100%]\n98 passed, 24 skipped in 1.61s",
+      "seconds": 12.02,
+      "raw_tail": "...............ssssssssssss............................................. [ 47%]\n.................................ssssssssssss........................... [ 95%]\n.......                                                                  [100%]\n127 passed, 24 skipped in 9.73s",
       "failed_in_target": 0,
       "matched": true,
       "reverted": true
     }
   ],
   "summary": {
-    "total": 22,
-    "matched": 22,
+    "total": 24,
+    "matched": 24,
     "mismatches": [],
     "all_sources_reverted": true,
     "baseline_green": true

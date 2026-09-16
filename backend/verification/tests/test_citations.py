@@ -115,6 +115,22 @@ CITATIONS = (
     ("oasis.environment.env", 193,
      "await asyncio.gather(*tasks)",
      "repro_03 / comment_751_759：所有 agent 的动作并发执行"),
+    # ---- camel/oasis：端到端那一跑引到的 --------------------------------
+    ("camel.agents.chat_agent", 468,
+     "self.model_backend = ModelManager(",
+     "README §端到端 / e2e_stub：每个 agent 各包一个 ModelManager —— "
+     "**包的是同一个后端实例**，所以替身必须无状态"),
+    ("camel.agents.chat_agent", 2004,
+     "except RuntimeError as e:",
+     "README §端到端：max_tokens 同时是上下文上限，收紧它在这里被接住"),
+    ("camel.agents.chat_agent", 2006,
+     '"max_tokens_exceeded"',
+     "README §端到端：接住之后**直接把这一轮终止** —— agent 静默无动作，"
+     "看起来像跑通了。所以 max_tokens 不能当旋钮用"),
+    ("oasis.social_agent.agents_generator", 574,
+     'with open(profile_path, "r") as file:',
+     "e2e_stub：**不指定编码** —— 中文 Windows 上默认 GBK，"
+     "读 UTF-8 花名册当场 UnicodeDecodeError（上游缺陷，本命令绕开）"),
 )
 
 

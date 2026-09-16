@@ -56,6 +56,7 @@ T_GUARDS = "verification/tests/test_camel_guards.py"
 T_VERDICTS = "verification/tests/test_repro_verdicts.py"
 T_CITATIONS = "verification/tests/test_citations.py"
 T_ADJ = "verification/tests/test_adjudicate.py"
+T_ADJ_E2E = "verification/tests/test_e2e_stub.py"
 
 #: 下半那条变异要植回去的**错引写法**。
 #:
@@ -100,6 +101,10 @@ G_CITE_DOWN = "引文·下半"
 G_ADJ = "裁决"
 G_ADJ_MISS = "裁决·缺读数"
 G_ADJ_VAC = "裁决·恒真"
+#: 后加的两组。**没有并进上面任何一组** —— 上面那几组的条数写在 README 的
+#: 声明里（「守卫：七处」），并进去就会把那句话变成过期的。
+G_COUNTERS = "守卫·计数落盘"
+G_ADJ_E2E = "裁决·端到端"
 G_CONTROL = "阴性对照"
 
 CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
@@ -244,6 +249,42 @@ MUTATIONS = (
                 '        print(f"\\n○ 没测到：{e}")\n        return 2',
                 '        print(f"\\n○ 没测到：{e}")\n        return 1  # 变异：折成「没达到预期」')],
        expect=1, claim="README「退出码：三种不是两种」：前提不成立退 2，折成 1 当场红"),
+
+    # ---- 守卫·计数落盘 ----------------------------------------------------
+    # 这一格从前是空的：`counters()` **只有测试在调**，谁真拿 `--guards both`
+    # 跑一整局也拿不到任何一个数。补上之后要有个东西守着它不被拿掉。
+    _M("J6", G_COUNTERS, "**装守卫时不安排落盘** —— 计数照样烂在内存里，"
+                         "一次真跑还是什么都看不见（回到补它之前那个状态）",
+       T_GUARDS, [(GUARDS,
+                   '    _state["patched"] = True\n    _arrange_counters_dump()',
+                   '    _state["patched"] = True  # 变异：不安排落盘')],
+       expect=1, claim="README「守卫端到端」：装了守卫就得安排落盘，拿掉当场红"),
+
+    # ---- 裁决·端到端 ------------------------------------------------------
+    _M("J7", G_ADJ_E2E, "端到端报告不在时**编一份读数**出来 —— 最容易写下的"
+                        "那种「补全」，而且编完那张表看着更完整",
+       T_ADJ_E2E, [(ADJUDICATE,
+                    '    if not path.is_file():\n        return None\n    try:',
+                    '    if not path.is_file():\n'
+                    '        # 变异：没跑过就编一份读数 —— 于是那五条照判「通过」\n'
+                    '        return {"results": [{"readings": {\n'
+                    '            "readings": {\n'
+                    '                "roomy_e2e": {"written_whole": 1, '
+                    '"still_sliced": 0,\n'
+                    '                              "timestamp_pushed": 1, '
+                    '"db_posts": 1},\n'
+                    '                "bigtext_e2e": {"written_whole": 1, '
+                    '"still_sliced": 1,\n'
+                    '                               "timestamp_pushed": 0, '
+                    '"db_posts": 1},\n'
+                    '                "two_e2e": {"written_whole": 2, '
+                    '"still_sliced": 0,\n'
+                    '                            "timestamp_pushed": 1, '
+                    '"db_posts": 2}},\n'
+                    '            "boundaries": []}}]}\n'
+                    '    try:')],
+       expect=1, claim="README「裁决：三种结果不是两种」：端到端读数缺了要判不可判定，"
+                       "编一份补上当场红"),
 
     # ---- 阴性对照 ----------------------------------------------------------
     _M("K0", G_CONTROL, "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",

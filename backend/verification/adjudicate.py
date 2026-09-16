@@ -59,6 +59,8 @@ HERE = pathlib.Path(__file__).resolve().parent          # backend/verification
 BACKEND = HERE.parent                                   # backend/
 
 REPORT = BACKEND / "verification_report.json"
+#: 端到端那份（`e2e_stub.py` 落的）。**可以在，也可以不在** —— 见 `load_e2e_report`。
+E2E_REPORT = HERE / "e2e_report.json"
 MD_PATH = HERE / "ADJUDICATION.md"
 JS_PATH = HERE / "adjudication_report.json"
 
@@ -71,7 +73,12 @@ NO_TRUST_VACUOUS = "判据恒真"
 
 #: 断言声明的「层」是一个**闭集**。写错一个字会让整条断言静默退化 ——
 #: 所以这里校验，不认识的层直接抛。（weiran 那边真踩过：`产出` 写成 `产物`。）
-LAYERS = ("复现一", "复现二", "复现三", "跨复现")
+#:
+#: 「端到端」是后加的一层：前四层读的是 `run_all` 那三条复现的读数（全离线），
+#: 这一层读的是 `e2e_stub` 那份**另跑一次**的读数（替身模型驱真入口脚本）。
+#: 两份报告分开落、分开读 —— 因为端到端那一条**可以不在**（没跑就没有），
+#: 而前三条复现的读数**不许不在**。
+LAYERS = ("复现一", "复现二", "复现三", "跨复现", "端到端")
 
 
 class AdjudicationError(Exception):
@@ -139,16 +146,23 @@ CLAIM_SET = {
         "它证明的是「**这套判据对这批读数有鉴别力**」，"
         "**不是**「装置是对的」。判据是我们写的，读数是我们量的 —— "
         "这张表能排除的是「判据恒真／被贴界蒙混」，排除不了「两边一起错」。"
-        "**还有一件照实说**：这 10 条判据是**读到读数之后**才写下来的，不是先验的。"
+        "**还有一件照实说**：判据是**读到读数之后**才写下来的，不是先验的。"
         "所以「对这批读数有鉴别力」不等于「对任何别的读数也有」—— 换一批读数，"
         "这套判据必须重写、重跑自证，不能搬过去当结论用。"
+        "**这里一句条数都不写**：判不了几条、哪几条不采信，都随「端到端那一跑在不在」"
+        "而变，写死的数会变成一句**听着像事实的过期话**。要看数就看 `summary` —— "
+        "那两个数（`by_verdict`、`not_trusted`）是**当场数出来的**，不是写在这里的。"
         "它没被写成一张更好看的表，靠的不是我们自觉，是下面三件事："
-        "**两条判不了**（缺读数就如实判不了）、**两条不采信**（成立但不结实）、"
+        "**判不了的不计进任何一边**（缺读数就如实判不了）、"
+        "**贴界一票降级**（成立但不结实）、"
         "**给不出 falsifier 的判据自己判自己恒真**。"),
     "not_solid": (
-        "B1 与 B10 是**通过但不采信**的：B1 的分母卡在最小值上（守卫开那格是 1，"
-        "而 1 是这个量的最小可能值），B10 的比较基准是「耗时全相同」这个退化情形。"
-        "两条都成立，但都**不足以论证「守卫好」**。"),
+        "**通过但不采信**的那些，逐条理由在每行的 `no_trust_because` 里。这里举三类："
+        "① **分母卡在本量的最小值上** —— B1 守卫开那格是 1，而 1 是这个量的最小可能值；"
+        "② **比较基准退化** —— B10 比的是「耗时全相同」这个情形；"
+        "③ **计数在那一支上按构造加不动** —— 端到端里「回落支那档的 "
+        "`timestamp_pushed`」恒为 0（计数只加在快路径上）。"
+        "三类都成立，但都**分不出差别**，所以都不足以论证「守卫好」。"),
 }
 #: 判据表**必须**自己交代的四件事。缺一件就抛 —— 这句话不能由检查器代说。
 REQUIRED_DECLARATIONS = ("what_this_is", "what_this_is_NOT",
@@ -262,6 +276,81 @@ CLAIMS = (
        undecidable="三条复现量的都是写入的**后果**（记录数、token 数），"
                    "**没有量写入本身的耗时** —— 这一格不存在",
        to_fix="在写入前后各读一次时钟，把耗时也打进读数块"),
+
+    # ---- 端到端（替身模型 · 真入口脚本）------------------------------------
+    #
+    # 这一层的读数来自**另一次运行**（`python -m verification.e2e_stub`），
+    # 与上面那三层的 `verification_report.json` 分开落盘。它**可以不在** ——
+    # 没跑过那一趟，这几条就如实判「不可判定」，不是「没通过」（`evaluate`
+    # 的缺格子分支已经这么做了，这里只把「怎么补」写得更可操作）。
+    #
+    # **这一层主张什么、不主张什么**（照实写在这里，因为它决定了这几条判据
+    # 该被读成什么）：它主张的是「**守卫的两个分支都被真实流量走到了**」——
+    # 快路径写入走通了、超限回落支走通了、同拍写入被推了时间戳、动作真落进了
+    # 平台库。它**不主张「守卫修好了什么」** —— 那是复现一／复现二的活：
+    # 那两条量的是「装上前后差多少」，这一层量的是「装上了、并且被走到了」。
+    _c("E1", "端到端",
+       "快路径写入被真实流量走到 —— 守卫装上了，而且那支真的在干活",
+       "`roomy_e2e.written_whole` > 0",
+       (("roomy_e2e", "written_whole"),),
+       lambda v, t: v[0] > t[0],
+       thresholds=((r">\s*([\d.]+)", "下界"),),
+       falsifier={("roomy_e2e", "written_whole"): 0},
+       undecidable="本轮没跑 `python -m verification.e2e_stub` —— "
+                   "端到端那份报告不在，这几格读不到",
+       to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
+
+    _c("E2", "端到端",
+       "超限回落支被真实流量走到 —— 把助手文本加到 20000 字，"
+       "「自己就超上限」那一支才动；不加它一次都不动",
+       "`bigtext_e2e.still_sliced` > `roomy_e2e.still_sliced`",
+       (("bigtext_e2e", "still_sliced"), ("roomy_e2e", "still_sliced")),
+       lambda v, t: v[0] > v[1],
+       falsifier={("bigtext_e2e", "still_sliced"): 0},
+       undecidable="本轮没跑 `python -m verification.e2e_stub` —— "
+                   "端到端那份报告不在，这几格读不到",
+       to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
+
+    _c("E3", "端到端",
+       "一次响应里并排两个动作时，写入时间戳真被推开了 —— "
+       "同拍那一路在端到端上也被走到",
+       "`two_e2e.timestamp_pushed` > 0",
+       (("two_e2e", "timestamp_pushed"),),
+       lambda v, t: v[0] > t[0],
+       thresholds=((r">\s*([\d.]+)", "下界"),),
+       falsifier={("two_e2e", "timestamp_pushed"): 0},
+       undecidable="本轮没跑 `python -m verification.e2e_stub` —— "
+                   "端到端那份报告不在，这几格读不到",
+       to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
+
+    _c("E4", "端到端",
+       "同一次响应里的**第二个动作没有被吞掉** —— 它一路走到了平台库"
+       "（两个动作的库里行数是单动作那档的两倍）",
+       "`two_e2e.db_posts` > `roomy_e2e.db_posts`",
+       (("two_e2e", "db_posts"), ("roomy_e2e", "db_posts")),
+       lambda v, t: v[0] > v[1],
+       falsifier={("two_e2e", "db_posts"): 2},
+       why_not_solid="两档臂的 agent 数相同、每个 agent 恰恰一轮 —— "
+                     "所以这个比较**有分母**，比值本身不额外说明什么；"
+                     "它说的是「第二个动作没被吞」，不是「吞吐更高」",
+       undecidable="本轮没跑 `python -m verification.e2e_stub` —— "
+                   "端到端那份报告不在，这几格读不到",
+       to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
+
+    _c("E5", "端到端",
+       "回落支那档**没有**发生同拍碰撞",
+       "`bigtext_e2e.timestamp_pushed` == 0",
+       (("bigtext_e2e", "timestamp_pushed"),),
+       lambda v, t: v[0] == 0,
+       falsifier={("bigtext_e2e", "timestamp_pushed"): 1},
+       undecidable="本轮没跑 `python -m verification.e2e_stub` —— "
+                   "端到端那份报告不在，这几格读不到",
+       to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`",
+       why_not_solid="**这一格按构造恒为 0**：`timestamp_pushed` 只在快路径写入"
+                     "那一支累加，而这一档走的正是回落支 —— 它分不出「有没有碰撞」。"
+                     "这条「通过」因此**不采信**（见 `no_trust_because`）。"
+                     "它留在这里是有用的：它把「我们想主张、但这格撑不住」"
+                     "这件事摆到台面上，而不是把它藏起来。"),
 )
 
 
@@ -277,23 +366,59 @@ def load_report(path: pathlib.Path = REPORT) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def cells_from(report: dict):
-    """把报告里三条复现的读数摊平成 `{(臂, 量): 值}`，并分出贴界/未测量的格。"""
+def load_e2e_report(path: pathlib.Path = E2E_REPORT):
+    """端到端那份报告。**不在就返回 `None` —— 不抛。**
+
+    和 `load_report` 的处置**故意不同**：三条复现的读数**必须**在（不在就说明
+    谁把前提搞坏了，该停下来），而端到端这一趟**本来就可以没跑过**。所以这里
+    返回 `None`，由 `evaluate` 的缺格子分支把那几条如实判成「不可判定」，
+    并带着「跑一次 e2e_stub」这条补法。**这正是三态里那一格的用处** ——
+    把「没测到」和「没通过」分开，而不是让它静默少几条。
+    """
+    if not path.is_file():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except ValueError:
+        # 文件在、但不是 JSON —— 这是**没测到**，不是「读数为空」。返回 None，
+        # 让它按同样的路走到「不可判定」，而不是在这里崩掉整张表。
+        return None
+
+
+def cells_from(report: dict, *extra):
+    """把报告里各条复现的读数摊平成 `{(臂, 量): 值}`，并分出贴界/未测量的格。
+
+    `extra` 是**另外几份同形的报告**（端到端那份就是这么进来的）。加可变参数
+    而不是加一个专用分支：一份报告一个来源，来源之间不互相知道。
+    """
     cells, railed, unmeasured = {}, {}, {}
-    for entry in report.get("results", []):
-        block = entry.get("readings")
-        if not block:
+    for rep in (report, *extra):
+        if not rep:
             continue
-        for arm, vals in block.get("readings", {}).items():
-            for metric, value in vals.items():
-                cells[(arm, metric)] = value
-        for b in block.get("boundaries", []):
-            key = (b["arm"], b["metric"])
-            if b["kind"] == P.BOUND_UNMEASURED:
-                unmeasured[key] = b["why"]
-            else:
-                railed[key] = b["why"]
+        for entry in rep.get("results", []):
+            block = entry.get("readings")
+            if not block:
+                continue
+            for arm, vals in block.get("readings", {}).items():
+                for metric, value in vals.items():
+                    cells[(arm, metric)] = value
+            for b in block.get("boundaries", []):
+                key = (b["arm"], b["metric"])
+                if b["kind"] == P.BOUND_UNMEASURED:
+                    unmeasured[key] = b["why"]
+                else:
+                    railed[key] = b["why"]
     return cells, railed, unmeasured
+
+
+def all_cells():
+    """**本表判的全部格子**，一个入口。`run()` 与 `selfproof` 都走它。
+
+    存在的理由：格子有**两个**来源了（三条复现 + 端到端），而「两边都读上」
+    这件事必须是**一处**说了算 —— 两处各读一半，就会出现「这份产物判了 15 条、
+    那份判了 10 条」而没人发现。
+    """
+    return cells_from(load_report(), load_e2e_report())
 
 
 # ---------------------------------------------------------------------------
@@ -513,7 +638,7 @@ def render_markdown(rep: dict) -> str:
     return "\n".join(L)
 
 
-def readings_digest(report: dict) -> str:
+def readings_digest(report: dict, *extra) -> str:
     """这批**读数**的指纹 —— 不是报告文件的指纹。
 
     `verification_report.json` 每跑一次 `run_all` 就会重写，`generated_at`
@@ -523,8 +648,34 @@ def readings_digest(report: dict) -> str:
     （`clock.tick_ns`、`gap_s`、`ticks_ratio`），**每次运行本来就不一样**。
     它记的是「这份产物判的是**哪一批**读数」，给人对照用的；判过期查的是
     **结果表**（`tests/test_adjudicate.py::test_the_artifacts_still_describe_...`）。
+
+    `extra` 同 `cells_from` —— 端到端那份也算进来。**两份报告一起出指纹**：
+    只钉住其中一份，另一份换了读数这张表就不会响。
     """
-    return readings_digest_of(*cells_from(report))
+    return readings_digest_of(*cells_from(report, *extra))
+
+
+def _e2e_provenance(e2e) -> dict:
+    """端到端那一路的来路。**「没跑过」和「跑了」都要说得出是哪一种。**
+
+    少了五条断言，读的人必须能一眼看出是「这一层没跑」还是「这张表就这么多」。
+    没有这一格，两种情况长得一模一样 —— 那就是把「没测到」伪装成「没有这一项」。
+    """
+    if not e2e:
+        return {"path": E2E_REPORT.name, "present": False,
+                "why": "本轮没跑端到端 —— 那一层的断言如实判「不可判定」，"
+                       "**不是「没通过」**",
+                "to_make_decidable":
+                    "cd backend && python -m verification.e2e_stub"}
+    entry = (e2e.get("results") or [{}])[0]
+    return {"path": E2E_REPORT.name, "present": True,
+            "generated_at": e2e.get("generated_at"),
+            "arms": entry.get("arms") or [],
+            "arms_missing": e2e.get("arms_missing") or [],
+            # 替身这件事必须跟着读数走到这里：判据表读的是「真入口脚本跑出来的
+            # 计数」，而那个脚本里的模型是替身 —— 换一处理解就是另一回事了。
+            "model_is_stub": True,
+            "what_it_does_NOT_prove": e2e.get("what_it_does_NOT_prove")}
 
 
 def readings_digest_of(cells, railed, unmeasured) -> str:
@@ -540,7 +691,8 @@ def readings_digest_of(cells, railed, unmeasured) -> str:
 def run() -> dict:
     t0 = time.time()
     report = load_report()
-    cells, railed, unmeasured = cells_from(report)
+    e2e = load_e2e_report()
+    cells, railed, unmeasured = cells_from(report, e2e)
     rows = evaluate(CLAIMS, cells, railed, unmeasured)
     fals = falsifier_report(CLAIMS, cells, railed, unmeasured, base_rows=rows)
     return {
@@ -558,6 +710,10 @@ def run() -> dict:
         # `readings_digest` 的注释）：读数一改，这份产物就过期。
         "report": {"path": REPORT.name, "generated_at": report.get("generated_at"),
                    "readings_sha256": readings_digest_of(cells, railed, unmeasured)},
+        # **端到端那一路在不在，是这份产物要说的一件事。** 「没跑过」和
+        # 「跑了、那几条判不了」都合法，但**读的人必须看得出来是哪一种** ——
+        # 否则少了五条断言会被读成「这张表就这么多」。
+        "e2e_report": _e2e_provenance(e2e),
         "claims_source": {"path": "verification/adjudicate.py",
                           "ids": [c["id"] for c in CLAIMS],
                           "layers": sorted({c["layer"] for c in CLAIMS})},

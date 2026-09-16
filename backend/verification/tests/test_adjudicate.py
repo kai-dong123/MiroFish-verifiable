@@ -449,7 +449,9 @@ def test_the_artifacts_still_describe_the_code_on_disk(adj, sp):
     except A.AdjudicationError:
         pytest.skip(f"`{RUN_REPORT.name}` 不在，这一条没条件判。"
                     f"先跑一次 `cd backend && python -m verification.run_all`。")
-    live = A.evaluate(A.CLAIMS, *A.cells_from(report))
+    # 走 `all_cells()`：格子有**两个**来源（三条复现 + 端到端），
+    # 这里若只读一份，就会把「端到端那一层不在」误判成「产物过期」。
+    live = A.evaluate(A.CLAIMS, *A.all_cells())
 
     want = {r["id"]: (r["verdict"], r["trusted"]) for r in live}
     for rep, rerun in ((adj, _RERUN_A), (sp, _RERUN_S)):

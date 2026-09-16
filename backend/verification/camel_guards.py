@@ -58,7 +58,21 @@ camel 写一次 tool 调用时**只读一次时钟**，用 `+1e-6` 把回执排�
 
 from __future__ import annotations
 
+import atexit
+import json
+import os
 import time
+
+#: 把计数落到哪儿。设了这个环境变量、且守卫装上了，进程退出时写一份 JSON。
+#:
+#: **为什么必须落在退出时、而不是让驱动脚本喊一声**：上游那三个 `run_*_simulation.py`
+#: 是上游的文件，本装置的改动纪律是**每个入口只多两行**（见 `attach.py` 的头）。
+#: 挂 `atexit` 就一行都不用加，而且不管那一局是怎么结束的（正常收尾、被信号打断、
+#: `sys.exit`）都会落。落不下就落不下 —— 上层报「没测到」，**不编数**。
+ENV_COUNTERS_OUT = "GUARD_COUNTERS_OUT"
+
+#: 防止重复注册。`install()` 是幂等的，`atexit` 也得是。
+_atexit_registered = False
 
 #: 逻辑时钟步长：每条记录与上一条之间**至少**推进这么多秒。
 #:
@@ -188,6 +202,7 @@ def install(target=None, *, slicing: bool = True, timestamp: bool = True):
     _state["timestamp"] = timestamp
     target.update_memory = _dispatch
     _state["patched"] = True
+    _arrange_counters_dump()
     return _state
 
 
@@ -221,3 +236,33 @@ def counters() -> dict:
             "written_whole": _state["written_whole"],
             "still_sliced": _state["still_sliced"],
             "timestamp_pushed": _state["timestamp_pushed"]}
+
+
+def _arrange_counters_dump() -> None:
+    """装了守卫就顺手安排一件事：**进程退出时把这个进程的计数写下来**。
+
+    在此之前，`counters()` **只有测试在调** —— 也就是说，谁真拿 `--guards both`
+    跑一整局，也拿不到任何一个数，日志里只剩一行「运行时守卫已装」。守卫端到端
+    不只是「没跑过」，是**跑了也看不见**。这里补的就是这一格。
+    """
+    global _atexit_registered
+    if _atexit_registered or not os.environ.get(ENV_COUNTERS_OUT):
+        return
+    atexit.register(dump_counters, os.environ[ENV_COUNTERS_OUT])
+    _atexit_registered = True
+
+
+def dump_counters(path: str) -> bool:
+    """把当前计数写到 `path`。写成返回 True；写不成返回 False（**不抛**）。
+
+    写不成是有意不抛的：进程正在退出，抛出去只会把一个正常收尾变成崩溃。
+    上层拿不到这个文件时的正确反应是**报「没测到」**，不是补一个默认值 ——
+    见 `e2e_stub.py`。
+    """
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(counters(), f, ensure_ascii=False, indent=2,
+                      sort_keys=True)
+        return True
+    except OSError:
+        return False

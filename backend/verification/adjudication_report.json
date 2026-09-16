@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-17 00:39:14",
+  "generated_at": "2026-09-17 01:43:46",
   "not_a_pass_rate": true,
   "what_this_is": "一套**跨复现的**判据：把三条复现各自的读数摆到一张桌上判。每条都自带 falsifier，所以「它有没有鉴别力」是可机检的。",
   "what_this_is_NOT": "不是分数，不是通过率，不是质量评价。判不了的那几条**根本没被判定**，不算「未通过」—— 所以这张表**不许被聚合成任何比率**。",
-  "what_it_does_NOT_prove": "它证明的是「**这套判据对这批读数有鉴别力**」，**不是**「装置是对的」。判据是我们写的，读数是我们量的 —— 这张表能排除的是「判据恒真／被贴界蒙混」，排除不了「两边一起错」。**还有一件照实说**：这 10 条判据是**读到读数之后**才写下来的，不是先验的。所以「对这批读数有鉴别力」不等于「对任何别的读数也有」—— 换一批读数，这套判据必须重写、重跑自证，不能搬过去当结论用。它没被写成一张更好看的表，靠的不是我们自觉，是下面三件事：**两条判不了**（缺读数就如实判不了）、**两条不采信**（成立但不结实）、**给不出 falsifier 的判据自己判自己恒真**。",
-  "not_solid": "B1 与 B10 是**通过但不采信**的：B1 的分母卡在最小值上（守卫开那格是 1，而 1 是这个量的最小可能值），B10 的比较基准是「耗时全相同」这个退化情形。两条都成立，但都**不足以论证「守卫好」**。",
+  "what_it_does_NOT_prove": "它证明的是「**这套判据对这批读数有鉴别力**」，**不是**「装置是对的」。判据是我们写的，读数是我们量的 —— 这张表能排除的是「判据恒真／被贴界蒙混」，排除不了「两边一起错」。**还有一件照实说**：判据是**读到读数之后**才写下来的，不是先验的。所以「对这批读数有鉴别力」不等于「对任何别的读数也有」—— 换一批读数，这套判据必须重写、重跑自证，不能搬过去当结论用。**这里一句条数都不写**：判不了几条、哪几条不采信，都随「端到端那一跑在不在」而变，写死的数会变成一句**听着像事实的过期话**。要看数就看 `summary` —— 那两个数（`by_verdict`、`not_trusted`）是**当场数出来的**，不是写在这里的。它没被写成一张更好看的表，靠的不是我们自觉，是下面三件事：**判不了的不计进任何一边**（缺读数就如实判不了）、**贴界一票降级**（成立但不结实）、**给不出 falsifier 的判据自己判自己恒真**。",
+  "not_solid": "**通过但不采信**的那些，逐条理由在每行的 `no_trust_because` 里。这里举三类：① **分母卡在本量的最小值上** —— B1 守卫开那格是 1，而 1 是这个量的最小可能值；② **比较基准退化** —— B10 比的是「耗时全相同」这个情形；③ **计数在那一支上按构造加不动** —— 端到端里「回落支那档的 `timestamp_pushed`」恒为 0（计数只加在快路径上）。三类都成立，但都**分不出差别**，所以都不足以论证「守卫好」。",
   "environment": {
     "python": "3.11.9",
     "platform": "Windows-10-10.0.26200-SP0",
@@ -12,12 +12,25 @@
   },
   "script": {
     "path": "verification/adjudicate.py",
-    "sha256": "ba6ef8a93b8dc24ae76b5331f072317637973553dff9c44a6789ba15611d3545"
+    "sha256": "666dd074a46f97f4e033e742cbb667aa575c7a950867d8c179563aee7860d4c9"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-17T00:34:14",
-    "readings_sha256": "b8881e3b8da458a149f8e8b51c97ded262122c87c00eb2987c483c8d679059fe"
+    "generated_at": "2026-09-17T01:43:12",
+    "readings_sha256": "69c920927caea94b6841069f5665006633af4a446f14283ec597e3bca2cf6a27"
+  },
+  "e2e_report": {
+    "path": "e2e_report.json",
+    "present": true,
+    "generated_at": "2026-09-17T01:36:52",
+    "arms": [
+      "roomy_e2e",
+      "bigtext_e2e",
+      "two_e2e"
+    ],
+    "arms_missing": [],
+    "model_is_stub": true,
+    "what_it_does_NOT_prove": "**它不证明「守卫修好了什么」** —— 那是三条离线复现的活：那三条量的是「装上前后差多少」，本命令量的是「装上了、并且被真实流量走到了」。它也**不证明仿真质量**：模型是替身，关于「真 LLM 下行为如何」一个字都不主张。另有一条照实说：`db_posts` 数的是**平台库里的行数**，不是「动作有多合理」。"
   },
   "claims_source": {
     "path": "verification/adjudicate.py",
@@ -31,15 +44,21 @@
       "B9",
       "B10",
       "B5",
-      "B8"
+      "B8",
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5"
     ],
     "layers": [
       "复现一",
       "复现三",
-      "复现二"
+      "复现二",
+      "端到端"
     ]
   },
-  "cells_total": 54,
+  "cells_total": 66,
   "railed_cells": {
     "guard_off_1.residual": "截断**之后**算出来的，按构造就贴着上限 —— 它不是一个自由的输入",
     "guard_off_2.residual": "同上",
@@ -54,7 +73,8 @@
     "slicing_fixed.ticks_ratio": "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；间隔由实际工作量决定、很稳，分母本身是随机量 —— **这一列抖得比间隔那一列厉害**，不该当精确值用",
     "slicing_fixed.gap_s": "满记忆这个前提沿用了复现一的**严格不等式**关（写入后 token 超过上限才算启动截断），所以这一臂同样坐在边界上",
     "orders.deterministic": "比较的基准是「所有 agent 耗时**全都相同**」这个退化情形，而不是「按提交顺序」。所以这个「确定」是在边界情形上得到的 —— **它不证明一般的确定**，只证明这一格",
-    "grid.smallest_flipped_s": "**栅格上的最小值**，不是量出来的阈值：它只说明「没有更小的格点试过」，真正的阈值被夹在上一个没变样的格点和它之间 —— 这一格给的是**上界**"
+    "grid.smallest_flipped_s": "**栅格上的最小值**，不是量出来的阈值：它只说明「没有更小的格点试过」，真正的阈值被夹在上一个没变样的格点和它之间 —— 这一格给的是**上界**",
+    "bigtext_e2e.timestamp_pushed": "这一格**按构造**恒为 0：`timestamp_pushed` 只在快路径写入那支累加，而这档臂走的正是回落支。它分不出「有没有碰撞」。"
   },
   "unmeasured_cells": {
     "guard_on.chunk_body_limit": "**这次没量到**：守卫开着时根本没走切片那条分支，这一格算出来的是「要是切了会是多少」，即**反事实**值，不是这次运行量到的容量"
@@ -285,6 +305,114 @@
       "to_make_decidable": "在写入前后各读一次时钟，把耗时也打进读数块",
       "why_not_solid": "",
       "detail": "缺 guard_on.write_seconds、guard_off_1.write_seconds"
+    },
+    {
+      "id": "E1",
+      "layer": "端到端",
+      "what": "快路径写入被真实流量走到 —— 守卫装上了，而且那支真的在干活",
+      "check": "`roomy_e2e.written_whole` > 0",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "roomy_e2e.written_whole": 8
+      },
+      "operands": [
+        "roomy_e2e.written_whole"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "E2",
+      "layer": "端到端",
+      "what": "超限回落支被真实流量走到 —— 把助手文本加到 20000 字，「自己就超上限」那一支才动；不加它一次都不动",
+      "check": "`bigtext_e2e.still_sliced` > `roomy_e2e.still_sliced`",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "bigtext_e2e.still_sliced": 2,
+        "roomy_e2e.still_sliced": 0
+      },
+      "operands": [
+        "bigtext_e2e.still_sliced",
+        "roomy_e2e.still_sliced"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "E3",
+      "layer": "端到端",
+      "what": "一次响应里并排两个动作时，写入时间戳真被推开了 —— 同拍那一路在端到端上也被走到",
+      "check": "`two_e2e.timestamp_pushed` > 0",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "two_e2e.timestamp_pushed": 2
+      },
+      "operands": [
+        "two_e2e.timestamp_pushed"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "E4",
+      "layer": "端到端",
+      "what": "同一次响应里的**第二个动作没有被吞掉** —— 它一路走到了平台库（两个动作的库里行数是单动作那档的两倍）",
+      "check": "`two_e2e.db_posts` > `roomy_e2e.db_posts`",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "two_e2e.db_posts": 4,
+        "roomy_e2e.db_posts": 2
+      },
+      "operands": [
+        "two_e2e.db_posts",
+        "roomy_e2e.db_posts"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "两档臂的 agent 数相同、每个 agent 恰恰一轮 —— 所以这个比较**有分母**，比值本身不额外说明什么；它说的是「第二个动作没被吞」，不是「吞吐更高」",
+      "detail": "成立"
+    },
+    {
+      "id": "E5",
+      "layer": "端到端",
+      "what": "回落支那档**没有**发生同拍碰撞",
+      "check": "`bigtext_e2e.timestamp_pushed` == 0",
+      "verdict": "通过",
+      "trusted": false,
+      "no_trust_because": [
+        "贴界"
+      ],
+      "values": {
+        "bigtext_e2e.timestamp_pushed": 0
+      },
+      "operands": [
+        "bigtext_e2e.timestamp_pushed"
+      ],
+      "tainted_by_railing": [
+        "bigtext_e2e.timestamp_pushed"
+      ],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "**这一格按构造恒为 0**：`timestamp_pushed` 只在快路径写入那一支累加，而这一档走的正是回落支 —— 它分不出「有没有碰撞」。这条「通过」因此**不采信**（见 `no_trust_because`）。它留在这里是有用的：它把「我们想主张、但这格撑不住」这件事摆到台面上，而不是把它藏起来。",
+      "detail": "成立；读数贴界：bigtext_e2e.timestamp_pushed（这一格**按构造**恒为 0：`timestamp_pushed` 只在快路径写入那支累加，而这档臂走的正是回落支。它分不出「有没有碰撞」。）"
     }
   ],
   "falsifiers": [
@@ -347,22 +475,52 @@
       "kind": "不可判定",
       "flipped": null,
       "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+    },
+    {
+      "id": "E1",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 roomy_e2e.written_whole 改成 0 → 通过 变 否决"
+    },
+    {
+      "id": "E2",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 bigtext_e2e.still_sliced 改成 0 → 通过 变 否决"
+    },
+    {
+      "id": "E3",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 two_e2e.timestamp_pushed 改成 0 → 通过 变 否决"
+    },
+    {
+      "id": "E4",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 two_e2e.db_posts 改成 2 → 通过 变 否决"
+    },
+    {
+      "id": "E5",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 bigtext_e2e.timestamp_pushed 改成 1 → 通过 变 否决"
     }
   ],
   "summary": {
-    "total": 10,
+    "total": 15,
     "by_verdict": {
-      "通过": 8,
+      "通过": 13,
       "否决": 0,
       "不可判定": 2
     },
-    "trusted": 6,
-    "not_trusted": 2,
+    "trusted": 10,
+    "not_trusted": 3,
     "undecided_trusted": 2,
-    "falsifiable": 8,
+    "falsifiable": 13,
     "vacuous": [],
     "not_a_rate": true,
     "note": "判不了的既不算通过也不算否决，所以这里没有分母。"
   },
-  "seconds": 0.06
+  "seconds": 0.05
 }

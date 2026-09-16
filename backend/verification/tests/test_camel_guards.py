@@ -440,6 +440,52 @@ def test_counters_shape():
     assert G.counters()["timestamp"] is True
 
 
+def test_install_arranges_to_dump_counters_at_exit(monkeypatch):
+    """**装了守卫就得顺手安排落盘** —— 否则真跑一整局也拿不到任何一个数。
+
+    这一格补的正是那个缺陷：`counters()` 从前**只有测试在调**，谁拿
+    `--guards both` 跑一整局，日志里也只剩一行「运行时守卫已装」。
+    守卫端到端不只是「没跑过」，是**跑了也看不见**。
+
+    不去真退出进程：把 `atexit.register` 换成一个记录器，看它有没有被叫、
+    叫的时候带的是不是那个路径。**这正是「进程退出时会写」这句话的可测形式。**
+    """
+    T = stand_in()
+    registered = []
+    monkeypatch.setattr(G.atexit, "register", lambda *a, **k: registered.append(a))
+    monkeypatch.setattr(G, "_atexit_registered", False)
+    monkeypatch.setenv(G.ENV_COUNTERS_OUT, "somewhere/guard_counters.json")
+
+    G.install(T, slicing=True, timestamp=True)
+    assert registered == [(G.dump_counters, "somewhere/guard_counters.json")], (
+        "装守卫时没有安排落盘 —— 一次真跑的守卫计数会照样烂在内存里")
+
+
+def test_no_counters_dump_without_the_env_var(monkeypatch):
+    """没设 `$GUARD_COUNTERS_OUT` 就**不安排**落盘 —— 别往别人的进程里塞东西。"""
+    T = stand_in()
+    registered = []
+    monkeypatch.setattr(G.atexit, "register", lambda *a, **k: registered.append(a))
+    monkeypatch.setattr(G, "_atexit_registered", False)
+    monkeypatch.delenv(G.ENV_COUNTERS_OUT, raising=False)
+
+    G.install(T, slicing=True, timestamp=True)
+    assert registered == []
+
+
+def test_dump_counters_writes_a_readable_json(tmp_path):
+    """落盘的内容要能原样读回来，且**写不成也不抛**（进程正在退出）。"""
+    T = stand_in()
+    G.install(T, slicing=True, timestamp=True)
+    out = tmp_path / "guard_counters.json"
+    assert G.dump_counters(str(out)) is True
+    import json
+    assert json.loads(out.read_text(encoding="utf-8")) == G.counters()
+    # 写不成：路径是个目录。**返回 False，不抛** —— 收尾时抛出去只会把
+    # 一次正常退出变成崩溃。
+    assert G.dump_counters(str(tmp_path)) is False
+
+
 # --------------------------------------------------------------------------
 # 驱动脚本那一侧：--guards 四档，**默认 off**
 # --------------------------------------------------------------------------

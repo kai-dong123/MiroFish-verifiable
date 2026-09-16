@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17 00:39:14",
+  "generated_at": "2026-09-17 01:44:03",
   "not_a_pass_rate": true,
   "what_this_is": "对**真读数**做单点受控扰动，逐条检验这套判据有没有鉴别力。",
   "what_this_is_NOT": "不是「判据对不对」的证明 —— 它证明的是「一处改动会让它动」，证明不了「判据和读数不会一起错」。真锚在对照臂上。",
@@ -10,15 +10,15 @@
   },
   "script": {
     "path": "verification/selfproof.py",
-    "sha256": "3151b0016b97df6dbfef6a6eda958f6437dc6262cf43172d1231879be4fb4893"
+    "sha256": "ac0cfccfa05d68ecf2b5f0be27998693e6416e13fbdede78fc984d313ff02cc3"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-17T00:34:14",
-    "readings_sha256": "b8881e3b8da458a149f8e8b51c97ded262122c87c00eb2987c483c8d679059fe"
+    "generated_at": "2026-09-17T01:43:12",
+    "readings_sha256": "69c920927caea94b6841069f5665006633af4a446f14283ec597e3bca2cf6a27"
   },
   "claims": {
-    "count": 10,
+    "count": 15,
     "ids": [
       "B1",
       "B2",
@@ -29,7 +29,12 @@
       "B9",
       "B10",
       "B5",
-      "B8"
+      "B8",
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5"
     ],
     "source": "verification/adjudicate.py"
   },
@@ -103,6 +108,41 @@
       "trusted": null,
       "grid": "不可判定",
       "why": ""
+    },
+    {
+      "id": "E1",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "E2",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "E3",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "E4",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": "两档臂的 agent 数相同、每个 agent 恰恰一轮 —— 所以这个比较**有分母**，比值本身不额外说明什么；它说的是「第二个动作没被吞」，不是「吞吐更高」"
+    },
+    {
+      "id": "E5",
+      "verdict": "通过",
+      "trusted": false,
+      "grid": "通过·不采信",
+      "why": "**这一格按构造恒为 0**：`timestamp_pushed` 只在快路径写入那一支累加，而这一档走的正是回落支 —— 它分不出「有没有碰撞」。这条「通过」因此**不采信**（见 `no_trust_because`）。它留在这里是有用的：它把「我们想主张、但这格撑不住」这件事摆到台面上，而不是把它藏起来。"
     }
   ],
   "cases": [
@@ -128,7 +168,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B1": "否决·采信"
@@ -158,7 +203,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B1": "否决·不采信",
@@ -189,7 +239,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B2": "否决·采信"
@@ -219,7 +274,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B3": "否决·采信"
@@ -249,7 +309,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B4": "否决·采信"
@@ -279,7 +344,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B6": "否决·采信"
@@ -309,7 +379,12 @@
         "B6",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B7": "否决·采信"
@@ -339,7 +414,12 @@
         "B6",
         "B7",
         "B8",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B9": "否决·采信"
@@ -369,7 +449,12 @@
         "B6",
         "B7",
         "B8",
-        "B9"
+        "B9",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B10": "否决·采信"
@@ -399,7 +484,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B1": "通过·采信"
@@ -429,7 +519,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B1": "不可判定"
@@ -459,7 +554,12 @@
         "B7",
         "B8",
         "B9",
-        "B10"
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {
         "B4": "否决·采信"
@@ -488,12 +588,87 @@
         "B9",
         "B10",
         "B5",
-        "B8"
+        "B8",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5"
       ],
       "moved": {},
       "vacuous": [
         "B4"
       ],
+      "ok": true
+    },
+    {
+      "id": "P14",
+      "layer": "读数",
+      "why": "**把端到端那条关系断言的两边扳平**（回落支那档的 `still_sliced` 改成 0，和基线一样）—— 「加长助手文本才逼出回落支」这句话就不成立了。这一例证明端到端那一路的读数是**真的**在判据里起作用，不是摆在产物里好看的",
+      "edit": {
+        "bigtext_e2e.still_sliced": 0
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "E2": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10",
+        "E1",
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "moved": {
+        "E2": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P15",
+      "layer": "边界",
+      "why": "**把「回落支那格恒为 0」这条贴界声明撤掉**（读数一个字不动）——E5 仍然通过，但**变成采信**。这一例和 P10 是一个意思，只是这次那格长在端到端那一路：**贴界降级是声明在起作用**",
+      "edit": {},
+      "unrail": [
+        "bigtext_e2e.timestamp_pushed"
+      ],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "E5": "通过·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10",
+        "E1",
+        "E2",
+        "E3",
+        "E4"
+      ],
+      "moved": {
+        "E5": "通过·采信"
+      },
+      "vacuous": [],
       "ok": true
     }
   ],
@@ -557,6 +732,36 @@
       "kind": "不可判定",
       "flipped": null,
       "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+    },
+    {
+      "id": "E1",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 roomy_e2e.written_whole 改成 0 → 通过 变 否决"
+    },
+    {
+      "id": "E2",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 bigtext_e2e.still_sliced 改成 0 → 通过 变 否决"
+    },
+    {
+      "id": "E3",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 two_e2e.timestamp_pushed 改成 0 → 通过 变 否决"
+    },
+    {
+      "id": "E4",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 two_e2e.db_posts 改成 2 → 通过 变 否决"
+    },
+    {
+      "id": "E5",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 bigtext_e2e.timestamp_pushed 改成 1 → 通过 变 否决"
     }
   ],
   "meta": {
@@ -583,16 +788,21 @@
       "B6",
       "B7",
       "B9",
-      "B10"
+      "B10",
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5"
     ],
     "claims_undecidable": [
       "B5",
       "B8"
     ],
     "claims_vacuous": [],
-    "cases_ok": 13,
+    "cases_ok": 15,
     "all_ok": true
   },
   "problems": [],
-  "seconds": 0.05
+  "seconds": 0.07
 }
