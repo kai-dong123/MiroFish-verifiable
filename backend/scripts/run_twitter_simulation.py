@@ -724,9 +724,14 @@ async def main():
         default=False,
         help='模拟完成后立即关闭环境，不进入等待命令模式'
     )
-    
+    sys.path.insert(0, os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))
+    from verification.attach import add_guard_argument, install_if_requested
+    add_guard_argument(parser)
+
     args = parser.parse_args()
-    
+    install_if_requested(args, log=print)
+
     # 在 main 函数开始时创建 shutdown 事件
     global _shutdown_event
     _shutdown_event = asyncio.Event()

@@ -1519,7 +1519,11 @@ async def main():
         default=False,
         help='模拟完成后立即关闭环境，不进入等待命令模式'
     )
-    
+    sys.path.insert(0, os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))
+    from verification.attach import add_guard_argument, install_if_requested
+    add_guard_argument(parser)
+
     args = parser.parse_args()
     
     # 在 main 函数开始时创建 shutdown 事件，确保整个程序都能响应退出信号
@@ -1541,6 +1545,11 @@ async def main():
     log_manager = SimulationLogManager(simulation_dir)
     twitter_logger = log_manager.get_twitter_logger()
     reddit_logger = log_manager.get_reddit_logger()
+
+    # 运行时守卫：**默认不装**，默认行为与上游逐字一致。
+    # 装上之后 `ChatAgent.update_memory` 被替换，`uninstall()` 可完整还原。
+    from verification.attach import install_if_requested
+    install_if_requested(args, log=log_manager.info)
     
     log_manager.info("=" * 60)
     log_manager.info("OASIS 双平台并行模拟")
