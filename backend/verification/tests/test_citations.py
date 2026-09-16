@@ -22,6 +22,17 @@
 （`oasis/environment/env.py` 那四条另有 `repro_03_concurrency.py` 在运行时会
 现场核一遍 —— 那一条是判据的一部分，所以两边都有。这里把全部引文收在一处，
 免得散着。）
+
+## 这个文件有两半，核的是两件不同的事
+
+* **上半**（`CITATIONS`）：源码那一行**还对不对**。防的是上游一升级、行号一漂，
+  一叠材料静静地引用错行。
+* **下半**（`KNOWN_MISQUOTES`）：**我们引的时候有没有引岔**。防的是源码纹丝不动、
+  我们的材料却把它写错。这两件事不重叠 —— 上半完全管不到下半，所以下半要单独有。
+
+下半只收**真出现过**的错，不收假想的。目前一条：曾经把 `prefix_token_len`
+（943 行当场量出来的值）写成了字面量 `12`，还标成 948 行的原文。数值上对
+（那个分词器下恰好是 12）、引文上错，而当时没有任何东西会因此变红。
 """
 
 from __future__ import annotations
@@ -174,3 +185,79 @@ def test_no_duplicate_citations():
     seen = [(m, n) for m, n, _, _ in CITATIONS]
     dupes = {k for k in seen if seen.count(k) > 1}
     assert not dupes, f"重复的引文：{dupes}"
+
+
+# --------------------------------------------------------------------------
+# 另一半：**我们自己的材料**里有没有错引
+# --------------------------------------------------------------------------
+#
+# 上面那组核的是「源码那一行还对不对」；这一组核的是「我们引的时候有没有引岔」。
+# 两件事不一样，而上面那组**管不到**下面这件事 —— 源码可以纹丝不动，我们的材料
+# 照样能把它写错。
+
+#: 已经在材料里**真出现过**的错引。每一条都曾经写在某份材料里、并且当时
+#: **没有任何东西会因此变红** —— 是人工复核才抓到的。
+#:
+#: (错的样子（正则）, 对的样子, 出过什么事)
+KNOWN_MISQUOTES = (
+    (r"base_chunk_size\s*-\s*12",
+     "base_chunk_size - prefix_token_len（948 行；那个减数是 943 行**量**出来的）",
+     "把「前缀长度」这个当场量出来的值写死成了字面量 12，还标成 948 行的原文 —— "
+     "数值上对（gpt-4o-mini 下恰好是 12），**引文上错**：换个分词器就不是 12"),
+)
+
+#: 会被扫的材料。**不含本目录** —— 上面那些正则就写在这儿，扫自己等于自投罗网。
+_SCAN_SUFFIXES = (".py", ".md", ".txt")
+_SKIP_DIRS = {"__pycache__", "tests", ".git"}
+
+
+def _materials() -> list:
+    """把 `verification/` 下**会被人读到**的文本文件都列出来。"""
+    root = pathlib.Path(__file__).resolve().parent.parent
+    out = []
+    for path in sorted(root.rglob("*")):
+        if path.suffix not in _SCAN_SUFFIXES or not path.is_file():
+            continue
+        if _SKIP_DIRS & set(path.relative_to(root).parts):
+            continue
+        out.append(path)
+    return out
+
+
+def test_the_misquote_scan_covers_the_materials():
+    """先证明这个扫描**不是空转** —— 否则下面那条测的是空气。"""
+    files = _materials()
+    assert files, "一个文件都没扫到，这个扫描是空的"
+    names = {f.name for f in files}
+    for must in ("README.md", "repro_01_slicing.py", "camel_guards.py"):
+        assert must in names, f"这份材料没被扫到：{must}（扫描范围写窄了）"
+
+
+def test_the_misquote_patterns_actually_match_the_wrong_form():
+    """先证明这几条正则**真能命中**它们要抓的那个写法。
+
+    否则「没命中」和「这缺陷不存在」就分不开了 —— 而这两件事完全不同。
+    """
+    import re as _re
+
+    for pattern, right, _story in KNOWN_MISQUOTES:
+        assert _re.search(pattern, "    chunk_body_limit = max(1, base_chunk_size - 12)"), (
+            f"这条正则抓不到它要抓的写法：{pattern!r}")
+        assert not _re.search(pattern, right), (
+            f"这条正则连**正确**的写法也抓 —— 那它会天天误报：{pattern!r}")
+
+
+@pytest.mark.parametrize("pattern,right,story", KNOWN_MISQUOTES)
+def test_no_known_misquote_survives_in_our_materials(pattern, right, story):
+    """那个错引过一次的写法，不许在任何材料里留下第二份。"""
+    import re as _re
+
+    hits = []
+    for path in _materials():
+        for i, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), 1):
+            if _re.search(pattern, line):
+                hits.append(f"{path.name}:{i}  {line.strip()}")
+    assert not hits, (
+        "\n材料里出现了已知的错引：\n  " + "\n  ".join(hits) +
+        f"\n  正确的写法：{right}\n  出过的事：{story}")

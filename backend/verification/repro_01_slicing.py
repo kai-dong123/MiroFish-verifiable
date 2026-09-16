@@ -10,20 +10,27 @@
 ## 症状
 
 记忆一装满、截断一启动，`camel/agents/chat_agent.py` 的 `update_memory` 就把
-**一条完全放得下的消息**切碎（源码 884 / 933 / 948 行）：
+**一条完全放得下的消息**切碎（下面四行是源码 884 / 933 / 943 / 948 行的**原文**）：
 
-    remaining_budget = max(0, token_limit - ctx_tokens)     # 884：ctx_tokens 是**截断后**的
-    base_chunk_size  = max(1, remaining_budget) // 10       # 933：先除以 10
-    chunk_body_limit = max(1, base_chunk_size - 12)         # 948：再减掉前缀的 12+ token
+    remaining_budget = max(0, token_limit - ctx_tokens)      # 884：ctx_tokens 是**截断后**的
+    base_chunk_size = max(1, remaining_budget) // 10         # 933：先除以 10
+    prefix_token_len = len(token_counter.encode(sample_prefix))  # 943：前缀长度是**量出来的**
+    chunk_body_limit = max(1, base_chunk_size - prefix_token_len)  # 948：再扣掉它
+
+**注意 943 那一行 —— 那个减数不是字面量 `12`，是当场用分词器量出来的。**
+在 `gpt-4o-mini` 这个分词器下它**恰好**量出 12，所以本节下面拿 12 去算数是对的；
+但那是**这一台机器上、这一个分词器下的读数**，不是代码里的常数。（这里先前把减数
+写成了字面量 `12`、还标注成「948 行」—— 数值对、**引文错**，已改正。
+`tests/test_citations.py` 钉的就是 948 那一行的真实内容。）
 
 两件事叠在一起把每块压到 1 个 token：
 
 * **残余预算天然很小。** 884 行读的是**截断之后**的上下文大小 —— 而截断干的事
   正是把上下文填到贴着上限。所以 `remaining_budget` 是「上限减去一个几乎满了的
   上下文」，**按构造就远小于待写的这条消息**。本次跑出来是 `4000 - 3867 = 133`。
-* **133 还要再被砍两刀**：`//10` → 13，再减掉前缀长度 12 → **1**。
-  那个前缀是 `"[chunk 3/412 of a long message]\\n"`，本身就要十几个 token，
-  源码 942~948 行专门为它留了扣减 —— 于是扣完只剩 1。
+* **133 还要再被砍两刀**：`//10` → 13，再扣掉上面量出来的 `prefix_token_len`（这次是
+  12）→ **1**。那个前缀长这样：`"[chunk 3/412 of a long message]\\n"`，本身就要十几个
+  token，源码 942~948 行专门为它留了扣减 —— 于是扣完只剩 1。
 
 结果：每条记录 1 个 token 正文 + 一个十几 token 的前缀，**一次写入的 token 量
 膨胀一个数量级**，记录条数从 1 条变成几百条。
