@@ -154,6 +154,29 @@ def _real_gap_with_full_memory(slicing: bool):
     return abs(stamps["call_2"] - stamps["call_1"]), tick
 
 
+def _tick_verdict(gap: float, tick: float, want_same: bool) -> str:
+    """由**读数**算出「后果」那一列 —— 不许把结论摆在读数旁边。
+
+    `gap` 是两次调用的真实间隔，`tick` 是当场量的一拍，`want_same` 是这一行的
+    预期（缺陷那行预期跨拍，修好那行预期同拍）。判定只有一条：
+    `gap < tick` 就是同拍。
+
+    **这一格曾经是写死的**，于是有过一次它一边打出「3.35 ms / 9.66 拍」、
+    一边宣称「同拍 → 碰撞才发生」—— 同一张表里读数和结论互相打脸。这类错
+    不会自己报错，只会顺着报告流出去，所以判定必须由读数算，且与预期不符时
+    **直书「与预期相反」**、不许悄悄折回预期那一侧。
+
+    单独拎成函数是为了能被测（见 `tests/test_repro_verdicts.py`）：
+    写死的字面量测不出来，算出来的才测得出。
+    """
+    same = (gap / tick) < 1.0 if tick > 0 else False
+    if same == want_same:
+        return "同拍 → 碰撞才发生" if same else "跨拍 → 误打误撞免疫"
+    n = gap / tick if tick > 0 else float("nan")
+    return ("**同一拍**（与预期相反）" if same
+            else f"**跨到 {n:,.0f} 拍**（与预期相反）")
+
+
 def main() -> bool | None:
     P.title("复现二 · 同拍碰撞（离线、确定性、不要 API key）")
     P.quiet_logging()
@@ -217,16 +240,7 @@ def main() -> bool | None:
                 ("切片没修（缺陷在）", gap_defect, False),
                 ("切片修了（守卫开）", gap_fixed, True)):
             n = gap / tick if tick > 0 else float("nan")
-            same = n < 1.0
-            if same == want_same:
-                verdict = ("同拍 → 碰撞才发生" if same
-                           else "跨拍 → 误打误撞免疫")
-            else:
-                # **与预期不符就照实说。** 这一格曾经是写死的，于是有一次它一边
-                # 打出「3.35 ms / 9.66 拍」一边宣称「同拍」—— 读数和结论摆在同一张
-                # 表里互相打脸。结论必须由读数算出来，不能摆在读数旁边。
-                verdict = ("**同一拍**（与预期相反）" if same
-                           else f"**跨到 {n:,.0f} 拍**（与预期相反）")
+            verdict = _tick_verdict(gap, tick, want_same)
             rows.append([label, f"{gap*1e3:.2f} ms", f"{n:,.2f} 拍", verdict])
         P.table(rows, header=["", "两次调用的真实间隔", "合多少拍", "后果"])
         P.note("（间隔由物理时钟给出，不是我们设的：camel 自己读钟，"
