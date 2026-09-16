@@ -74,7 +74,7 @@ agent = ChatAgent.__new__(ChatAgent)     # 绕开 __init__：不构造模型后�
 agent.memory = ...                       # 塞一个真的 ScoreBasedContextCreator
 ```
 
-**哪些是真的：** `ChatAgent` 这个类、它以次调用的方法体（`update_memory`、
+**哪些是真的：** `ChatAgent` 这个类、它依次调用的方法体（`update_memory`、
 `_record_tool_calling` 及它们调用的全部逻辑）、`Memory`、`ScoreBasedContextCreator`、
 真的分词器、真的驱逐算法。判据也是真的 —— 它拿的是 `memory.get_context()` 返回的
 **那串真消息**，直接过 API 的同一条校验规则。
@@ -94,18 +94,19 @@ agent.memory = ...                       # 塞一个真的 ScoreBasedContextCrea
 ### 守卫自己的测试
 
 ```bash
-python -m pytest verification/tests -q         # 当前 56 条，两秒
+python -m pytest verification/tests -q         # 当前 79 条，两秒
 ```
 
 **只需要 camel**，不需要 flask / zep / API key（上游 `backend/tests/` 里那些要完整
 后端才收集得动，所以这两套是分开的）。
 
-两个文件，管两件不同的事：
+三个文件，管三件不同的事：
 
 | 文件 | 管什么 |
 |---|---|
 | `test_camel_guards.py` | 守卫本身：该拦的拦、该切的不切 |
 | `test_repro_verdicts.py` | **判词必须由读数算出来**（见下） |
+| `test_citations.py` | **文档里引的行号，对着装好的源码逐条核**（见下） |
 
 #### 守卫：两个方向都要成立
 
@@ -139,6 +140,23 @@ python -m pytest verification/tests -q         # 当前 56 条，两秒
 > 这套也**验过它不是恒真的**：三处变异（判词写死、`<` 写成 `<=`、去掉
 > 「与预期相反」那一支）分别红 16 / 3 / 16 条。
 
+#### 引文：文档里的行号不许腐烂
+
+整套材料引了 camel / oasis 二十几处行号（这份 README、两个上游草稿、守卫注释）。
+**判读的人会拿它们和本地装的源码逐条对**，这是最容易被 diff 的地方 —— 而这些
+行号是手抄的。复核时确实抓到过两处抄岔，且当时没有任何东西会因此变红。
+
+`test_citations.py` 把全部引文收成一张表，逐条核对：「第 N 行必须还是那个样子」。
+上游一升级、行号一漂，这里先响。报错信息里带着**这条引文支持的是哪个论断**，
+提醒先去看论断还成不成立，而不是把期望值改成漂移后的样子。
+
+> 它也**验过不是恒真的**：五处变异（行号错开一格、引越界的行号、换成那行没有的
+> 片段、引一个不存在的模块、重复引同一条）**五处都红**。
+>
+> 顺带一处做法：它读源码用 `PathFinder.find_spec` 查路径，**不 import 模块** ——
+> `import oasis` 要 9.4 秒（拖 flask 那一套 web 栈），真去 import 会让这套测试
+> 从两秒变十一秒。一个没人愿意跑的测试和没有测试是一样的下场。
+
 ### 把守卫接进真跑
 
 守卫**默认不装** —— 不装时行为与上游逐字一致，这是刻意的（没有「不装」那一版，
@@ -162,7 +180,7 @@ python scripts/run_parallel_simulation.py --config your_config.json --guards bot
 > 那要 API key。
 >
 > 所以本装置验证到的地方到「守卫」这一层为止：守卫自己的行为有测试钉着
-> （56 条），守卫在两个复现脚本里跑的是**真的 `ChatAgent` 和真的记忆**
+> （79 条），守卫在两个复现脚本里跑的是**真的 `ChatAgent` 和真的记忆**
 > （只是不发 LLM）。**再往下——一整局仿真跑出来什么——本装置没验，也不声称。**
 
 ---
@@ -392,6 +410,6 @@ verification/
   repro_02_timestamp.py ② 同拍碰撞
   repro_03_concurrency.py ③ 并发次序（边界）
   run_all.py            一条命令跑三个，并落一份可验证性报告
-  tests/                守卫与判词的测试（56 条，只要 camel 就能跑）
+  tests/                守卫、判词、引文的测试（79 条，只要 camel 就能跑）
   upstream/             准备发给上游的原文（草稿，尚未提交）与两份最小复现
 ```
