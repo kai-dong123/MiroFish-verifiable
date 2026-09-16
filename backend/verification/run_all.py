@@ -4,7 +4,8 @@
     python -m verification.run_all --out /tmp/rep       # 换个落点
     python -m verification.run_all --no-report          # 只看屏幕，不落文件
 
-不发 LLM、不联网、不要 API key、不要 Zep、不花钱。几十秒跑完。
+不发 LLM 请求、不要 API key、不要 Zep、不花钱。本机约 25 秒跑完。
+（首次运行要下一次分词器的编码表，约 3.6 MB —— 那不是 LLM 调用，但要用到网。）
 
 ## 退出码（**三种，不是两种**）
 
@@ -74,6 +75,8 @@ def _environment() -> dict:
         "clock_step_ns": None,
         "camel_ai": None,
         "camel_oasis": None,
+        "tokenizer": None,
+        "tokenizer_cache": None,
     }
     try:
         from . import _probe as P
@@ -87,6 +90,17 @@ def _environment() -> dict:
             env[key] = getattr(__import__(mod), "__version__", "未知")
         except Exception:  # noqa: BLE001
             pass
+    # 分词器：切片那一节的数字**全依赖它**（270 条 / 5130 token 是它数出来的），
+    # 而它首次使用要下的一份静态数据文件。所以这里把编码名和缓存状态一并记下 ——
+    # 将来有人质疑某个数字，先看得到它是哪个分词器、在哪台机器上数的。
+    try:
+        import tiktoken
+
+        enc = tiktoken.get_encoding("o200k_base")
+        env["tokenizer"] = f"tiktoken o200k_base (n_vocab={enc.n_vocab})"
+        env["tokenizer_cache"] = os.environ.get("TIKTOKEN_CACHE_DIR") or "默认临时目录"
+    except Exception as exc:  # noqa: BLE001
+        env["tokenizer"] = f"取不到（{exc.__class__.__name__}）"
     return env
 
 
@@ -139,14 +153,19 @@ def _write_report(prefix: str, results: list, env: dict) -> tuple:
            "## 环境（这批数字是用什么跑的）", "",
            "| 项 | 值 |", "|---|---|"]
     for key in ("python", "platform", "camel_ai", "camel_oasis",
-                "clock_step_ns", "cwd"):
+                "tokenizer", "tokenizer_cache", "clock_step_ns", "cwd"):
         val = env.get(key)
         label = {"python": "Python", "platform": "平台",
                  "camel_ai": "camel-ai", "camel_oasis": "camel-oasis",
+                 "tokenizer": "分词器", "tokenizer_cache": "分词器缓存目录",
                  "clock_step_ns": "时钟最小步长 (ns)", "cwd": "工作目录"}[key]
         md.append(f"| {label} | {val if val is not None else '未知'} |")
     md += ["", "时钟步长是**量出来的**，每次运行会有出入；结论只用到它比 camel 那个",
-           "`1e-6` 的排序偏移大两三个数量级这一点。", "",
+           "`1e-6` 的排序偏移大两三个数量级这一点。",
+           "",
+           "分词器那一行不是装饰：切片那一节的数字（270 条 / 5130 token）**是它数出来的**，",
+           "换个分词器就不是这些数。它首次使用要下的一份静态数据文件（约 3.6 MB，之后走缓存）——",
+           "所以「不发 LLM 请求」是准确的，「这台机器上不需要任何网络」不是。", "",
            "---", "", "## 各条原样转录", "",
            "> 下面每一条的正文，就是那条命令当时打在屏幕上的原话，逐字转录。",
            "> **不做二次解析** —— 报告里的数字如果是「再算一遍」来的，就可能和产生它的",
@@ -216,7 +235,8 @@ def main() -> int:
           + ("" if n_ok == len(results) else " —— **先看上面没通过的那条**"))
     print()
     print("  第 3 条「没达到预期」不适用：它验的是**边界**，不是修法。")
-    print("  三条都是离线、确定、无 API key —— 换台机器结论应当一样。")
+    print("  三条都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。")
+    print("  （首次运行要下一次分词器的编码表，约 3.6 MB；之后走缓存。）")
 
     if not args.no_report:
         env = _environment()

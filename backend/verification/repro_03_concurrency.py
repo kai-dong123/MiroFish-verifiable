@@ -2,7 +2,7 @@
 
     python -m verification.repro_03_concurrency      # 在 backend/ 下
 
-不发 LLM、不联网、不要 API key。
+不发 LLM、不要 API key。
 
 ## 与前两个不同：这一条**不修**
 

@@ -37,7 +37,9 @@ WARNING - Message with 277 tokens exceeds remaining budget of 133. Slicing into 
 > 机制与离线复现是实打实测出来的，上面两条用户可见后果是据此推断的。如果维护者
 > 需要端到端证据，我们可以配合补。
 
-## 最小复现（自包含，不联网、不要 API key、几秒跑完）
+## 最小复现（自包含，不发 LLM 请求、不要 API key、几秒跑完）
+
+（唯一要用到网的地方：分词器的编码表首次使用要下一份静态数据，约 3.6 MB，之后走缓存。它不是 LLM 调用。）
 
 ```python
 import warnings

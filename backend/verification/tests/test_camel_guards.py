@@ -9,7 +9,7 @@
 才收集得动 —— 本目录刻意不掺进去，装置自己的门要自己能开。）
 
 替身类（`stand_in()`）只提供 `memory` / `agent_id` 两个属性，所以这些测试
-**不去改真的 `ChatAgent`**、不发 LLM、不联网、不花钱。唯一用到的 camel 东西是
+**不去改真的 `ChatAgent`**、不发 LLM、不花钱。唯一用到的 camel 东西是
 `BaseMessage` / `MemoryRecord` / `OpenAIBackendRole` 三个**普通数据类**。
 
 ## 为什么替身类必须每次新造一个

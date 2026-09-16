@@ -2,7 +2,10 @@
 
     python -m verification.repro_01_slicing        # 在 backend/ 下
 
-不发 LLM、不联网、不要 API key、不要 Zep。跑完几秒钟，数字每次一样。
+不发 LLM、不要 API key、不要 Zep。跑完几秒钟，数字每次一样。
+> **首次运行要联网一次**：装置用的分词器（tiktoken）要下一份静态数据（约 3.6 MB，
+> 之后走本地缓存）。这只是编码表，不是 LLM 调用 —— 但冷缓存的机器上确实要用到网。
+
 
 ## 症状
 
