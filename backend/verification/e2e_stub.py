@@ -140,11 +140,13 @@ UNITS = {"written_whole": "条（走快路径写入的记录）",
          "timestamp_pushed": "次（我们取读数却被推后的写入）",
          "db_posts": "条（平台 SQLite 里 post 表的行数）"}
 
-#: 花名册。**值里有中文是故意的** —— 见 `_write_profiles`。
+#: 花名册。**值里有中文是故意的** —— 见 `_write_profiles`（那一跑要经过上游那次
+#: 不带编码的 `open()`）。**内容刻意与任何具体场景无关**：这一跑量的是守卫有没有被
+#: 走到，不是某个题材下的人像不像 —— 换成别的题材，读数应当一个字不变。
 PROFILES = (
-    {"username": "甲", "bio": "关注校园食堂", "persona": "学生",
+    {"username": "甲", "bio": "关注本地新闻", "persona": "自由撰稿人",
      "mbti": "INTJ", "gender": "female", "age": 20, "country": "China"},
-    {"username": "乙", "bio": "关注宿舍管理", "persona": "教职工",
+    {"username": "乙", "bio": "关注科技产品", "persona": "产品经理",
      "mbti": "ENFP", "gender": "male", "age": 35, "country": "China"},
 )
 
@@ -307,7 +309,8 @@ def _redact(text: str, root: pathlib.Path) -> str:
     **这不是装饰，是必须的。** 上游脚本会把路径原样打出来：运行目录
     （`mkdtemp` 的随机后缀）、仓库位置、主目录。这份转录要入库、仓库要公开，
     而 `C:\\Users\\<某人的名字>\\AppData\\Local\\Temp\\...` 既泄露了构建者的
-    本机路径，又让产物每次跑出来的字节都不一样（D-21 踩过两次的那个坑）。
+    本机路径，又让产物每次跑出来的字节都不一样（本装置在别处也踩过同一个坑：
+    **别去钉一个每次跑都会变的东西，然后说它变了就是有问题**）。
 
     抹掉的是**四个具名的替换**，逐条列在下面 —— 有名单就能核，不是「大概洗一下」：
 

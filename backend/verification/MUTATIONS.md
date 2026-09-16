@@ -1,6 +1,6 @@
 # 变异测试留痕（自动生成，别手改）
 
-> 生成时间 **2026-09-17 02:02:46** · Python 3.11.9 · `cd backend && python -m verification.mutations`
+> 生成时间 **2026-09-17 03:02:45** · Python 3.11.9 · `cd backend && python -m verification.mutations`
 
 ## 这份报告是什么、不是什么
 
@@ -8,7 +8,7 @@
 
 **不是**：通过率、覆盖率、质量分。这里的**红色是期望的结果**，一条红都没有才是坏消息。**别把红条数读成任何形式的得分。**
 
-- 基线（一点没改）：**128 passed / 0 failed / 26 skipped**（= 全套 154 条），退出码 0，22.11s —— 先证明测试集本身是绿的，底下那些红才有意义。
+- 基线（一点没改）：**128 passed / 0 failed / 26 skipped**（= 全套 154 条），退出码 0，21.32s —— 先证明测试集本身是绿的，底下那些红才有意义。
 - 上面这个规模**不含** `tests/test_mutation_evidence.py`（5 条）：那一组问的是「这份报告有没有过期」，而本模块每一轮都在被改坏的源码上跑 —— 它见到环境变量 `MIROFISH_MUTATION_RUN` 会跳过自己。「报告过期」由普通 `pytest` 抓，见那个文件。
 - 三个源文件跑完后逐字节还原：**是**（逐文件 `sha256` 见 `mutations_report.json` 的 `sources` / `sources_after`）。
 
@@ -55,7 +55,7 @@
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，23.26s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，20.78s
 - 改：`camel_guards.py`
 
   ```diff
@@ -75,7 +75,7 @@
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal
-1 failed, 127 passed, 26 skipped in 19.73s
+1 failed, 127 passed, 26 skipped in 17.00s
 ```
 
 </details>
@@ -84,7 +84,7 @@ FAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **10** 条，整轮红 **10** 条、绿 118 条、跳过 26 条，退出码 1，21.66s
+- 实测：目标文件红 **10** 条，整轮红 **10** 条、绿 118 条、跳过 26 条，退出码 1，20.52s
 - 改：`camel_guards.py`
 
   ```diff
@@ -122,7 +122,7 @@ FAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_on
 FAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls
 FAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted
 FAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads
-10 failed, 118 passed, 26 skipped in 18.35s
+10 failed, 118 passed, 26 skipped in 16.89s
 ```
 
 </details>
@@ -131,7 +131,7 @@ FAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_onl
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **2** 条，整轮红 **2** 条、绿 126 条、跳过 26 条，退出码 1，21.24s
+- 实测：目标文件红 **2** 条，整轮红 **2** 条、绿 126 条、跳过 26 条，退出码 1，21.42s
 - 改：`camel_guards.py`
 
   ```diff
@@ -153,7 +153,7 @@ FAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_onl
 =========================== short test summary info ===========================
 FAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit
 FAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal
-2 failed, 126 passed, 26 skipped in 17.99s
+2 failed, 126 passed, 26 skipped in 17.79s
 ```
 
 </details>
@@ -162,7 +162,7 @@ FAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，21.78s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，21.3s
 - 改：`camel_guards.py`
 
   ```diff
@@ -182,7 +182,7 @@ FAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset
-1 failed, 127 passed, 26 skipped in 18.59s
+1 failed, 127 passed, 26 skipped in 17.57s
 ```
 
 </details>
@@ -191,7 +191,7 @@ FAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **4** 条，整轮红 **4** 条、绿 124 条、跳过 26 条，退出码 1，21.64s
+- 实测：目标文件红 **4** 条，整轮红 **4** 条、绿 124 条、跳过 26 条，退出码 1，21.83s
 - 改：`camel_guards.py`
 
   ```diff
@@ -219,7 +219,7 @@ FAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_on
 FAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls
 FAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted
 FAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads
-4 failed, 124 passed, 26 skipped in 18.30s
+4 failed, 124 passed, 26 skipped in 18.19s
 ```
 
 </details>
@@ -228,7 +228,7 @@ FAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_onl
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.13s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，20.83s
 - 改：`camel_guards.py`
 
   ```diff
@@ -253,7 +253,7 @@ FAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_onl
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted
-1 failed, 127 passed, 26 skipped in 18.76s
+1 failed, 127 passed, 26 skipped in 17.30s
 ```
 
 </details>
@@ -262,7 +262,7 @@ FAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cann
 
 - 组：守卫　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫：两个方向都要成立」：七处变异都变红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，21.8s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，20.45s
 - 改：`camel_guards.py`
 
   ```diff
@@ -288,7 +288,7 @@ FAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cann
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...
-1 failed, 127 passed, 26 skipped in 18.50s
+1 failed, 127 passed, 26 skipped in 16.82s
 ```
 
 </details>
@@ -297,7 +297,7 @@ FAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...
 
 - 组：判词　目标文件：`verification/tests/test_repro_verdicts.py`
 - 声明：README「判词」：判词写死 → 红 16 条
-- 实测：目标文件红 **16** 条，整轮红 **16** 条、绿 112 条、跳过 26 条，退出码 1，21.32s
+- 实测：目标文件红 **16** 条，整轮红 **16** 条、绿 112 条、跳过 26 条，退出码 1，20.94s
 - 改：`repro_02_timestamp.py`
 
   ```diff
@@ -337,7 +337,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts
 FAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed
 FAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported
 FAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode
-16 failed, 112 passed, 26 skipped in 18.01s
+16 failed, 112 passed, 26 skipped in 17.33s
 ```
 
 </details>
@@ -346,7 +346,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explod
 
 - 组：判词　目标文件：`verification/tests/test_repro_verdicts.py`
 - 声明：README「判词」：`<` 写成 `<=` → 红 3 条
-- 实测：目标文件红 **3** 条，整轮红 **3** 条、绿 125 条、跳过 26 条，退出码 1，21.44s
+- 实测：目标文件红 **3** 条，整轮红 **3** 条、绿 125 条、跳过 26 条，退出码 1，23.53s
 - 改：`repro_02_timestamp.py`
 
   ```diff
@@ -370,7 +370,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explod
 FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]
 FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]
 FAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed
-3 failed, 125 passed, 26 skipped in 18.23s
+3 failed, 125 passed, 26 skipped in 19.72s
 ```
 
 </details>
@@ -379,7 +379,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tic
 
 - 组：判词　目标文件：`verification/tests/test_repro_verdicts.py`
 - 声明：README「判词」：去掉「与预期相反」那一支 → 红 3 条
-- 实测：目标文件红 **3** 条，整轮红 **3** 条、绿 125 条、跳过 26 条，退出码 1，21.2s
+- 实测：目标文件红 **3** 条，整轮红 **3** 条、绿 125 条、跳过 26 条，退出码 1，25.4s
 - 改：`repro_02_timestamp.py`
 
   ```diff
@@ -406,7 +406,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tic
 FAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed
 FAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported
 FAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode
-3 failed, 125 passed, 26 skipped in 17.95s
+3 failed, 125 passed, 26 skipped in 21.52s
 ```
 
 </details>
@@ -415,7 +415,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explod
 
 - 组：引文·上半　目标文件：`verification/tests/test_citations.py`
 - 声明：README「引文：文档里的行号不许腐烂」：上半五处变异都红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.15s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，25.4s
 - 改：`test_citations.py`
 
   ```diff
@@ -435,7 +435,7 @@ FAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explod
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \xa7\u2460\uff1a\u6b8b\u4f59\u9884\u7b97\u5148\u88ab //10 \u780d\u4e00\u5200]
-1 failed, 127 passed, 26 skipped in 18.80s
+1 failed, 127 passed, 26 skipped in 21.30s
 ```
 
 </details>
@@ -444,7 +444,7 @@ FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_
 
 - 组：引文·上半　目标文件：`verification/tests/test_citations.py`
 - 声明：README「引文：文档里的行号不许腐烂」：上半五处变异都红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，23.84s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.96s
 - 改：`test_citations.py`
 
   ```diff
@@ -464,7 +464,7 @@ FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \xa7\u2460 / camel_guards\uff1a\u6b8b\u4f59\u9884\u7b97\u7528\u7684\u662f**\u622a\u65ad\u540e**\u7684 ctx_tokens]
-1 failed, 127 passed, 26 skipped in 20.47s
+1 failed, 127 passed, 26 skipped in 20.99s
 ```
 
 </details>
@@ -473,7 +473,7 @@ FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_
 
 - 组：引文·上半　目标文件：`verification/tests/test_citations.py`
 - 声明：README「引文：文档里的行号不许腐烂」：上半五处变异都红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.11s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，25.64s
 - 改：`test_citations.py`
 
   ```diff
@@ -493,7 +493,7 @@ FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \xa7\u2460\uff1a\u6b8b\u4f59\u9884\u7b97\u5148\u88ab //10 \u780d\u4e00\u5200]
-1 failed, 127 passed, 26 skipped in 20.69s
+1 failed, 127 passed, 26 skipped in 21.66s
 ```
 
 </details>
@@ -502,7 +502,7 @@ FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_
 
 - 组：引文·上半　目标文件：`verification/tests/test_citations.py`
 - 声明：README「引文：文档里的行号不许腐烂」：上半五处变异都红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 126 条、跳过 27 条，退出码 1，24.36s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 126 条、跳过 27 条，退出码 1，25.37s
 - 改：`test_citations.py`
 
   ```diff
@@ -522,7 +522,7 @@ FAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable
-1 failed, 126 passed, 27 skipped in 20.69s
+1 failed, 126 passed, 27 skipped in 21.33s
 ```
 
 </details>
@@ -531,7 +531,7 @@ FAILED verification/tests/test_citations.py::test_every_citation_module_is_reach
 
 - 组：引文·上半　目标文件：`verification/tests/test_citations.py`
 - 声明：README「引文：文档里的行号不许腐烂」：上半五处变异都红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.43s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.91s
 - 改：`test_citations.py`
 
   ```diff
@@ -558,7 +558,7 @@ FAILED verification/tests/test_citations.py::test_every_citation_module_is_reach
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...
-1 failed, 127 passed, 26 skipped in 20.76s
+1 failed, 127 passed, 26 skipped in 20.94s
 ```
 
 </details>
@@ -567,7 +567,7 @@ FAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...
 
 - 组：引文·下半　目标文件：`verification/tests/test_citations.py`
 - 声明：README「引文」：下半把那个写法植回 `camel_guards.py`，当场红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.41s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.93s
 - 改：`camel_guards.py`
 
   ```diff
@@ -587,7 +587,7 @@ FAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\s*-\\s*12-base_chunk_size - prefix_token_len\uff08948 \u884c\uff1b\u90a3\u4e2a\u51cf\u6570\u662f 943 \u884c**\u91cf**\u51fa\u6765\u7684\uff09-\u628a\u300c\u524d\u7f00\u957f\u5ea6\u300d\u8fd9\u4e2a\u5f53\u573a\u91cf\u51fa\u6765\u7684\u503c\u5199\u6b7b\u6210\u4e86\u5b57\u9762\u91cf 12\uff0c\u8fd8\u6807\u6210 948 \u884c\u7684\u539f\u6587 \u2014\u2014 \u6570\u503c\u4e0a\u5bf9\uff08gpt-4o-mini \u4e0b\u6070\u597d\u662f 12\uff09\uff0c**\u5f15\u6587\u4e0a\u9519**\uff1a\u6362\u4e2a\u5206\u8bcd\u5668\u5c31\u4e0d\u662f 12]
-1 failed, 127 passed, 26 skipped in 19.08s
+1 failed, 127 passed, 26 skipped in 20.85s
 ```
 
 </details>
@@ -596,7 +596,7 @@ FAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_
 
 - 组：裁决　目标文件：`verification/tests/test_adjudicate.py`
 - 声明：README「裁决：三种结果不是两种」：贴界按单元格判，退化成乘积当场红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，21.52s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.5s
 - 改：`adjudicate.py`
 
   ```diff
@@ -619,7 +619,7 @@ FAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets
-1 failed, 127 passed, 26 skipped in 18.26s
+1 failed, 127 passed, 26 skipped in 20.66s
 ```
 
 </details>
@@ -628,7 +628,7 @@ FAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_no
 
 - 组：裁决·缺读数　目标文件：`verification/tests/test_adjudicate.py`
 - 声明：README「裁决」：缺读数判不可判定，折进「否决」当场红
-- 实测：目标文件红 **3** 条，整轮红 **4** 条、绿 124 条、跳过 26 条，退出码 1，22.11s
+- 实测：目标文件红 **3** 条，整轮红 **4** 条、绿 124 条、跳过 26 条，退出码 1，25.04s
 - 改：`adjudicate.py`
 
   ```diff
@@ -654,7 +654,7 @@ FAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_n
 FAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed
 FAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous
 FAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided
-4 failed, 124 passed, 26 skipped in 18.66s
+4 failed, 124 passed, 26 skipped in 21.10s
 ```
 
 </details>
@@ -663,7 +663,7 @@ FAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that
 
 - 组：裁决·恒真　目标文件：`verification/tests/test_adjudicate.py`
 - 声明：README「裁决·非空泛」：falsifier 必须实例化，只查在不在当场红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.35s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，25.05s
 - 改：`adjudicate.py`
 
   ```diff
@@ -683,7 +683,7 @@ FAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous
-1 failed, 127 passed, 26 skipped in 18.88s
+1 failed, 127 passed, 26 skipped in 20.96s
 ```
 
 </details>
@@ -692,7 +692,7 @@ FAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_
 
 - 组：裁决·恒真　目标文件：`verification/tests/test_adjudicate.py`
 - 声明：README「裁决：恒真就不许退 0」：判据恒真时退出码必须非 0
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.54s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，25.18s
 - 改：`adjudicate.py`
 
   ```diff
@@ -720,7 +720,7 @@ FAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green
-1 failed, 127 passed, 26 skipped in 19.22s
+1 failed, 127 passed, 26 skipped in 21.34s
 ```
 
 </details>
@@ -729,7 +729,7 @@ FAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_tab
 
 - 组：裁决·缺读数　目标文件：`verification/tests/test_adjudicate.py`
 - 声明：README「退出码：三种不是两种」：前提不成立退 2，折成 1 当场红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.78s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.71s
 - 改：`adjudicate.py`
 
   ```diff
@@ -751,7 +751,7 @@ FAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_tab
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback
-1 failed, 127 passed, 26 skipped in 19.38s
+1 failed, 127 passed, 26 skipped in 20.82s
 ```
 
 </details>
@@ -760,7 +760,7 @@ FAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_ge
 
 - 组：守卫·计数落盘　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：README「守卫端到端」：装了守卫就得安排落盘，拿掉当场红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.1s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，25.76s
 - 改：`camel_guards.py`
 
   ```diff
@@ -781,7 +781,7 @@ FAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_ge
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit
-1 failed, 127 passed, 26 skipped in 18.65s
+1 failed, 127 passed, 26 skipped in 21.81s
 ```
 
 </details>
@@ -790,7 +790,7 @@ FAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_co
 
 - 组：裁决·端到端　目标文件：`verification/tests/test_e2e_stub.py`
 - 声明：README「裁决：三种结果不是两种」：端到端读数缺了要判不可判定，编一份补上当场红
-- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，22.16s
+- 实测：目标文件红 **1** 条，整轮红 **1** 条、绿 127 条、跳过 26 条，退出码 1，24.75s
 - 改：`adjudicate.py`
 
   ```diff
@@ -823,7 +823,7 @@ FAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_co
 ..........                                                               [100%]
 =========================== short test summary info ===========================
 FAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception
-1 failed, 127 passed, 26 skipped in 18.69s
+1 failed, 127 passed, 26 skipped in 20.89s
 ```
 
 </details>
@@ -832,7 +832,7 @@ FAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_no
 
 - 组：阴性对照　目标文件：`verification/tests/test_camel_guards.py`
 - 声明：本模块自己的纪律：不做任何语义改动的编辑，一条都不许红
-- 实测：目标文件红 **0** 条，整轮红 **0** 条、绿 128 条、跳过 26 条，退出码 0，22.31s
+- 实测：目标文件红 **0** 条，整轮红 **0** 条、绿 128 条、跳过 26 条，退出码 0，25.52s
 - 改：`camel_guards.py`
 
   ```diff
@@ -848,7 +848,7 @@ FAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_no
 ...............ssssssssssss............................................. [ 46%]
 ..................................ssssssssssssss........................ [ 93%]
 ..........                                                               [100%]
-128 passed, 26 skipped in 18.83s
+128 passed, 26 skipped in 21.53s
 ```
 
 </details>

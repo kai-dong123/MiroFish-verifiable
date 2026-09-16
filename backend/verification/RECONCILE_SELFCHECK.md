@@ -1,6 +1,6 @@
 # 对账自检留痕（自动生成，别手改）
 
-> 生成时间 **2026-09-16 23:23:45** · Python 3.11.9 · `cd backend && python -m verification.reconcile_selfcheck`（23.77s）
+> 生成时间 **2026-09-17 02:25:57** · Python 3.11.9 · `cd backend && python -m verification.reconcile_selfcheck`（48.85s）
 
 ## 这份产物是什么、不是什么
 
