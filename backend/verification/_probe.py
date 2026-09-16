@@ -294,3 +294,171 @@ def table(rows, header=None, pad: int = 2) -> None:
                                       for j, c in enumerate(row)))
         if header and i == 0:
             print("  " + (" " * pad).join("-" * w for w in widths))
+
+
+# --------------------------------------------------------------------------
+# 4. 读数块：给检查器读的那一段
+# --------------------------------------------------------------------------
+#
+# `run_all` 的立场是「不做二次解析、不重算」—— 它把子进程的正文逐字抄进报告，
+# 不从散文里抠数字。但有些结论只能由读数算出来，那就需要一份**机器可读**的读数。
+#
+# 解法是让**复现自己**按锚定的分隔符吐出结构化的一段：这不是「从散文里猜」，
+# 而是「读同一个进程自己吐的结构」，抽取因此是确定的；`run_all` 另记这一段在
+# 正文里的 sha256，于是「这份读数出自那次运行」是可核的。
+
+_READINGS_BEGIN = "--- 读数 BEGIN（机器可读；由本复现自己打出，人读上面那几张表）---"
+_READINGS_END = "--- 读数 END ---"
+
+
+#: 贴界：这格的值被**机制**压住了（夹逼、取整、下界），失去了分辨力。
+BOUND_RAILED = "贴界"
+#: 未测量：这格**这次运行根本没量**（比如那条分支压根没走）。和「量到 0」不是一回事。
+BOUND_UNMEASURED = "未测量"
+
+
+def _boundary(spec) -> dict:
+    """一条边界声明。`(臂, 量, 为什么)` 默认按**贴界**；四元组可指定类别。
+
+    这两类必须分开，因为检查器对它们的处理不一样：
+    贴界 → 结论**降级为不采信**（量还在，但分不出差别）；
+    未测量 → 结论**不可判定**（量不在，判不了）。
+    合成一类就会出现「拿反事实的格子当成量到的读数」这种错。
+    """
+    if len(spec) == 4:
+        arm, metric, kind, why = spec
+    else:
+        arm, metric, why = spec
+        kind = BOUND_RAILED
+    if kind not in (BOUND_RAILED, BOUND_UNMEASURED):
+        raise ValueError(f"边界类别只有 {BOUND_RAILED!r} / {BOUND_UNMEASURED!r}，"
+                         f"收到 {kind!r}")
+    return {"arm": arm, "metric": metric, "kind": kind, "why": why}
+
+
+def non_gbk_chars(text: str) -> str:
+    """挑出 GBK **编不出**的字符（去重、按出现顺序）。
+
+    为什么值得单独一个函数：中文 Windows 的 cmd 默认代码页是 GBK，而
+    `__init__._harden_streams()` 把编不出的字符**降级成 `?` 而不是崩掉**。
+    于是这类字符不会报错，只会**悄悄把内容改掉** —— 读数块里一个脏字符
+    就是一次无声的数据损坏。所以这里把它变成一个能断言的东西。
+    """
+    bad: list = []
+    for ch in text:
+        if ch in bad:
+            continue
+        try:
+            ch.encode("gbk")
+        except UnicodeEncodeError:
+            bad.append(ch)
+    return "".join(bad)
+
+
+def emit_readings(repro: str, arms, readings, *,
+                  units=None, boundaries=(), note=None) -> None:
+    """打出机器可读的读数块。
+
+    参数：
+
+    * `repro` —— 复现的名字（稳定标识，别改）。
+    * `arms` —— `{稳定键: 人读标签}`。**稳定键要自己定**，别复用打屏标签：
+      同一批复现可能有两套标签（表里「守卫关（1）」、`runs` 里「守卫关（第 1 遍）」）。
+    * `readings` —— `{稳定键: {量: 裸数}}`。**要裸数，不要格式化串** ——
+      表里那个 `1.0×` 和 `{"value": 1.0, "unit": "×"}` 是两回事，
+      而 `f"{x:,.0f}"` 那种带千分位的更不该进这里。
+    * `units` —— `{量: 单位}`，只给人读。
+    * `boundaries` —— `((稳定键, 量, 为什么), ...)` 或
+      `((稳定键, 量, 类别, 为什么), ...)`。类别见 `BOUND_RAILED` /
+      `BOUND_UNMEASURED`；不写类别时按**贴界**算。
+      由**复现自己**声明：检查器重算不了这件事（夹逼发生在 camel 源码里）。
+      只声明事实，不下结论 —— 采不采信、判不判得了，都由检查器按规则判。
+    * `note` —— 一句话交代这一批读数的前提。
+
+    **派生量要在 `boundaries` 或 `note` 里说清分母/来源**：比如「合多少拍」
+    的分母是本节当场另量的一拍，和第一节那个数不是同一个 —— 只报一个
+    `tick` 会歪曲那张表。
+    """
+    import json
+
+    payload = {
+        "repro": repro,
+        "arms": dict(arms),
+        "readings": {k: dict(v) for k, v in readings.items()},
+        "units": dict(units or {}),
+        "boundaries": [_boundary(b) for b in boundaries],
+        "note": note,
+    }
+    print(f"\n  {_READINGS_BEGIN}")
+    body = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+    unsafe = non_gbk_chars(body)
+    if unsafe:
+        # 报警但**不崩**：一个装置不该因为一个字打印不出来就整个停下来。
+        # 但也不能装作没发生 —— 脏字符会被降级成 `?`，那是无声的数据损坏。
+        note(f"读数块里有 {len(unsafe)} 个字符 GBK 编不出：{unsafe!r} —— "
+             f"中文 Windows 的 cmd 下它们会变成 `?`。"
+             f"本目录的记号只用 GBK 编得出的字符，正是为了这件事。")
+    print(body)
+    print(f"  {_READINGS_END}")
+
+
+def parse_readings(text: str) -> dict | None:
+    """从一段正文里把读数块取出来。取不到就返回 `None` —— **不猜**。
+
+    「抽不出来」和「读数是空的」必须分开：前者是 `None`，后者是取到了但没内容。
+    `run_all` 那边据此把「没测到」和「测到了但什么都没有」分开报。
+    """
+    import json
+
+    lines = text.splitlines()
+    try:
+        i = next(n for n, ln in enumerate(lines) if _READINGS_BEGIN in ln)
+        j = next(n for n, ln in enumerate(lines[i + 1:], i + 1)
+                 if _READINGS_END in ln)
+    except StopIteration:
+        return None
+    body = "\n".join(lines[i + 1:j])
+    try:
+        return json.loads(body)
+    except ValueError:
+        return None
+
+
+def readings_sha256(text: str) -> str | None:
+    """读数块在**这一段正文里**的 sha256。取不到块就返回 None。
+
+    记它是为了让「这份读数出自那次运行」可核 —— 块被换过，哈希就对不上。
+    """
+    import hashlib
+
+    lines = text.splitlines()
+    try:
+        i = next(n for n, ln in enumerate(lines) if _READINGS_BEGIN in ln)
+        j = next(n for n, ln in enumerate(lines[i + 1:], i + 1)
+                 if _READINGS_END in ln)
+    except StopIteration:
+        return None
+    body = "\n".join(lines[i:j + 1])
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+# --------------------------------------------------------------------------
+# 5. 出口：**三种退出码，不是两种**
+# --------------------------------------------------------------------------
+
+def exit_with(verdict: bool | None) -> None:
+    """`True` → `0`，`False` → `1`，`None` → `2`（**没测到**）。
+
+    三条复现的 `main()` 签名都是 `-> bool | None`，其中 `None` 是
+    「没测到／前提不成立」—— 它**既不等于通过，也不等于失败**。
+
+    这里必须写 `is True` / `is False`：`None` 是假值，写成
+    `0 if verdict else 1` 会把「没测到」折进「没达到预期」，
+    而 README「退出码：**三种，不是两种**」那一节承诺的正是三态。
+    **一个装置如果把「没跑起来」报成红色，它后面所有的红色也一样不值钱。**
+    """
+    if verdict is True:
+        raise SystemExit(0)
+    if verdict is False:
+        raise SystemExit(1)
+    raise SystemExit(2)

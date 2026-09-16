@@ -277,7 +277,12 @@ def _write_report(prefix: str, results: list, env: dict,
            "---", "", "## 各条原样转录", "",
            "> 下面每一条的正文，就是那条命令当时打在屏幕上的原话，逐字转录。",
            "> **不做二次解析** —— 报告里的数字如果是「再算一遍」来的，就可能和产生它的",
-           "> 那次运行对不上，而这份报告的全部意义就是「我看到的和它说的是同一件事」。", ""]
+           "> 那次运行对不上，而这份报告的全部意义就是「我看到的和它说的是同一件事」。",
+           "",
+           "> 唯一的例外是读数块（`.json` 里的 `readings`）：那是**复现自己按锚定",
+           "> 分隔符打出来的一段结构化读数**，报告只是把它原样取出来，并记下它在正文",
+           "> 里的 `readings_sha256`。这不是「从散文里抠数字」，取不到就记",
+           "> `readings_missing: true`，**不猜**。", ""]
     for i, (mod, what, rc, body) in enumerate(results, 1):
         md += [f"### {i}. {what}", "",
                f"- 命令：`python -m {mod}`",
@@ -285,16 +290,37 @@ def _write_report(prefix: str, results: list, env: dict,
                "```text", body, "```", ""]
 
     md_text = "\n".join(md) + "\n"
+
+    def _repro_entry(i, mod, what, rc, body):
+        """一条复现的机读条目。
+
+        读数块由复现**自己按锚定分隔符吐出**，这里只把它取出来 —— 不是从散文里
+        猜数字，所以「不做二次解析」这条纪律没有破。取不到就记 `readings_missing`：
+        **「没测到」和「读数是空的」必须分开**，前者不许被读成后者。
+        """
+        from . import _probe as P
+
+        block = P.parse_readings(body)
+
+        entry = {"n": i, "module": mod, "what": what, "nature": CASES[i - 1][2],
+                 "returncode": rc, "verdict": verdicts.get(rc, str(rc)),
+                 "transcript": body}
+        if block is None:
+            entry["readings_missing"] = True
+            entry["readings"] = None
+            entry["readings_sha256"] = None
+        else:
+            entry["readings_missing"] = False
+            entry["readings"] = block
+            entry["readings_sha256"] = P.readings_sha256(body)
+        return entry
+
     json_doc = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "not_a_pass_rate": True,
         "environment": env,
-        "results": [
-            {"n": i, "module": mod, "what": what, "nature": CASES[i - 1][2],
-             "returncode": rc, "verdict": verdicts.get(rc, str(rc)),
-             "transcript": body}
-            for i, (mod, what, rc, body) in enumerate(results, 1)
-        ],
+        "results": [_repro_entry(i, mod, what, rc, body)
+                    for i, (mod, what, rc, body) in enumerate(results, 1)],
         "reconciliation": {"returncode": recon_rc,
                            "verdict": verdicts.get(recon_rc, str(recon_rc)),
                            "not_a_fourth_reproduction": True,

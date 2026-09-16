@@ -62,7 +62,6 @@
 
 from __future__ import annotations
 
-import sys
 import time
 
 from . import _probe as P
@@ -298,8 +297,67 @@ def main() -> bool | None:
               "拉回到「拍的量级」。**")
     else:
         print("  上面有没通过的项，这条不能作数。")
+
+    # 第二节那三臂的裸数（`rows` 里是格式化串，这里要裸数）。
+    _sec2 = (("guard_off_same", "守卫关 · 同拍", 0.0, results["守卫关 · 同拍"]),
+             ("guard_off_one_tick", "守卫关 · 隔一拍", tick,
+              results["守卫关 · 隔一拍"]),
+             ("guard_on_same", "守卫开 · 同拍", 0.0, results["守卫开 · 同拍"]))
+    readings = {"clock": {"tick_ns": tick * 1e9,
+                          "camel_bump_ns": CAMEL_BUMP * 1e9,
+                          "ticks_per_bump": tick / CAMEL_BUMP}}
+    arms = {"clock": "第一节 · 时钟刻度（前提读数，不是实验臂）"}
+    for key, label, gap, bad in _sec2:
+        arms[key] = label
+        readings[key] = {"gap_ns": gap * 1e9, "violations": len(bad),
+                         "frozen_clock": True}
+
+    boundaries = [
+        ("clock", "tick_ns",
+         "取样窗口内的**最小值**，受时钟分辨率限制 —— 它量不出比一拍更细的东西"),
+        ("clock", "ticks_per_bump", "分母是上面那个下限受制的量，比值跟着它走"),
+        ("guard_off_one_tick", "gap_ns",
+         "**这一臂的输入就是量出来的那一拍本身** —— 它是边界，不是随便挑的间隔；"
+         "判定用的是严格 `<`，`gap == tick` 刻意算作「跨过去了」"),
+    ]
+
+    # 第三节的两个臂：**各自带各自的分母**。共用一个 tick 会歪曲这张表 ——
+    # 那一列的分母是本节当场另量的一拍，和第一节那个数不是同一个。
+    if gap_defect and gap_fixed:
+        for key, label, got, want_same in (
+                ("slicing_unfixed", "切片没修（缺陷在）", gap_defect, False),
+                ("slicing_fixed", "切片修了（守卫开）", gap_fixed, True)):
+            gap, tick_here = got
+            arms[key] = label
+            readings[key] = {"gap_s": gap,
+                             "tick_s": tick_here,
+                             "ticks_ratio": gap / tick_here if tick_here > 0
+                             else float("nan")}
+            boundaries.append(
+                (key, "ticks_ratio",
+                 "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；"
+                 "间隔由实际工作量决定、很稳，分母本身是随机量 —— "
+                 "**这一列抖得比间隔那一列厉害**，不该当精确值用"))
+            boundaries.append(
+                (key, "gap_s",
+                 "满记忆这个前提沿用了复现一的**严格不等式**关（写入后 token "
+                 "超过上限才算启动截断），所以这一臂同样坐在边界上"))
+
+    P.emit_readings(
+        "repro_02_timestamp", arms=arms, readings=readings,
+        units={"tick_ns": "ns", "camel_bump_ns": "ns", "ticks_per_bump": "拍",
+               "gap_ns": "ns", "violations": "处", "frozen_clock": "是/否",
+               "gap_s": "秒", "tick_s": "秒", "ticks_ratio": "拍"},
+        boundaries=tuple(boundaries),
+        note=f"第二节三臂用的是**冻钟**（同一个数被读到），逐位可复核；"
+             f"第三节两臂是物理时钟量出来的**趋势**，不进判据。"
+             f"`ticks_ratio` 的分母逐臂不同："
+             + ("、".join(f"{k}={readings[k]['tick_s']*1e3:.3f} ms"
+                          for k in ("slicing_unfixed", "slicing_fixed")
+                          if k in readings) or "（第三节没量到）"),
+    )
     return ok
 
 
 if __name__ == "__main__":
-    sys.exit(0 if main() else 1)
+    P.exit_with(main())

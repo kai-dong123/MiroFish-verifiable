@@ -67,8 +67,6 @@
 
 from __future__ import annotations
 
-import sys
-
 from . import _probe as P
 
 #: 探针消息：一份**又长又完整**的记录。头尾各有一个标记，用来验它有没有被撕碎。
@@ -111,6 +109,37 @@ def _measure(agent, creator, msg):
         "expansion": (t1 - t0) / own if own else 0.0,
         "head_intact": _HEAD in stored,
         "tail_intact": _TAIL in stored,
+    }
+
+
+def _chunk_body_limit(creator, residual: int) -> dict:
+    """照 camel `chat_agent.py:933-948` 那条链，**每一环都由实测得出**。
+
+    上游那几行是：
+
+        base_chunk_size  = max(1, remaining_budget) // 10               # 933
+        sample_prefix    = "[chunk 1/1000 of a long message]\\n"        # 942
+        prefix_token_len = len(token_counter.encode(sample_prefix))     # 943
+        chunk_body_limit = max(1, base_chunk_size - prefix_token_len)   # 948
+
+    `residual` 是量出来的，`prefix_token_len` 这里也**当场拿 camel 自己的
+    计数器量**。此前这一步写的是字面量 `12`（gpt-4o-mini 下恰好对，换个
+    分词器就不是 12）—— 「每块正文容量 1 token」于是成了**再推导**出来的数。
+    引文上错的那件事，`tests/test_citations.py::KNOWN_MISQUOTES` 已经记过一次，
+    只是当时只扫了材料、没扫到装置自己这一步。
+
+    `clamped` 记的是**上游那个 `max(1, ...)` 兜底有没有真的兜住**：
+    `base_chunk_size - prefix_token_len <= 0` 时，容量是兜底兜出来的，
+    不是算出来的 —— 贴界判定要认的正是这件事。
+    """
+    base_chunk_size = max(1, residual) // 10
+    prefix_token_len = len(creator.token_counter.encode(
+        "[chunk 1/1000 of a long message]\n"))
+    return {
+        "base_chunk_size": base_chunk_size,
+        "prefix_token_len": prefix_token_len,
+        "chunk_body_limit": max(1, base_chunk_size - prefix_token_len),
+        "clamped": base_chunk_size - prefix_token_len <= 0,
     }
 
 
@@ -204,10 +233,20 @@ def main() -> bool | None:
 
     P.note(f"（残余预算 = 上限 {limit} 减去**截断之后**的上下文大小；"
            f"待写消息自身 {own} token）")
+    # 每条臂**各算各的**（不共用一个上算出来的数）：三者的残余预算实测相同，
+    # 但把「谁的量」写清楚，读数才不会在人改前提时悄悄错位。
+    chains = {k: _chunk_body_limit(filled[0][1], r["residual"])
+              for k, r in (("guard_off_1", off1), ("guard_off_2", off2),
+                           ("guard_on", on))}
+    chain = chains["guard_off_1"]
     if off1["residual"] >= 0:
         P.note(f"（守卫关着时，camel 拿 {off1['residual']} 这个数去做 "
-               f"//10 再减 12 的前缀扣减 → 每块正文容量 "
-               f"{max(1, max(1, off1['residual']) // 10 - 12)} token）")
+               f"//10 再减 {chain['prefix_token_len']} 的前缀扣减 → 每块正文容量 "
+               f"{chain['chunk_body_limit']} token）")
+        if chain["clamped"]:
+            P.note(f"（注意：上面那个 {chain['chunk_body_limit']} 是上游 "
+                   f"`max(1, ...)` **兜底兜出来的** —— 算出来的容量本来小于 1。"
+                   f"它是个夹逼产物，不是量出来的容量）")
 
     # -- 判据 --------------------------------------------------------------
     P.step("判据")
@@ -249,8 +288,53 @@ def main() -> bool | None:
         print("  而这是个正反馈环 —— 越满越碎，越碎越满。守卫装上后一次写入一条。")
     else:
         print("  上面有没通过的项，这条不能作数。")
+
+    def _cells(r, c):
+        return {"residual": r["residual"],
+                "records_added": r["records_added"],
+                "tokens_added": r["tokens_added"],
+                "expansion": round(r["expansion"], 4),
+                "head_intact": r["head_intact"],
+                "chunk_body_limit": c["chunk_body_limit"],
+                "base_chunk_size": c["base_chunk_size"],
+                "prefix_token_len": c["prefix_token_len"]}
+
+    P.emit_readings(
+        "repro_01_slicing",
+        arms={"guard_off_1": "守卫关（1）", "guard_off_2": "守卫关（2）",
+              "guard_on": "守卫开"},
+        readings={"guard_off_1": _cells(off1, chains["guard_off_1"]),
+                  "guard_off_2": _cells(off2, chains["guard_off_2"]),
+                  "guard_on": _cells(on, chains["guard_on"])},
+        units={"residual": "token", "records_added": "条", "tokens_added": "token",
+               "expansion": "倍（实增 token ÷ 待写消息自身 token）",
+               "chunk_body_limit": "token/块", "base_chunk_size": "token",
+               "prefix_token_len": "token"},
+        boundaries=(
+            ("guard_off_1", "residual",
+             "截断**之后**算出来的，按构造就贴着上限 —— 它不是一个自由的输入"),
+            ("guard_off_2", "residual", "同上"),
+            ("guard_off_1", "chunk_body_limit",
+             "卡在机制能表达的最小正文容量上：残余预算 120–139 都会得到 1，"
+             "**这一格分不出区间内的差别**"),
+            ("guard_off_2", "chunk_body_limit", "同上"),
+            ("guard_on", "records_added",
+             "1 是这个量的最小值（写一条消息不可能产生 0 条记录），"
+             "所以它只说明「没坏」，**不说明「好」**"),
+            ("guard_on", "chunk_body_limit", P.BOUND_UNMEASURED,
+             "**这次没量到**：守卫开着时根本没走切片那条分支，这一格算出来的是"
+             "「要是切了会是多少」，即**反事实**值，不是这次运行量到的容量"),
+        ),
+        note=f"上限 {limit} token；待写消息自身 {own} token；"
+             f"守卫关那两遍是同一份前提下的两次独立运行（确定性对照）。"
+             f"chunk_body_limit 那条链每一环都是实测的：残余预算 {off1['residual']} "
+             f"→ //10 得 {chain['base_chunk_size']}，减去当场量出的前缀 "
+             f"{chain['prefix_token_len']} → {chain['chunk_body_limit']}"
+             + ("（这个 1 是 max(1, …) 兜底兜出来的）" if chain["clamped"]
+                else "（不是兜底兜出来的，是算出来的）"),
+    )
     return ok
 
 
 if __name__ == "__main__":
-    sys.exit(0 if main() else 1)
+    P.exit_with(main())

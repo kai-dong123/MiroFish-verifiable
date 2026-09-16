@@ -50,10 +50,12 @@ SUITE = "verification/tests"
 GUARDS = HERE / "camel_guards.py"
 TIMESTAMP = HERE / "repro_02_timestamp.py"
 CITATIONS = HERE / "tests" / "test_citations.py"
+ADJUDICATE = HERE / "adjudicate.py"
 
 T_GUARDS = "verification/tests/test_camel_guards.py"
 T_VERDICTS = "verification/tests/test_repro_verdicts.py"
 T_CITATIONS = "verification/tests/test_citations.py"
+T_ADJ = "verification/tests/test_adjudicate.py"
 
 #: 下半那条变异要植回去的**错引写法**。
 #:
@@ -95,6 +97,9 @@ G_GUARD = "守卫"
 G_VERDICT = "判词"
 G_CITE_UP = "引文·上半"
 G_CITE_DOWN = "引文·下半"
+G_ADJ = "裁决"
+G_ADJ_MISS = "裁决·缺读数"
+G_ADJ_VAC = "裁决·恒真"
 G_CONTROL = "阴性对照"
 
 CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
@@ -203,6 +208,43 @@ MUTATIONS = (
        T_CITATIONS, [(GUARDS, _MISQUOTE_RIGHT, _MISQUOTE_WRONG)],
        expect=1, claim="README「引文」：下半把那个写法植回 `camel_guards.py`，当场红"),
 
+    # ---- 裁决：三处 --------------------------------------------------------
+    # 判据表那三条规则里，**贴界按单元格判**是最深的一条：它错成乘积式，
+    # 产物照样长得像证据，而且降级得**没人看得出来**（weiran 那边真踩过）。
+    _M("J1", G_ADJ, "贴界退化成「碰过这一臂或这一量的格子都算贴界」（一格贴界，整行整列降级）",
+       T_ADJ, [(ADJUDICATE,
+                '        hits = [f"{a}.{m}" for a, m in c["operands"] if (a, m) in railed]',
+                '        _arms = {a for a, _ in railed}\n'
+                '        _mets = {m for _, m in railed}\n'
+                '        hits = [f"{a}.{m}" for a, m in c["operands"]\n'
+                '                if (a, m) in railed or a in _arms or m in _mets]')],
+       expect=1, claim="README「裁决：三种结果不是两种」：贴界按单元格判，退化成乘积当场红"),
+
+    _M("J2", G_ADJ_MISS, "把「缺读数」折进「否决」—— 正是本装置抓别人的那件事",
+       T_ADJ, [(ADJUDICATE, '"check": c["check"], "verdict": UNDECIDED,',
+                '"check": c["check"], "verdict": FAIL_,  # 变异：没测到就当没通过')],
+       expect=3, claim="README「裁决」：缺读数判不可判定，折进「否决」当场红"),
+
+    _M("J3", G_ADJ_VAC, "falsifier 只查在不在，**不实例化** —— 于是它永远「翻得动」",
+       T_ADJ, [(ADJUDICATE,
+                '            if after[cid]["verdict"] != base[cid]["verdict"]:',
+                '            if True:  # 变异：声明了就算数，不去试它')],
+       expect=1, claim="README「裁决·非空泛」：falsifier 必须实例化，只查在不在当场红"),
+
+    _M("J4", G_ADJ_VAC, "**判据恒真也照退 0** —— 这张表开始装绿",
+       T_ADJ, [(ADJUDICATE,
+                '        return 1\n    return 0\n\n\nif __name__ == "__main__":',
+                '        return 0  # 变异：有恒真判据也当表是好的\n'
+                '    return 0\n\n\nif __name__ == "__main__":')],
+       expect=1, claim="README「裁决：恒真就不许退 0」：判据恒真时退出码必须非 0"),
+
+    _M("J5", G_ADJ_MISS, "**「没测到」退 1**（退成「没达到预期」）—— 正是本装置"
+                         "抓别人的那件事，落在自己身上",
+       T_ADJ, [(ADJUDICATE,
+                '        print(f"\\n○ 没测到：{e}")\n        return 2',
+                '        print(f"\\n○ 没测到：{e}")\n        return 1  # 变异：折成「没达到预期」')],
+       expect=1, claim="README「退出码：三种不是两种」：前提不成立退 2，折成 1 当场红"),
+
     # ---- 阴性对照 ----------------------------------------------------------
     _M("K0", G_CONTROL, "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",
        T_GUARDS, [(GUARDS, "STEP = 1e-3", "STEP = 1e-3  # 阴性对照：这行不该有行为差异")],
@@ -303,7 +345,7 @@ def _revert(backups: dict) -> bool:
 
 
 def run(only: set | None = None) -> dict:
-    sources = {GUARDS, TIMESTAMP, CITATIONS}
+    sources = {GUARDS, TIMESTAMP, CITATIONS, ADJUDICATE}
     source_before = {str(p.relative_to(BACKEND)).replace("\\", "/"): _sha(p.read_text(encoding="utf-8"))
                      for p in sorted(sources)}
 

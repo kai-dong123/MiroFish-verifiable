@@ -57,7 +57,6 @@ MiroFish 的驱动脚本把并发数设成 **30**（`scripts/run_parallel_simula
 from __future__ import annotations
 
 import asyncio
-import sys
 
 from . import _probe as P
 
@@ -235,8 +234,55 @@ def main() -> bool | None:
     print("  · 本装置对此的立场：**这一层不承诺可复现，只承诺可检出。**")
     print("  · 装置在能钉住的层上钉死（见 `repro_01` / `repro_02`，")
     print("    那两条每次运行数字逐位相同），在钉不住的层上**明说钉不住**。")
+
+    arms = {"driver": "驱动脚本（前提读数，不是实验臂）",
+            "orders": "第三节 · 次序是不是「耗时」的确定函数"}
+    readings = {"driver": {"mirofish_semaphore": MIROFISH_SEMAPHORE,
+                           "driver_semaphore": sem},
+                "orders": {"deterministic": a1 == a2,
+                           "order_a1": a1, "order_a2": a2}}
+    boundaries = [
+        ("orders", "deterministic",
+         "比较的基准是「所有 agent 耗时**全都相同**」这个退化情形，而不是"
+         "「按提交顺序」。所以这个「确定」是在边界情形上得到的 —— "
+         "**它不证明一般的确定**，只证明这一格"),
+    ]
+    # 每个探针各自成臂；键由**序号**生成，不写死那三个耗时差。
+    for i, (d, flip) in enumerate(rows):
+        key = f"probe_{i}"
+        # 单位用「微秒」不用 `µs`：`µ`（U+00B5）**GBK 编不出**，中文 Windows 的
+        # cmd 下会被 `_harden_streams` 降级成 `?`，读数块里的标签就脏了。
+        unit = "微秒" if d < 1e-3 else "毫秒"
+        shown = d * 1e6 if d < 1e-3 else d * 1e3
+        arms[key] = f"把一个 agent 拖慢 {shown:,.0f} {unit}"
+        readings[key] = {"probe_s": d, "flipped": flip}
+    readings["grid"] = {"smallest_flipped_s": smallest}
+    arms["grid"] = "第二节 · 灵敏度栅格（前提读数，不是实验臂）"
+    boundaries.append(
+        ("grid", "smallest_flipped_s",
+         "**栅格上的最小值**，不是量出来的阈值：它只说明"
+         "「没有更小的格点试过」，真正的阈值被夹在上一个没变样的格点"
+         "和它之间 —— 这一格给的是**上界**"))
+
+    P.emit_readings(
+        "repro_03_concurrency", arms=arms, readings=readings,
+        units={"mirofish_semaphore": "并发数", "driver_semaphore": "并发数",
+               "deterministic": "是/否", "probe_s": "秒", "flipped": "是/否",
+               "smallest_flipped_s": "秒"},
+        boundaries=tuple(boundaries),
+        note="灵敏度栅格 = " + "、".join(
+            f"{d*1e6:,.0f} 微秒→{'变了' if f else '没变'}" for d, f in rows)
+            + f"；栅格上**恒在 {MIROFISH_SEMAPHORE} 并发**下测"
+            f"（信号量是用常量造的，所以 driver_semaphore 那个读数"
+            f"**不是灵敏度数的输入**）。"
+            "`probe_s` 那一列是脚本**自己设的输入**，不是量出来的阈值；"
+            "量出来的那个在 `smallest_flipped_s`。"
+            "**本节有一句结论没有对应的读数**：「两次真实 LLM 调用之间的耗时差"
+            "是毫秒到秒」是外部前提 —— 本脚本离线、不发请求，量不到它。"
+            "所以那一句不该被当成量到的东西。",
+    )
     return ok
 
 
 if __name__ == "__main__":
-    sys.exit(0 if main() else 1)
+    P.exit_with(main())

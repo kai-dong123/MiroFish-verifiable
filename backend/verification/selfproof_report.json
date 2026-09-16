@@ -1,0 +1,598 @@
+{
+  "generated_at": "2026-09-17 00:39:14",
+  "not_a_pass_rate": true,
+  "what_this_is": "对**真读数**做单点受控扰动，逐条检验这套判据有没有鉴别力。",
+  "what_this_is_NOT": "不是「判据对不对」的证明 —— 它证明的是「一处改动会让它动」，证明不了「判据和读数不会一起错」。真锚在对照臂上。",
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "cwd": "backend/"
+  },
+  "script": {
+    "path": "verification/selfproof.py",
+    "sha256": "3151b0016b97df6dbfef6a6eda958f6437dc6262cf43172d1231879be4fb4893"
+  },
+  "report": {
+    "path": "verification_report.json",
+    "generated_at": "2026-09-17T00:34:14",
+    "readings_sha256": "b8881e3b8da458a149f8e8b51c97ded262122c87c00eb2987c483c8d679059fe"
+  },
+  "claims": {
+    "count": 10,
+    "ids": [
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "B6",
+      "B7",
+      "B9",
+      "B10",
+      "B5",
+      "B8"
+    ],
+    "source": "verification/adjudicate.py"
+  },
+  "base": [
+    {
+      "id": "B1",
+      "verdict": "通过",
+      "trusted": false,
+      "grid": "通过·不采信",
+      "why": "分母卡在本量的最小值上，这一格分不出「更好」"
+    },
+    {
+      "id": "B2",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "B3",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "B4",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "B6",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "B7",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "B9",
+      "verdict": "通过",
+      "trusted": true,
+      "grid": "通过·采信",
+      "why": ""
+    },
+    {
+      "id": "B10",
+      "verdict": "通过",
+      "trusted": false,
+      "grid": "通过·不采信",
+      "why": "比较基准是「耗时全相同」这个退化情形，不是「按提交顺序」"
+    },
+    {
+      "id": "B5",
+      "verdict": "不可判定",
+      "trusted": null,
+      "grid": "不可判定",
+      "why": ""
+    },
+    {
+      "id": "B8",
+      "verdict": "不可判定",
+      "trusted": null,
+      "grid": "不可判定",
+      "why": ""
+    }
+  ],
+  "cases": [
+    {
+      "id": "P1",
+      "layer": "读数",
+      "why": "把守卫开那格从 1 抬到 5 —— 两个数量级那句话就不成立了，而且这一格**不再贴界**（值不再卡在最小值上）",
+      "edit": {
+        "guard_on.records_added": 5
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B1": "否决·采信"
+      },
+      "untouched": [
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B1": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P2",
+      "layer": "读数",
+      "why": "把守卫关那格从 270 压到 1 —— 两边一样了。这一格**没被扰动**，所以「守卫开贴界」这条声明仍然挂着：判成否决，**且不采信**",
+      "edit": {
+        "guard_off_1.records_added": 1
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B1": "否决·不采信",
+        "B2": "否决·采信"
+      },
+      "untouched": [
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B1": "否决·不采信",
+        "B2": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P3",
+      "layer": "读数",
+      "why": "把守卫关第 2 遍的 token 数改掉一个 —— 「逐位相同」就不成立了",
+      "edit": {
+        "guard_off_2.tokens_added": 5016
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B2": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B2": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P4",
+      "layer": "读数",
+      "why": "把守卫关下的原文改成完整可寻回 —— 「被撕碎」是这条判据的全部内容",
+      "edit": {
+        "guard_off_1.head_intact": true
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B3": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B3": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P5",
+      "layer": "读数",
+      "why": "把膨胀从 18.5 倍压到 1.5 倍 —— 越过 ≥10 那条线",
+      "edit": {
+        "guard_off_1.expansion": 1.5
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B4": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B4": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P6",
+      "layer": "读数",
+      "why": "让「隔一拍」也出现违反 —— 那样「违反只在同拍出现」这个因果说法就垮了",
+      "edit": {
+        "guard_off_one_tick.violations": 2
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B6": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B6": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P7",
+      "layer": "读数",
+      "why": "让守卫开着时也出现违反 —— 这一条正是「守卫有用」的那一半，它必须会被弄红，否则它是装饰",
+      "edit": {
+        "guard_on_same.violations": 1
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B7": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B7": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P8",
+      "layer": "读数",
+      "why": "把 1 微秒那一格改成「没变样」—— 灵敏度那句话就不成立了",
+      "edit": {
+        "probe_0.flipped": false
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B9": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B10"
+      ],
+      "moved": {
+        "B9": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P9",
+      "layer": "读数",
+      "why": "把「耗时全相同时两遍相同」改成 False —— 连「次序是耗时的确定函数」都垮了",
+      "edit": {
+        "orders.deterministic": false
+      },
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B10": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9"
+      ],
+      "moved": {
+        "B10": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P10",
+      "layer": "边界",
+      "why": "**把「守卫开那格贴界」这条声明撤掉**（读数一个字不动）——B1 仍然通过，但**变成采信**。这证明那条降级是声明在起作用，不是因为数值凑巧",
+      "edit": {},
+      "unrail": [
+        "guard_on.records_added"
+      ],
+      "unmeasured": {},
+      "claims_amended": [],
+      "touch": {
+        "B1": "通过·采信"
+      },
+      "untouched": [
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B1": "通过·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P11",
+      "layer": "边界",
+      "why": "**把守卫开那格改标成「未测量」**（仍然是同一套读数）——B1 立刻变成**不可判定**。同源的两条规则走的是两条路：贴界是「量到了但分不出」，未测量是「根本没量到」",
+      "edit": {},
+      "unrail": [],
+      "unmeasured": {
+        "guard_on.records_added": "（自证扰动：假设这一格这次没量到）"
+      },
+      "claims_amended": [],
+      "touch": {
+        "B1": "不可判定"
+      },
+      "untouched": [
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B1": "不可判定"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P12",
+      "layer": "断言",
+      "why": "**只改判据原文里的阈值**（≥10 → ≥1000），代码一个字不动 ——B4 判成否决。这证明那个阈值是**从判据原文里抠出来的**，不是代码里另抄的一份",
+      "edit": {},
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [
+        "B4"
+      ],
+      "touch": {
+        "B4": "否决·采信"
+      },
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10"
+      ],
+      "moved": {
+        "B4": "否决·采信"
+      },
+      "vacuous": [],
+      "ok": true
+    },
+    {
+      "id": "P13",
+      "layer": "断言",
+      "why": "**把 B4 声明的 falsifier 抽掉** —— 它照样判「通过」，但检查器应当**自己**把它标成恒真。这一例证明的是：「这条判据没有鉴别力」是**机器**判出来的，不是我在注释里说的",
+      "edit": {},
+      "unrail": [],
+      "unmeasured": {},
+      "claims_amended": [
+        "B4"
+      ],
+      "touch": {},
+      "untouched": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B6",
+        "B7",
+        "B9",
+        "B10",
+        "B5",
+        "B8"
+      ],
+      "moved": {},
+      "vacuous": [
+        "B4"
+      ],
+      "ok": true
+    }
+  ],
+  "falsifiers": [
+    {
+      "id": "B1",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_on.records_added 改成 5 → 通过 变 否决"
+    },
+    {
+      "id": "B2",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_2.records_added 改成 269 → 通过 变 否决"
+    },
+    {
+      "id": "B3",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_1.head_intact 改成 True → 通过 变 否决"
+    },
+    {
+      "id": "B4",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_1.expansion 改成 1.5 → 通过 变 否决"
+    },
+    {
+      "id": "B6",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_one_tick.violations 改成 2 → 通过 变 否决"
+    },
+    {
+      "id": "B7",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_on_same.violations 改成 1 → 通过 变 否决"
+    },
+    {
+      "id": "B9",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 probe_0.flipped 改成 False → 通过 变 否决"
+    },
+    {
+      "id": "B10",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 orders.deterministic 改成 False → 通过 变 否决"
+    },
+    {
+      "id": "B5",
+      "kind": "不可判定",
+      "flipped": null,
+      "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+    },
+    {
+      "id": "B8",
+      "kind": "不可判定",
+      "flipped": null,
+      "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+    }
+  ],
+  "meta": {
+    "grids_seen": [
+      "不可判定",
+      "否决·不采信",
+      "否决·采信",
+      "通过·不采信",
+      "通过·采信"
+    ],
+    "grids_required": [
+      "通过·采信",
+      "通过·不采信",
+      "否决·采信",
+      "否决·不采信",
+      "不可判定"
+    ],
+    "grids_missing": [],
+    "claims_with_working_falsifier": [
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "B6",
+      "B7",
+      "B9",
+      "B10"
+    ],
+    "claims_undecidable": [
+      "B5",
+      "B8"
+    ],
+    "claims_vacuous": [],
+    "cases_ok": 13,
+    "all_ok": true
+  },
+  "problems": [],
+  "seconds": 0.05
+}

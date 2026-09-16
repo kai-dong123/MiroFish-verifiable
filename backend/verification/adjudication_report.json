@@ -1,0 +1,368 @@
+{
+  "generated_at": "2026-09-17 00:39:14",
+  "not_a_pass_rate": true,
+  "what_this_is": "一套**跨复现的**判据：把三条复现各自的读数摆到一张桌上判。每条都自带 falsifier，所以「它有没有鉴别力」是可机检的。",
+  "what_this_is_NOT": "不是分数，不是通过率，不是质量评价。判不了的那几条**根本没被判定**，不算「未通过」—— 所以这张表**不许被聚合成任何比率**。",
+  "what_it_does_NOT_prove": "它证明的是「**这套判据对这批读数有鉴别力**」，**不是**「装置是对的」。判据是我们写的，读数是我们量的 —— 这张表能排除的是「判据恒真／被贴界蒙混」，排除不了「两边一起错」。**还有一件照实说**：这 10 条判据是**读到读数之后**才写下来的，不是先验的。所以「对这批读数有鉴别力」不等于「对任何别的读数也有」—— 换一批读数，这套判据必须重写、重跑自证，不能搬过去当结论用。它没被写成一张更好看的表，靠的不是我们自觉，是下面三件事：**两条判不了**（缺读数就如实判不了）、**两条不采信**（成立但不结实）、**给不出 falsifier 的判据自己判自己恒真**。",
+  "not_solid": "B1 与 B10 是**通过但不采信**的：B1 的分母卡在最小值上（守卫开那格是 1，而 1 是这个量的最小可能值），B10 的比较基准是「耗时全相同」这个退化情形。两条都成立，但都**不足以论证「守卫好」**。",
+  "environment": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "cwd": "backend/"
+  },
+  "script": {
+    "path": "verification/adjudicate.py",
+    "sha256": "ba6ef8a93b8dc24ae76b5331f072317637973553dff9c44a6789ba15611d3545"
+  },
+  "report": {
+    "path": "verification_report.json",
+    "generated_at": "2026-09-17T00:34:14",
+    "readings_sha256": "b8881e3b8da458a149f8e8b51c97ded262122c87c00eb2987c483c8d679059fe"
+  },
+  "claims_source": {
+    "path": "verification/adjudicate.py",
+    "ids": [
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "B6",
+      "B7",
+      "B9",
+      "B10",
+      "B5",
+      "B8"
+    ],
+    "layers": [
+      "复现一",
+      "复现三",
+      "复现二"
+    ]
+  },
+  "cells_total": 54,
+  "railed_cells": {
+    "guard_off_1.residual": "截断**之后**算出来的，按构造就贴着上限 —— 它不是一个自由的输入",
+    "guard_off_2.residual": "同上",
+    "guard_off_1.chunk_body_limit": "卡在机制能表达的最小正文容量上：残余预算 120–139 都会得到 1，**这一格分不出区间内的差别**",
+    "guard_off_2.chunk_body_limit": "同上",
+    "guard_on.records_added": "1 是这个量的最小值（写一条消息不可能产生 0 条记录），所以它只说明「没坏」，**不说明「好」**",
+    "clock.tick_ns": "取样窗口内的**最小值**，受时钟分辨率限制 —— 它量不出比一拍更细的东西",
+    "clock.ticks_per_bump": "分母是上面那个下限受制的量，比值跟着它走",
+    "guard_off_one_tick.gap_ns": "**这一臂的输入就是量出来的那一拍本身** —— 它是边界，不是随便挑的间隔；判定用的是严格 `<`，`gap == tick` 刻意算作「跨过去了」",
+    "slicing_unfixed.ticks_ratio": "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；间隔由实际工作量决定、很稳，分母本身是随机量 —— **这一列抖得比间隔那一列厉害**，不该当精确值用",
+    "slicing_unfixed.gap_s": "满记忆这个前提沿用了复现一的**严格不等式**关（写入后 token 超过上限才算启动截断），所以这一臂同样坐在边界上",
+    "slicing_fixed.ticks_ratio": "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；间隔由实际工作量决定、很稳，分母本身是随机量 —— **这一列抖得比间隔那一列厉害**，不该当精确值用",
+    "slicing_fixed.gap_s": "满记忆这个前提沿用了复现一的**严格不等式**关（写入后 token 超过上限才算启动截断），所以这一臂同样坐在边界上",
+    "orders.deterministic": "比较的基准是「所有 agent 耗时**全都相同**」这个退化情形，而不是「按提交顺序」。所以这个「确定」是在边界情形上得到的 —— **它不证明一般的确定**，只证明这一格",
+    "grid.smallest_flipped_s": "**栅格上的最小值**，不是量出来的阈值：它只说明「没有更小的格点试过」，真正的阈值被夹在上一个没变样的格点和它之间 —— 这一格给的是**上界**"
+  },
+  "unmeasured_cells": {
+    "guard_on.chunk_body_limit": "**这次没量到**：守卫开着时根本没走切片那条分支，这一格算出来的是「要是切了会是多少」，即**反事实**值，不是这次运行量到的容量"
+  },
+  "rows": [
+    {
+      "id": "B1",
+      "layer": "复现一",
+      "what": "守卫关把一条消息切成几百条记录，守卫开只切一条 —— 至少差两个数量级",
+      "check": "`guard_off_1.records_added` > `guard_on.records_added` × 100",
+      "verdict": "通过",
+      "trusted": false,
+      "no_trust_because": [
+        "贴界"
+      ],
+      "values": {
+        "guard_off_1.records_added": 270,
+        "guard_on.records_added": 1
+      },
+      "operands": [
+        "guard_off_1.records_added",
+        "guard_on.records_added"
+      ],
+      "tainted_by_railing": [
+        "guard_on.records_added"
+      ],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "分母卡在本量的最小值上，这一格分不出「更好」",
+      "detail": "成立；读数贴界：guard_on.records_added（1 是这个量的最小值（写一条消息不可能产生 0 条记录），所以它只说明「没坏」，**不说明「好」**）"
+    },
+    {
+      "id": "B2",
+      "layer": "复现一",
+      "what": "守卫关那两遍在同一份前提下逐位相同 —— 这是确定性的复现，不是碰巧",
+      "check": "`guard_off_1.records_added` == `guard_off_2.records_added` 且 `guard_off_1.tokens_added` == `guard_off_2.tokens_added`",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "guard_off_1.records_added": 270,
+        "guard_off_2.records_added": 270,
+        "guard_off_1.tokens_added": 5130,
+        "guard_off_2.tokens_added": 5130
+      },
+      "operands": [
+        "guard_off_1.records_added",
+        "guard_off_2.records_added",
+        "guard_off_1.tokens_added",
+        "guard_off_2.tokens_added"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "B3",
+      "layer": "复现一",
+      "what": "原文在守卫关下已经找不回连续片段，在守卫开下完整可寻回",
+      "check": "`guard_on.head_intact` == True 且 `guard_off_1.head_intact` == False",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "guard_on.head_intact": true,
+        "guard_off_1.head_intact": false
+      },
+      "operands": [
+        "guard_on.head_intact",
+        "guard_off_1.head_intact"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "B4",
+      "layer": "复现一",
+      "what": "切片把这一次写入放大了至少一个数量级",
+      "check": "`guard_off_1.expansion` ≥ 10",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "guard_off_1.expansion": 18.5199
+      },
+      "operands": [
+        "guard_off_1.expansion"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "B6",
+      "layer": "复现二",
+      "what": "违反只在「同拍」时出现 —— 隔一拍就合法，说明节拍是成因",
+      "check": "`guard_off_same.violations` ≥ 1 且 `guard_off_one_tick.violations` == 0",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "guard_off_same.violations": 1,
+        "guard_off_one_tick.violations": 0
+      },
+      "operands": [
+        "guard_off_same.violations",
+        "guard_off_one_tick.violations"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "B7",
+      "layer": "复现二",
+      "what": "守卫开着时**同样是同拍**（碰撞还在），但违反为零 —— 破坏不了了",
+      "check": "`guard_on_same.violations` == 0 且 `guard_on_same.gap_ns` == 0",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "guard_on_same.violations": 0,
+        "guard_on_same.gap_ns": 0.0
+      },
+      "operands": [
+        "guard_on_same.violations",
+        "guard_on_same.gap_ns"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "B9",
+      "layer": "复现三",
+      "what": "栅格上最小的那一格（1 微秒）就已经让落库次序变样",
+      "check": "`probe_0.flipped` == True 且 `probe_0.probe_s` ≤ 0.000001 秒",
+      "verdict": "通过",
+      "trusted": true,
+      "no_trust_because": [],
+      "values": {
+        "probe_0.flipped": true,
+        "probe_0.probe_s": 1e-06
+      },
+      "operands": [
+        "probe_0.flipped",
+        "probe_0.probe_s"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "",
+      "detail": "成立"
+    },
+    {
+      "id": "B10",
+      "layer": "复现三",
+      "what": "耗时全相同时，两遍次序逐位相同 —— 这一层是确定的，乱的是喂给它的耗时",
+      "check": "`orders.deterministic` == True",
+      "verdict": "通过",
+      "trusted": false,
+      "no_trust_because": [
+        "贴界"
+      ],
+      "values": {
+        "orders.deterministic": true
+      },
+      "operands": [
+        "orders.deterministic"
+      ],
+      "tainted_by_railing": [
+        "orders.deterministic"
+      ],
+      "undecidable_because": null,
+      "to_make_decidable": null,
+      "why_not_solid": "比较基准是「耗时全相同」这个退化情形，不是「按提交顺序」",
+      "detail": "成立；读数贴界：orders.deterministic（比较的基准是「所有 agent 耗时**全都相同**」这个退化情形，而不是「按提交顺序」。所以这个「确定」是在边界情形上得到的 —— **它不证明一般的确定**，只证明这一格）"
+    },
+    {
+      "id": "B5",
+      "layer": "复现三",
+      "what": "两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— 所以「1 微秒就能让次序变样」这个阈值**根本没有安全余量**",
+      "check": "`real_llm_call.gap_s` ≥ 0.001",
+      "verdict": "不可判定",
+      "trusted": null,
+      "no_trust_because": [],
+      "values": {
+        "real_llm_call.gap_s": null
+      },
+      "operands": [
+        "real_llm_call.gap_s"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": "本轮读数里**没有一格**能量到真实调用耗时 —— 三条复现全部离线、不发请求，量不到它",
+      "to_make_decidable": "量一次真实 LLM 调用的往返耗时差，把它打进读数块",
+      "why_not_solid": "",
+      "detail": "缺 real_llm_call.gap_s"
+    },
+    {
+      "id": "B8",
+      "layer": "复现一",
+      "what": "装上切片守卫没有把单次写入变慢到影响可用性",
+      "check": "`guard_on.write_seconds` ≤ `guard_off_1.write_seconds` × 2",
+      "verdict": "不可判定",
+      "trusted": null,
+      "no_trust_because": [],
+      "values": {
+        "guard_on.write_seconds": null,
+        "guard_off_1.write_seconds": null
+      },
+      "operands": [
+        "guard_on.write_seconds",
+        "guard_off_1.write_seconds"
+      ],
+      "tainted_by_railing": [],
+      "undecidable_because": "三条复现量的都是写入的**后果**（记录数、token 数），**没有量写入本身的耗时** —— 这一格不存在",
+      "to_make_decidable": "在写入前后各读一次时钟，把耗时也打进读数块",
+      "why_not_solid": "",
+      "detail": "缺 guard_on.write_seconds、guard_off_1.write_seconds"
+    }
+  ],
+  "falsifiers": [
+    {
+      "id": "B1",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_on.records_added 改成 5 → 通过 变 否决"
+    },
+    {
+      "id": "B2",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_2.records_added 改成 269 → 通过 变 否决"
+    },
+    {
+      "id": "B3",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_1.head_intact 改成 True → 通过 变 否决"
+    },
+    {
+      "id": "B4",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_1.expansion 改成 1.5 → 通过 变 否决"
+    },
+    {
+      "id": "B6",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_off_one_tick.violations 改成 2 → 通过 变 否决"
+    },
+    {
+      "id": "B7",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 guard_on_same.violations 改成 1 → 通过 变 否决"
+    },
+    {
+      "id": "B9",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 probe_0.flipped 改成 False → 通过 变 否决"
+    },
+    {
+      "id": "B10",
+      "kind": "可翻面",
+      "flipped": true,
+      "detail": "把 orders.deterministic 改成 False → 通过 变 否决"
+    },
+    {
+      "id": "B5",
+      "kind": "不可判定",
+      "flipped": null,
+      "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+    },
+    {
+      "id": "B8",
+      "kind": "不可判定",
+      "flipped": null,
+      "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "by_verdict": {
+      "通过": 8,
+      "否决": 0,
+      "不可判定": 2
+    },
+    "trusted": 6,
+    "not_trusted": 2,
+    "undecided_trusted": 2,
+    "falsifiable": 8,
+    "vacuous": [],
+    "not_a_rate": true,
+    "note": "判不了的既不算通过也不算否决，所以这里没有分母。"
+  },
+  "seconds": 0.06
+}
