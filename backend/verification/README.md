@@ -85,17 +85,28 @@ python scripts/run_parallel_simulation.py --config your_config.json --guards bot
 
 ### ① 切片正反馈环 —— `repro_01_slicing.py`
 
-`camel/agents/chat_agent.py` 的 `update_memory`（884 / 933 / 948 行）：
+`camel/agents/chat_agent.py` 的 `update_memory`（884 / 886 / 933 / 943 / 948 行）：
 
-```
-remaining_budget = max(0, token_limit - ctx_tokens)     # ctx_tokens 是**截断后**的
+```python
+remaining_budget = max(0, token_limit - ctx_tokens)   # ctx_tokens 是**截断后**的
+if current_tokens <= remaining_budget:               # ← 不满足才走切片
+    _write_single_record(message, role, base_ts); return
 base_chunk_size  = max(1, remaining_budget) // 10
-chunk_body_limit = max(1, base_chunk_size - 12)         # 12 是给块前缀留的扣减
+prefix_token_len = len(token_counter.encode("[chunk 1/1000 of a long message]\n"))
+chunk_body_limit = max(1, base_chunk_size - prefix_token_len)
+num_chunks       = math.ceil(len(all_token_ids) / chunk_body_limit)
 ```
+
+（`prefix_token_len` 在 `gpt-4o-mini` 的编码下量出来是 **12**，但上游写的是这个
+表达式、不是字面量 —— 换个分词器就不是 12 了。）
 
 截断干的事就是把上下文填到贴着上限，所以 `remaining_budget` **按构造就远小于
-待写的消息**；它还要再被 `//10` 和 `-12` 砍两刀。于是**一条完全放得下的消息
-被切成一块一个 token**，每块还各带一个十几 token 的前缀。
+待写的消息**；它还要再被 `//10` 和减前缀这两刀砍。
+
+**这个窗口比「预算很紧」宽得多。** 把 12 代进去算一下：只要
+`remaining_budget < 140`，`chunk_body_limit` 就落到 1 —— 也就是**只要残余预算
+不到 140 token，每一条被切的消息都变成一块一个 token**，每块还各带一个十几
+token 的前缀。上限 4000 的上下文里这几乎是常态。
 
 实测（上限 4000）：一条 **277 token** 的消息 → **270 条记录、实增 5130 token
 （18.5 倍）**，原文被撕得找不回连续的「记录开始」。而这是个正反馈环：
@@ -182,6 +193,31 @@ MiroFish 的驱动脚本把并发数设成 **30**，也是从脚本里读出来�
 
 ---
 
+## 这套东西在「可复现性分层」里的位置
+
+「可复现」不是一个布尔值。同一个仿真里，有的层天然确定，有的层原理上做不到 ——
+把它们混成一句「我们可复现」，是这类项目最常见的一句空话。这一节说的是这套
+装置**管到哪一层，以及哪一层它不管**。
+
+| 层 | 要回答的问题 | 这套装置 |
+|---|---|---|
+| **引擎** | 同样的输入，引擎的行为是不是逐位相同 | **管**，而且这是两个守卫的全部目的 —— `repro_01` / `repro_02` 量的就是它 |
+| **产物** | 同一份引擎产出，是不是渲染成同一份文字 | **管**，方式是**逐字转录**：报告里那段正文就是当时屏幕上那段 |
+| **端到端** | 同一条命令，是不是跑出同一个社会 | **不管**，`repro_03` 只说明它由什么决定、为什么钉不住 |
+
+前两层之所以管得住，是因为它们里面**没有 LLM**：守卫改的是记忆写入，
+转录读的是已经打出来的字节。第三层管不住，是因为它每一步都在问模型 ——
+温度设 0、固定 seed 也只能收窄抖动，服务端给不了逐位保证。
+
+**把管不住的那一层如实报出来，比含糊掉它重要得多。** 这也是为什么第 3 条复现
+和另外两条一样进退出码、一样写进报告 —— 它不是「没做的东西」，是**划出来的边界**。
+
+从这套分层回头看，两个守卫的分工也就清楚了：它们不是「让仿真更准」，
+而是**把引擎那一层从「不确定」挪到「确定」**，并且把这次挪动**是拿什么换的**
+（见上面那张 ①→② 的代价表）说明白。
+
+---
+
 ## 三个守卫是什么关系
 
 ```
@@ -244,4 +280,5 @@ verification/
   repro_02_timestamp.py ② 同拍碰撞
   repro_03_concurrency.py ③ 并发次序（边界）
   run_all.py            一条命令跑三个，并落一份可验证性报告
+  upstream/             准备发给上游的原文（草稿，尚未提交）与两份最小复现
 ```
