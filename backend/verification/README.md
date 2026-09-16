@@ -391,7 +391,7 @@ python scripts/run_parallel_simulation.py --config your_config.json --guards bot
 ## 端到端：替身模型跑一整局
 
 ```bash
-python -m verification.e2e_stub            # 三档臂，约一分半（实测 77 ~ 82 秒）
+python -m verification.e2e_stub            # 三档臂，约一分半（三档加起来实测 74 ~ 82 秒）
 python -m verification.e2e_stub --keep     # 留下临时目录，方便逐字看现场
 ```
 
