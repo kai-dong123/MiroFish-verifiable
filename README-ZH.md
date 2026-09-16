@@ -1,3 +1,18 @@
+> **这是 MiroFish 的一个 fork。** 上游代码原样保留，新增的是 `backend/verification/`
+> ——让仿真的输出变得**可判定**的一组运行时守卫与离线复现。
+>
+> - 上游：[666ghj/MiroFish](https://github.com/666ghj/MiroFish)，
+>   基线版本 `39d849138ef254f6c737ab4c4705e5545dbe31d4`
+> - 新增内容与自研边界见 [`backend/verification/README.md`](backend/verification/README.md)
+> - 许可证：AGPL-3.0（依 AGPL-3.0 第 5 条，本 fork 同样以 AGPL-3.0 发布），
+>   详见 [`NOTICE`](NOTICE)
+>
+> **一条命令看它做什么**（不要 API key、不联网、不花钱）：
+>
+> ```bash
+> cd backend && python -m verification.run_all
+> ```
+
 <div align="center">
 
 <img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>

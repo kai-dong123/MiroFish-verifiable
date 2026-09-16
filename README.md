@@ -1,3 +1,20 @@
+> **This is a fork of MiroFish.** The upstream code is kept as-is; what is added is
+> `backend/verification/` — a set of runtime guards and offline reproductions that make
+> the simulation's output **decidable**.
+>
+> - Upstream: [666ghj/MiroFish](https://github.com/666ghj/MiroFish),
+>   baseline `39d849138ef254f6c737ab4c4705e5545dbe31d4`
+> - What was added, and where the boundary of this work lies:
+>   [`backend/verification/README.md`](backend/verification/README.md)
+> - License: AGPL-3.0 (per AGPL-3.0 §5 this fork is likewise released under AGPL-3.0);
+>   see [`NOTICE`](NOTICE)
+>
+> **One command to see what it does** (no API key, no network, no cost):
+>
+> ```bash
+> cd backend && python -m verification.run_all
+> ```
+
 <div align="center">
 
 <img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>
