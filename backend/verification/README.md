@@ -105,8 +105,12 @@ agent.memory = ...                       # 塞一个真的 ScoreBasedContextCrea
 ### 守卫自己的测试
 
 ```bash
-python -m pytest verification/tests -q         # 当前 146 条，十来秒
+python -m pytest verification/tests -q         # 当前 154 条，十来秒
 ```
+
+> ⚠️ **这个条数只写在这一处。** 加测试之后**只改这里**，别在别的章节再抄一遍 ——
+> 抄了就一定会腐烂：实测有一次只同步了一处，另外两处停在旧数字上，
+> 而**照 README 跑一遍的人立刻会看出对不上**（屏幕上打着的是真实条数）。
 
 **只需要 camel**，不需要 flask / zep / API key（上游 `backend/tests/` 里那些要完整
 后端才收集得动，所以这两套是分开的）。
@@ -372,7 +376,7 @@ python scripts/run_parallel_simulation.py --config your_config.json --guards bot
 >
 > 两处都是本轮修的：替身模型走 `ModelFactory.create` 注入，计数走 `atexit` 落盘。
 >
-> 本装置验证到的地方仍到「守卫」这一层为止：守卫自己的行为有测试钉着（146 条），
+> 本装置验证到的地方仍到「守卫」这一层为止：守卫自己的行为有测试钉着
 > 守卫在两个复现脚本里跑的是**真的 `ChatAgent` 和真的记忆**（只是不发 LLM）。
 > **替身那一跑不证明仿真质量，也不证明真 LLM 下的行为** —— 它证明的是
 > 「**守卫的两个分支都被真实流量走到了**」。这条界线写进了产物，不只是写在这里。
@@ -793,6 +797,6 @@ verification/
   e2e_stub.py           端到端：拿替身模型把上游入口脚本跑一整局，取回守卫的计数
   e2e_report.json       上面那条命令的产物（机读，转录已抹本机路径）—— **入库**
   e2e_report.md         同一份的人读版
-  tests/                守卫、判词、引文、错引扫描、裁决规则、端到端、三份留痕新鲜度的测试（146 条，只要 camel 就能跑）
+  tests/                守卫、判词、引文、错引扫描、裁决规则、端到端、三份留痕新鲜度的测试（只要 camel 就能跑）
   upstream/             准备发给上游的原文（草稿，尚未提交）与两份最小复现
 ```
