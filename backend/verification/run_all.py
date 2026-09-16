@@ -1,20 +1,34 @@
-"""一条命令跑完三个复现，并落下一份**可验证性报告**。
+"""一条命令跑完三个复现，**再对一次账**，并落下一份**可验证性报告**。
 
     python -m verification.run_all                     # 在 backend/ 下
     python -m verification.run_all --out /tmp/rep       # 换个落点
     python -m verification.run_all --no-report          # 只看屏幕，不落文件
 
-不发 LLM 请求、不要 API key、不要 Zep、不花钱。本机约 25 秒跑完。
+不发 LLM 请求、不要 API key、不要 Zep、不花钱。本机约 38 秒跑完
+（三次计时 37.1 / 37.8 / 37.8 秒；其中约十来秒是最后那步对账）。
 （首次运行要下一次分词器的编码表，约 3.6 MB —— 那不是 LLM 调用，但要用到网。）
 
 ## 退出码（**三种，不是两种**）
 
-    0   三条都达到预期
-    1   有任意一条**没达到预期** —— 这是真的要看的东西
-    2   有任意一条**没测到**（缺依赖、取不到源码、前提造不出来……）
+    0   三条都达到预期、且对账一致
+    1   有任意一条**没达到预期**，或者**两份材料对不上** —— 这是真的要看的东西
+    2   有任意一条**没测到**（缺依赖、取不到源码、前提造不出来……），
+        或者对账有一边**抽不出数**
 
 `2` 和 `1` 分开是刻意的：**「没测到」不等于「通过」，也不等于「失败」**。
 一个装置如果把「没跑起来」报成绿色，它后面所有的绿色都不值钱了。
+
+## 最后那步「对账」在管什么（**它不是第四个复现**）
+
+装置本体那三条复现，和 `upstream/` 里**准备发出去的**两份最小复现，报的是
+同一组数（记录数 / 实增 token / 同拍违反数）。这两份**输入本来就不一样** ——
+两条完全不同的探针消息，在这个分词器下都恰好数出 277 token，于是数字撞在了
+一起。**这个「一致」是当下的巧合，不是结构保证**：换分词器、或者谁改了一边
+的探针消息，两边就会各走各的，而不会有任何东西响。
+
+所以它单独跑一遍、单独列在汇总里，**不并进那个 `x/3`** —— 三条复现回答的是
+「仿真会不会坏」，对账回答的是「我们的材料有没有走岔」，两件事不该混成一个比率。
+它**不重跑**装置那三条（那三条的正文刚跑出来还热着），只跑两份草稿，多花十来秒。
 
 ## 报告为什么是「原样转录 + 汇总」，而不是解析出结构化数字
 
@@ -65,6 +79,86 @@ CASES = (
 #: 退出码 → 汇总里的记号。`2` 单列，不折进任何一边。
 _MARK = {0: "√ 达到预期", 1: "× 没达到预期", 2: "○ 没测到"}
 
+#: 上游草稿里那两份**自包含最小复现**。它们是另写的紧凑版（为了贴进 issue），
+#: 数字必须和装置本体报的一致 —— 不一致就是有一边错了。
+#: `(模块名, 显示名, 正文键 —— 要和 `_SHARED_NUMBERS` 里那个对上)`
+DRAFTS = (
+    ("verification.upstream.repro_min_01_slicing", "草稿①（最小复现）", "草稿①"),
+    ("verification.upstream.repro_min_02_timestamp", "草稿②（最小复现）", "草稿②"),
+)
+
+#: **两份材料共用的那组数**，以及它各自在**人类输出**里长什么样。
+#:
+#: 每项是 `(叫法, 装置侧正文键, 装置侧正则, 草稿侧正文键, 草稿侧正则)`，
+#: 每个正则里恰好一个捕获组。锚的是两边输出里**稳定出现的那几个短语**，不是整行。
+#:
+#: 为什么要有这一步（不是强迫症）：这两份的**输入根本就不一样** —— 装置那条探针
+#: 消息是「【记录开始】…数据 数据…【记录结束】」（763 字），草稿那条是
+#: 「记录0，记录1，…记录89，」（440 字）。两条完全不同的消息，在这个分词器下
+#: **都恰好数出 277 token**，于是记录数与实增 token 撞在了一起。
+#: **这个「一致」是当下的巧合，不是结构保证** —— 换分词器、或者谁改了一边的探针
+#: 消息，两边就会各走各的，而不会有任何东西响。所以这里把它变成会响的。
+_SHARED_NUMBERS = (
+    ("① 新增记录数",
+     "装置①", r"被切成 \*\*([\d,]+) 条\*\*",
+     "草稿①", r"→ 一条消息变成 ([\d,]+) 条记录"),
+    ("① 实增 token",
+     "装置①", r"实增 ([\d,]+) token",
+     "草稿①", r"token 实增 ([\d,]+)（"),
+    ("② 同拍违反数",
+     "装置②", r"两次调用同拍：\*\*([\d,]+) 处违反\*\*",
+     "草稿②", r"违反「tool_calls 后必须紧跟它的回执」： ([\d,]+) 处"),
+)
+
+
+def _reconcile(transcripts: dict) -> tuple:
+    """把两份材料的共有数字对一遍。返回 `(退出码, 正文行列表)`。
+
+    退出码沿用同一套三态：`0` 对得上、`1` **对不上**（真要看的东西）、
+    `2` 有一边**抽不出来**（改过输出格式、或那条没跑到 —— 没测到，不是通过）。
+    **抽不出来时报 `2` 不报 `0`**：一个抽不到数的对账，说「通过」是假的。
+    """
+    import re as _re
+
+    from . import _probe as P
+
+    lines, rc, missing, rows = [], 0, [], []
+    for what, dev_key, pat_dev, draft_key, pat_draft in _SHARED_NUMBERS:
+        got = {}
+        for side, key, pat in (("装置", dev_key, pat_dev),
+                               ("草稿", draft_key, pat_draft)):
+            m = _re.search(pat, transcripts.get(key, ""))
+            got[side] = m.group(1).replace(",", "") if m else None
+        if not (got["装置"] and got["草稿"]):
+            verdict = "○ 没测到"
+            missing.append(f"{what}（{'装置' if not got['装置'] else '草稿'}）")
+        elif got["装置"] == got["草稿"]:
+            verdict = "√ 一致"
+        else:
+            verdict = "× **不一致**"
+            rc = 1
+        rows.append([what, got["装置"] or "○ 抽不到", got["草稿"] or "○ 抽不到",
+                     verdict])
+    if missing and rc == 0:
+        rc = 2
+
+    w = max(P._w(r[0]) for r in rows)
+    lines.append("  " + "  ".join([P._pad("", w), P._pad("装置", 8),
+                                   P._pad("草稿", 8), "对账"]).rstrip())
+    lines.append("  " + "  ".join(["-" * w, "-" * 8, "-" * 8, "-" * 9]))
+    for r in rows:
+        lines.append("  " + "  ".join([P._pad(r[0], w), P._pad(r[1], 8),
+                                       P._pad(r[2], 8), r[3]]).rstrip())
+    lines.append("")
+    if rc == 0:
+        lines.append("  √ 两份材料报的是同一组数 —— 改过任何一边都要重跑这一步。")
+    elif rc == 2:
+        lines.append(f"  ○ 这几项有一边抽不出来：{'、'.join(missing)} —— "
+                     "**这不是「一致」，是没测到**。多半是输出格式改过了。")
+    else:
+        lines.append("  × **两份材料对不上** —— 草稿是准备发出去的，先查清哪边对。")
+    return rc, lines
+
 
 def _environment() -> dict:
     """**这批数字是用什么跑的。** 拿不到的项如实写「未知」，不猜。"""
@@ -104,11 +198,15 @@ def _environment() -> dict:
     return env
 
 
-def _run_one(mod: str) -> tuple:
+def _run_one(mod: str, echo: bool = True) -> tuple:
     """跑一条，**边跑边显示、同时逐字留下**。返回 `(退出码, 正文)`。
 
     子进程强制 UTF-8：管道读写不该受控制台代码页影响。屏幕那一路仍是原生
     编码（见 `verification/__init__.py`），两件事互不干扰。
+
+    `echo=False` 时**只收不显** —— 对账那一步跑的是两份草稿，它们的正文只用来
+    抽几个数，整段铺在屏幕上会把上面三条复现的结论淹掉。**收还是要收全的**，
+    只是不显示。
     """
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     proc = subprocess.Popen(
@@ -121,6 +219,8 @@ def _run_one(mod: str) -> tuple:
     for raw in proc.stdout:
         text = raw.decode("utf-8", errors="replace").rstrip("\r\n")
         lines.append(text)
+        if not echo:
+            continue
         try:
             print(text)
         except UnicodeEncodeError:      # 控制台编不出，就降级显示
@@ -130,12 +230,13 @@ def _run_one(mod: str) -> tuple:
     return proc.wait(), "\n".join(lines)
 
 
-def _write_report(prefix: str, results: list, env: dict) -> tuple:
+def _write_report(prefix: str, results: list, env: dict,
+                  recon_rc: int = 0, recon_lines: tuple = ()) -> tuple:
     """落盘 `.md` 与 `.json`。返回两个路径。
 
     `.json` 里**只有汇总与环境**，外加每条的原文 —— 同样不做二次解析。
     """
-    worst = max((rc for _, _, rc, _ in results), default=0)
+    worst = max([rc for _, _, rc, _ in results] + [recon_rc], default=0)
     n_ok = sum(1 for _, _, rc, _ in results if rc == 0)
     verdicts = {0: "达到预期", 1: "没达到预期", 2: "没测到"}
 
@@ -150,6 +251,13 @@ def _write_report(prefix: str, results: list, env: dict) -> tuple:
         md.append(f"| {i} | {what} | {CASES[i - 1][2]} | {verdicts.get(rc, rc)} |")
     md += ["", f"{n_ok}/{len(results)} 条达到预期。"
            + ("" if n_ok == len(results) else " **先看下面没通过的那条。**"), "",
+           "### 另：对账（**不并进上面那个 x/3**）", "",
+           "> 上面那三条是**三个复现**；对账不是第四个 —— 它管的是另一件事："
+           "装置本体报的数字，和准备发出去的**上游草稿**里那份最小复现报的，"
+           "是不是同一组。两份的输入本来就不一样（两条不同的探针消息），"
+           "所以「一致」不是结构保证，是一条要守的断言。", "",
+           f"- 判定：**{verdicts.get(recon_rc, recon_rc)}**（退出码 `{recon_rc}`）", "",
+           "```text", "\n".join(recon_lines), "```", "",
            "## 环境（这批数字是用什么跑的）", "",
            "| 项 | 值 |", "|---|---|"]
     for key in ("python", "platform", "camel_ai", "camel_oasis",
@@ -187,6 +295,10 @@ def _write_report(prefix: str, results: list, env: dict) -> tuple:
              "transcript": body}
             for i, (mod, what, rc, body) in enumerate(results, 1)
         ],
+        "reconciliation": {"returncode": recon_rc,
+                           "verdict": verdicts.get(recon_rc, str(recon_rc)),
+                           "not_a_fourth_reproduction": True,
+                           "transcript": "\n".join(recon_lines)},
         "summary": {"reached_expectation": n_ok, "total": len(results),
                     "worst_returncode": worst},
     }
@@ -215,6 +327,7 @@ def main() -> int:
     print("以及装置对它们的处置：前两条修，第三条明说修不了、只说得出为什么。")
 
     results = []
+    transcripts = {}
     for mod, what, _nature in CASES:
         print()
         print("-" * 66)
@@ -222,6 +335,31 @@ def main() -> int:
         print("-" * 66)
         rc, body = _run_one(mod)
         results.append((mod, what, rc, body))
+        # 正文按**复现号**收着，给下面那步对账用（键要和 `_SHARED_NUMBERS` 对上）
+        if mod.endswith("repro_01_slicing"):
+            transcripts["装置①"] = body
+        elif mod.endswith("repro_02_timestamp"):
+            transcripts["装置②"] = body
+
+    # -- 对账：两份材料报的必须是同一组数 -----------------------------------
+    #
+    # **它不重复跑装置那两条** —— 那两条的正文上面刚跑出来、还热着。只跑两份草稿，
+    # 拿它们的数字去比。这样这一步只多花十来秒，而不是把整套再跑一遍。
+    print()
+    print("-" * 66)
+    print("· 对账：装置本体与上游草稿的「最小复现」，报的是不是同一组数")
+    print("-" * 66)
+    print("  这两份的输入**本来就不一样**（两条不同的探针消息），所以「数字一致」"
+          "不是结构保证，是一条要守的断言。")
+    for mod, label, key in DRAFTS:
+        rc, body = _run_one(mod, echo=False)
+        transcripts[key] = body
+        print(f"  {'√' if rc == 0 else '○'} {label} 跑完"
+              + ("" if rc == 0 else f"（退出码 {rc} —— 它自己那条没跑成，"
+                                    f"对账只能是「没测到」）"))
+    recon_rc, recon_lines = _reconcile(transcripts)
+    for line in recon_lines:
+        print(line)
 
     print()
     print("=" * 66)
@@ -233,20 +371,24 @@ def main() -> int:
     print()
     print(f"  {n_ok}/{len(results)} 条达到预期"
           + ("" if n_ok == len(results) else " —— **先看上面没通过的那条**"))
+    print(f"  {_MARK.get(recon_rc, f'? {recon_rc}'):<12} 对账（两份材料报的是不是同一组数）")
     print()
     print("  第 3 条「没达到预期」不适用：它验的是**边界**，不是修法。")
-    print("  三条都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。")
+    print("  以上都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。")
     print("  （首次运行要下一次分词器的编码表，约 3.6 MB；之后走缓存。）")
+    print("  对账单独列在汇总里，**不并进那个 x/3** —— 它不是第四个复现，")
+    print("  它管的是「装置和准备发出去的草稿有没有走岔」。")
 
     if not args.no_report:
         env = _environment()
-        md_path, js_path = _write_report(args.out, results, env)
+        md_path, js_path = _write_report(args.out, results, env,
+                                         recon_rc, recon_lines)
         print()
         print(f"  报告已落盘：{os.path.abspath(md_path)}")
         print(f"              {os.path.abspath(js_path)}")
         print("  （不是通过率：两条是可修的具体失效，一条是划出来的边界。）")
 
-    return max((rc for _, _, rc, _ in results), default=0)
+    return max([rc for _, _, rc, _ in results] + [recon_rc], default=0)
 
 
 if __name__ == "__main__":
