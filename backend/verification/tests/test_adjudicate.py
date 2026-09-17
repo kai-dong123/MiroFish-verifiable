@@ -9,7 +9,7 @@
 2. **这一批产物对得上这一批源码** —— 报告最容易坏的方式不是丢，是**过期**：
    代码动了、报告没动，于是它继续替一份已经不在的代码作证。
 3. **那两种状态不许混** —— 「读数里没有这一格」和「这一格是空的」必须分得开
-   （weiran 那边这条纪律是 `claim=None` 而不是 `""`，同一个道理）；
+   （本装置里「缺读数」记 `None`、不记 `""`，同一个道理）；
    「判不了」和「不采信」也必须分得开（前者 `trusted=None`，后者 `False`）。
 
 第 1 组用**现造的读数**测，不依赖某次运行 —— 机制对就对，跟这次量到什么无关。
@@ -113,7 +113,7 @@ def test_the_first_real_assertion_is_not_vacuous():
 def test_railing_is_judged_per_cell_not_by_the_product_of_two_sets():
     """**贴界按单元格判，不按「臂的集合 × 量的集合」的乘积判。**
 
-    weiran 那边真踩过这个：拿 `railed_rounds × railed_dims` 的乘积去圈定
+    本装置在别处真踩过这个：拿 `railed_rounds × railed_dims` 的乘积去圈定
     「贴界的单元格」，于是**每一格都被圈进去了** —— 一臂贴界，那一臂的**所有**
     量、以及那一量的**所有**臂，全被降级。判据于是变成「碰过贴界的臂就不可信」，
     比它该有的强得多，而且强得**没人看得出来**。
@@ -264,7 +264,7 @@ def test_thresholds_are_read_from_the_claim_text_not_reimplemented():
 
 
 def test_the_layer_is_a_closed_set_and_a_typo_raises():
-    """层写错一个字会让整条判据静默退化（weiran 那边 `产出` 写成 `产物`）——
+    """层写错一个字会让整条判据静默退化（本装置在别处 `产出` 写成 `产物`）——
     所以是校验过的闭集，不是随手写的字符串。"""
     with pytest.raises(A.AdjudicationError, match="不在"):
         _claim("T17", (("A", "x"),), lambda v, t: True, layer="复现壹")

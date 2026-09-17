@@ -3,8 +3,8 @@
     python -m verification.upstream.repro_min_01_slicing   # 在 backend/ 下
 
 不发 LLM、不要 API key、几秒跑完、结果确定。
-> **首次运行要联网一次**：装置用的分词器（tiktoken）要下一份静态数据（约 3.6 MB，
-> 之后走本地缓存）。这只是编码表，不是 LLM 调用 —— 但冷缓存的机器上确实要用到网。
+> **首次运行要联网一次**：装置用的分词器（tiktoken）要下一张几 MB 的静态表，
+> 之后走本地缓存。这只是编码表，不是 LLM 调用 —— 但冷缓存的机器上确实要用到网。
 
 
 **这是为了贴进 issue 而另写的紧凑版**，装置本体是 `../repro_01_slicing.py`

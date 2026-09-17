@@ -4,9 +4,10 @@
     python -m verification.run_all --out /tmp/rep       # 换个落点
     python -m verification.run_all --no-report          # 只看屏幕，不落文件
 
-不发 LLM 请求、不要 API key、不要 Zep、不花钱。本机约 38 秒跑完
-（三次计时 37.1 / 37.8 / 37.8 秒；其中约十来秒是最后那步对账）。
-（首次运行要下一次分词器的编码表，约 3.6 MB —— 那不是 LLM 调用，但要用到网。）
+不发 LLM 请求、不要 API key、不要 Zep、不花钱。机器闲着时本机约 38 秒跑完
+（三次计时 37.1 / 37.8 / 37.8 秒；其中一部分是最后那步对账）。
+**这个秒数不是刻度**：同一台机器、同一份代码，忙起来实测能到 86 秒。
+（首次运行要下一次分词器的编码表 —— 一张几 MB 的静态表，不是 LLM 调用，但要用到网。）
 
 ## 退出码（**三种，不是两种**）
 
@@ -24,7 +25,7 @@
 同一组数（记录数 / 实增 token / 同拍违反数）。这两份**输入本来就不一样** ——
 两条完全不同的探针消息，在这个分词器下都恰好数出 277 token，于是数字撞在了
 一起。**这个「一致」是当下的巧合，不是结构保证**：换分词器、或者谁改了一边
-的探针消息，两边就会各走各的，而不会有任何东西响。
+的探针消息，两边就会各走各的 —— 那正是这一步要响的地方（它比的就是这三个数）。
 
 所以它单独跑一遍、单独列在汇总里，**不并进那个 `x/3`** —— 三条复现回答的是
 「仿真会不会坏」，对账回答的是「我们的材料有没有走岔」，两件事不该混成一个比率。
@@ -39,8 +40,9 @@
 运行就可能对不上，而这份报告的全部意义就是"我看到的和它说的是同一件事"。
 要结构化数字的话，那些数字在每条的正文里，抄得走。
 
-报告另附一节**环境**：Python 版本、平台、camel/oasis 版本、现场量到的时钟步长、
-工作目录。这是"这批数字是用什么跑的"的凭据 —— 换了环境结论应当一样，
+报告另附一节**环境**：Python 版本、平台、camel/oasis 版本、分词器与它那张编码表
+**在本机落盘的字节数**、现场量到的时钟步长、工作目录。
+这是"这批数字是用什么跑的"的凭据 —— 换了环境结论应当一样，
 但那样的话**得能看出是换了环境**。
 
 ## 三条各自在说什么
@@ -171,6 +173,7 @@ def _environment() -> dict:
         "camel_oasis": None,
         "tokenizer": None,
         "tokenizer_cache": None,
+        "tokenizer_cache_bytes": None,
     }
     try:
         from . import _probe as P
@@ -193,9 +196,36 @@ def _environment() -> dict:
         enc = tiktoken.get_encoding("o200k_base")
         env["tokenizer"] = f"tiktoken o200k_base (n_vocab={enc.n_vocab})"
         env["tokenizer_cache"] = os.environ.get("TIKTOKEN_CACHE_DIR") or "默认临时目录"
+        env["tokenizer_cache_bytes"] = _tokenizer_cache_bytes()
     except Exception as exc:  # noqa: BLE001
         env["tokenizer"] = f"取不到（{exc.__class__.__name__}）"
     return env
+
+
+#: 编码表那份静态数据的下载地址。tiktoken 把它按 **URL 的 sha1** 落进缓存目录，
+#: 所以这个哈希就是缓存里的文件名 —— 于是不用去猜「哪个文件是它」。
+_TIKTOKEN_BLOB = ("https://openaipublic.blob.core.windows.net/encodings/"
+                  "o200k_base.tiktoken")
+
+
+def _tokenizer_cache_bytes():
+    """量一下那份编码表**在本机落盘多少字节**（拿不到就 `None`，不猜）。
+
+    README 里写着「首次会下一张几 MB 的表」。那句话是**观测值不是常数** ——
+    编码表跟着 `tiktoken` 的版本走，哪天变了，材料里那句话就悄悄过期了。
+    所以把**实测**的这个数记进产物的环境块：将来谁要核，核的是它，不是散文。
+    """
+    import hashlib
+    import tempfile
+
+    cache = (os.environ.get("TIKTOKEN_CACHE_DIR")
+             or os.environ.get("DATA_GYM_CACHE_DIR")
+             or os.path.join(tempfile.gettempdir(), "data-gym-cache"))
+    blob = os.path.join(cache, hashlib.sha1(_TIKTOKEN_BLOB.encode()).hexdigest())
+    try:
+        return os.path.getsize(blob)
+    except OSError:
+        return None                       # 缓存目录被别人清过／还没下完
 
 
 def _run_one(mod: str, echo: bool = True) -> tuple:
@@ -261,18 +291,21 @@ def _write_report(prefix: str, results: list, env: dict,
            "## 环境（这批数字是用什么跑的）", "",
            "| 项 | 值 |", "|---|---|"]
     for key in ("python", "platform", "camel_ai", "camel_oasis",
-                "tokenizer", "tokenizer_cache", "clock_step_ns", "cwd"):
+                "tokenizer", "tokenizer_cache", "tokenizer_cache_bytes",
+                "clock_step_ns", "cwd"):
         val = env.get(key)
         label = {"python": "Python", "platform": "平台",
                  "camel_ai": "camel-ai", "camel_oasis": "camel-oasis",
                  "tokenizer": "分词器", "tokenizer_cache": "分词器缓存目录",
+                 "tokenizer_cache_bytes": "编码表落盘字节数 (B)",
                  "clock_step_ns": "时钟最小步长 (ns)", "cwd": "工作目录"}[key]
         md.append(f"| {label} | {val if val is not None else '未知'} |")
     md += ["", "时钟步长是**量出来的**，每次运行会有出入；结论只用到它比 camel 那个",
            "`1e-6` 的排序偏移大两三个数量级这一点。",
            "",
            "分词器那一行不是装饰：切片那一节的数字（270 条 / 5130 token）**是它数出来的**，",
-           "换个分词器就不是这些数。它首次使用要下的一份静态数据文件（约 3.6 MB，之后走缓存）——",
+           "换个分词器就不是这些数。它首次使用要下的一份静态数据文件"
+           "（一张几 MB 的静态表，之后走缓存；本机实测字节数见下表）——",
            "所以「不发 LLM 请求」是准确的，「这台机器上不需要任何网络」不是。", "",
            "---", "", "## 各条原样转录", "",
            "> 下面每一条的正文，就是那条命令当时打在屏幕上的原话，逐字转录。",
@@ -401,7 +434,7 @@ def main() -> int:
     print()
     print("  第 3 条「没达到预期」不适用：它验的是**边界**，不是修法。")
     print("  以上都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。")
-    print("  （首次运行要下一次分词器的编码表，约 3.6 MB；之后走缓存。）")
+    print("  （首次运行要下一次分词器的编码表 —— 一张几 MB 的静态表；之后走缓存。）")
     print("  对账单独列在汇总里，**不并进那个 x/3** —— 它不是第四个复现，")
     print("  它管的是「装置和准备发出去的草稿有没有走岔」。")
 

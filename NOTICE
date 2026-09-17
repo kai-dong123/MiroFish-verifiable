@@ -7,3 +7,35 @@ mirofish-verifiable —— MiroFish 的可验证性 fork
 上游许可证：GNU Affero General Public License v3.0 (AGPL-3.0)
 本项目的修改内容与自研边界，详见 README-ZH.md 与 backend/verification/README.md。
 依据 AGPL-3.0 第 5 条，本项目同样以 AGPL-3.0 发布，完整许可证文本见 LICENSE。
+
+对上游文件的改动声明
+--------------------
+依 AGPL-3.0 第 5(a) 条，对本作品的显著改动应予说明。除下表所列文件外，
+上游代码未作改动 —— 包括未改动上游目录树中的任何其他文件。
+
+| 上游文件 | 改动 |
+|---|---|
+| `backend/scripts/run_parallel_simulation.py` | 增加 `--guards` 参数，并在启动处调用新增的 `verification.attach.install_if_requested()` |
+| `backend/scripts/run_reddit_simulation.py` | 同上 |
+| `backend/scripts/run_twitter_simulation.py` | 同上 |
+| `README.md` | 开头增加本 fork 的说明、被改动的上游文件清单与自研边界指向 |
+| `README-ZH.md` | 同上（中文） |
+| `.gitignore` | 增加忽略装置自检产物（`verification_report.md` / `verification_report.json`）；并把上游那行从未生效的 `backend/logs/` 改为实际目录名 `backend/log/` |
+
+**改动的性质：那三个入口脚本的改动是纯增量的，而且默认关闭。** 不传 `--guards`
+时，走的是与上游完全相同的代码路径 —— 仿真行为逐字未变。装置的全部新增代码都在
+`backend/verification/` 下。
+
+（这里的「纯增量」是**量过的**，不是说法：对着基线 commit
+`git diff --stat --ignore-all-space` 得到 **19 行插入、0 行删除** —— 三个脚本里原有的
+语句一行没删、一行没改。不加那个开关的普通 `git diff --stat` 会显示 **24 插入 /
+5 删除**，那 5 行删的是**只有空格的空行**（新增代码占了它们的位置），不是上游的代码。）
+
+两份 `README` 与 `.gitignore` 里，除去上表注明的那一处（`backend/logs/` →
+`backend/log/`，一条从未生效的忽略规则），其余改动同样只是**增加文字或规则**：
+两份 `README` 对着基线是**纯插入**（`+36` / `+28`，`-0`）；`.gitignore` 除那一行外，
+只有末行 `data/` 补了一个**行尾换行符**（上游那份文件末尾没有换行，内容未变）。
+上游原有的正文、段落顺序与规则一条未删、一条未改。
+
+本仓库另新增一份 `NOTICE`（即本文件）。改动均在本 fork 的工作期内完成
+（2026-09-16 起；三个入口脚本的改动落在 2026-09-16）。

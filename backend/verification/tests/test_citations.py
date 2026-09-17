@@ -138,9 +138,9 @@ CITATIONS = (
 def _read(module: str) -> list:
     """把那个模块的**源码文本**读出来 —— **不 import 它**。
 
-    这一条是量出来的：`import oasis` 要 9.4 秒（它拖 flask 那一整套 web 栈），
-    而这里需要的只是**文件里的几行字**。真去 import 的话，这条测试会让
-    `pytest verification/tests` 从两秒变成十一秒 —— 一个没人愿意跑的测试
+    这一条是量出来的：`import oasis` 要九秒上下（它拖 flask 那一整套 web 栈，
+    本机两次 9.2 / 8.7 秒），而这里需要的只是**文件里的几行字**。真去 import 的话，
+    光这一个文件就从 **0.06 秒**变成十秒量级 —— 一个没人愿意跑的测试
     和没有测试是一样的下场。
 
     `PathFinder.find_spec` 只查路径、不执行模块（实测 0.000 秒），够用。
@@ -277,3 +277,92 @@ def test_no_known_misquote_survives_in_our_materials(pattern, right, story):
     assert not hits, (
         "\n材料里出现了已知的错引：\n  " + "\n  ".join(hits) +
         f"\n  正确的写法：{right}\n  出过的事：{story}")
+
+
+# --------------------------------------------------------------------------
+# 第三件事：**贴出来的那几段源码，是不是真的**逐字那几行
+# --------------------------------------------------------------------------
+#
+# 上面两半管的都不是这件事。上半核的是「引文表里那条 citation 对不对」，
+# 下半抓的是「一个**已知的**错引写法有没有留下第二份」。可材料里还有第三种东西：
+#
+#     ```python
+#     # 逐字引自 camel.agents.chat_agent
+#     remaining_budget = max(0, token_limit - ctx_tokens)   # 884
+#     ```
+#
+# 一行一行贴着上游源码、旁边标着行号，**看着就是原文**。可它既不在 `CITATIONS`
+# 里（那是一张表，不是代码块），也不在 `KNOWN_MISQUOTES` 里（那是**已经犯过**的
+# 那一个具体写法）—— 于是**没有任何东西会去核它**。
+#
+# 这不是假想。写这一套的时候就出过：README §① 那段九行代码里，有一行是把 **942 行
+# 的字面量拼进了 943 行的表达式**。数值上照样对、读起来比真的还顺，可上游**根本
+# 没有那一行**。而这正是本文件开头说的那件事 —— 引文会烂，手抄的引文一定会烂。
+#
+# 所以给这种块加一个**认得出的标记**：围栏第一行写 `# 逐字引自 <模块>`，
+# 之后每行写成 `代码  # <行号>`。认了这个标记，就得**逐字**对得上上游第 N 行。
+
+_VERBATIM_MARK = "# 逐字引自 "
+_VERBATIM_LINE = r"^(?P<code>.*?)\s{2,}#\s*(?P<lineno>\d+)\s*$"
+
+
+def _verbatim_blocks() -> list:
+    """把材料里所有**认了标记**的代码块抽出来：`[(文件, 模块, [(行号, 那行代码), …])]`。"""
+    import re as _re
+
+    out = []
+    fence = _re.compile(r"```[^\n]*\n(.*?)```", _re.S)
+    for path in _materials():
+        if path.suffix != ".md":
+            continue
+        text = path.read_text(encoding="utf-8")
+        for block in fence.findall(text):
+            body = block.splitlines()
+            if not body or not body[0].startswith(_VERBATIM_MARK):
+                continue
+            module = body[0][len(_VERBATIM_MARK):].strip()
+            rows = []
+            for line in body[1:]:
+                m = _re.match(_VERBATIM_LINE, line)
+                if m:
+                    rows.append((int(m.group("lineno")), m.group("code").strip()))
+            out.append((path, module, rows))
+    return out
+
+
+def test_the_verbatim_blocks_are_actually_found():
+    """先证明这个扫描**不是空转**：现在确实有块认了这个标记。
+
+    没认标记的块它一个字都不看。要是哪天标记被删光了、或者写法改了，
+    下面那条会**一条都不报** —— 而「没报」和「都对」长得一模一样。
+    """
+    blocks = _verbatim_blocks()
+    assert blocks, ("一个认标记的逐字块都没有 —— 那下面的检查是空转的。"
+                    f"标记写法：围栏第一行 `{_VERBATIM_MARK}<模块>`，"
+                    f"之后每行 `代码  # <行号>`")
+    total = sum(len(rows) for _, _, rows in blocks)
+    assert total >= 5, f"认了标记的块一共只核到 {total} 行，太少了，看看是不是漏抽了"
+
+
+@pytest.mark.parametrize("path,module,rows", _verbatim_blocks(),
+                         ids=lambda v: v if isinstance(v, str) else "")
+def test_verbatim_blocks_match_upstream_line_for_line(path, module, rows):
+    """标了 `# N` 的那一行，就必须**逐字**是上游第 N 行。
+
+    对不上只有两种解释：上游动了（那这条引文该去看一眼，顺带想想论断还成不成立），
+    或者**我们贴的那段本来就不是原文**（那更严重 —— 它看着像原文）。
+    两种都要人去看，所以这里只负责当场红。
+    """
+    lines = _source(module)
+    for lineno, code in rows:
+        assert 0 < lineno <= len(lines), (
+            f"{path.name} 引了 {module}:{lineno}，而它只有 {len(lines)} 行")
+        actual = lines[lineno - 1].strip()
+        assert code == actual, (
+            f"\n{path.name} 里贴着的那一行，和 {module}:{lineno} **对不上**。\n"
+            f"  材料里：{code!r}\n"
+            f"  上游是：{actual!r}\n"
+            f"  这一行既不在 `CITATIONS` 表里、也不在 `KNOWN_MISQUOTES` 里，"
+            f"只有这个逐字块在管它。\n"
+            f"  **先看那段话的论断还成不成立**；要是这行本来就不是原文，"
+            f"把它改成原文，别把行号改成让它对得上的样子。")

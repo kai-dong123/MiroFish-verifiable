@@ -50,7 +50,10 @@ mydoc/
 mytest/
 
 # 日志文件
-backend/logs/
+# 上游这一行写的是 logs/，而脚本实际建的是 log/（见 backend/scripts 里
+# os.path.join(simulation_dir, "log")）—— 那条规则于是从来没生效过，
+# 跑过一次仿真就会在 git status 里多出一堆未跟踪文件。这里改成实际的目录名。
+backend/log/
 *.log
 
 # 上传文件

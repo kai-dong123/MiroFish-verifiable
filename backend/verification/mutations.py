@@ -51,6 +51,8 @@ GUARDS = HERE / "camel_guards.py"
 TIMESTAMP = HERE / "repro_02_timestamp.py"
 CITATIONS = HERE / "tests" / "test_citations.py"
 ADJUDICATE = HERE / "adjudicate.py"
+#: 变异的靶子不一定是代码 —— `C7` 改的是这份 README 里那段**逐字贴出来的源码**。
+README_MD = HERE / "README.md"
 
 T_GUARDS = "verification/tests/test_camel_guards.py"
 T_VERDICTS = "verification/tests/test_repro_verdicts.py"
@@ -80,6 +82,21 @@ _REDACTION_NOTE = (
     "去 `mutations_report.json`：后缀 `.json` 不在那条扫描的范围里。")
 
 
+def _rel(p) -> str:
+    """产物里一律写 **backend 相对路径**。
+
+    绝对路径会把跑这份产物时的本机目录名（用户名在内）原样写进
+    `mutations_report.json` / `MUTATIONS.md` —— 这两份是要公开出去的，
+    路径本身跟结论没关系，却把「在谁的机器上跑的」漏了个干净。
+    `_apply` 认相对路径（见那里），所以落盘的和用的可以是同一个值。
+    """
+    p = pathlib.Path(p)
+    try:
+        return str(p.relative_to(BACKEND)).replace("\\", "/")
+    except ValueError:                      # 不在 backend 下的（正常不会走到）
+        return p.name
+
+
 def _M(mid, group, what, target, edits, *, expect=None, claim=""):
     """一条变异。`expect` = **材料里声明的**红条数；None 表示只声明「至少一条红」。"""
     return {
@@ -87,7 +104,7 @@ def _M(mid, group, what, target, edits, *, expect=None, claim=""):
         "group": group,
         "what": what,
         "target": target,
-        "edits": [{"file": str(f), "old": o, "new": n} for f, o, n in edits],
+        "edits": [{"file": _rel(f), "old": o, "new": n} for f, o, n in edits],
         "expect_failed": expect,
         "claim": claim,
     }
@@ -105,6 +122,7 @@ G_ADJ_VAC = "裁决·恒真"
 #: 声明里（「守卫：七处」），并进去就会把那句话变成过期的。
 G_COUNTERS = "守卫·计数落盘"
 G_ADJ_E2E = "裁决·端到端"
+G_CITE_VERBATIM = "引文·逐字块"
 G_CONTROL = "阴性对照"
 
 CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
@@ -213,9 +231,19 @@ MUTATIONS = (
        T_CITATIONS, [(GUARDS, _MISQUOTE_RIGHT, _MISQUOTE_WRONG)],
        expect=1, claim="README「引文」：下半把那个写法植回 `camel_guards.py`，当场红"),
 
+    # ---- 引文·逐字块：一处 -------------------------------------------------
+    # README §① 那个块贴着上游源码、逐行标了行号。把其中一行的行号**错开一格**，
+    # 那一行就指向了另一行（886 → 885 是个空行）—— 也就是「材料里贴着一行
+    # 上游根本没有的代码」。这一条要证明第三半那个检查**不是恒真的**。
+    _M("C7", G_CITE_VERBATIM, "逐字块里的行号错开一格（886 → 885，那一行是空行）",
+       T_CITATIONS, [(README_MD,
+                      "if current_tokens <= remaining_budget:                         # 886",
+                      "if current_tokens <= remaining_budget:                         # 885")],
+       expect=1, claim="README「引文」：标了行号的逐字块，行号错了当场红"),
+
     # ---- 裁决：三处 --------------------------------------------------------
     # 判据表那三条规则里，**贴界按单元格判**是最深的一条：它错成乘积式，
-    # 产物照样长得像证据，而且降级得**没人看得出来**（weiran 那边真踩过）。
+    # 产物照样长得像证据，而且降级得**没人看得出来**（本装置在别处真踩过）。
     _M("J1", G_ADJ, "贴界退化成「碰过这一臂或这一量的格子都算贴界」（一格贴界，整行整列降级）",
        T_ADJ, [(ADJUDICATE,
                 '        hits = [f"{a}.{m}" for a, m in c["operands"] if (a, m) in railed]',
@@ -372,9 +400,14 @@ def _apply(edits, backups: dict) -> None:
 
     `backups` 由调用方持有、先建后用：这样**中途出错**时前面已经改掉的那几个文件
     也在 `backups` 里，`finally` 里照样能还原 —— 不留一个改坏一半的工作区。
+
+    `e["file"]` 是 **backend 相对路径**（`_rel` 写下的那个），这里补回绝对路径 ——
+    落盘的产物和真正动手改的必须是同一个值，不然产物记的是一份、改的是另一份。
     """
     for e in edits:
         path = pathlib.Path(e["file"])
+        if not path.is_absolute():
+            path = BACKEND / path
         text = path.read_text(encoding="utf-8")
         backups.setdefault(path, text)
         n = text.count(e["old"])
@@ -426,7 +459,7 @@ def run(only: set | None = None) -> dict:
         print(f"红 {in_target} 条（目标文件）· 整轮 {res['failed']} 条"
               f" · {'相符' if matched else '**与声明不符**'}")
 
-    # 再确认一遍：全跑完，三个源文件必须逐字节回到原样
+    # 再确认一遍：全跑完，上面那 `sources` 里每个源文件都必须逐字节回到原样
     source_after = {str(p.relative_to(BACKEND)).replace("\\", "/"): _sha(p.read_text(encoding="utf-8"))
                     for p in sorted(sources)}
     all_reverted = source_after == source_before
@@ -447,6 +480,8 @@ def run(only: set | None = None) -> dict:
                    "sha256": _sha(pathlib.Path(__file__).read_text(encoding="utf-8"))},
         "sources": source_before,
         "sources_after": source_after,
+        "source_count": len(sources),
+        "selfcheck_tests": _selfcheck_test_count(),
         "suite_sha256": _suite_fingerprint(),
         "baseline": baseline,
         "mutations": records,
@@ -458,6 +493,18 @@ def run(only: set | None = None) -> dict:
             "baseline_green": baseline["failed"] == 0 and baseline["returncode"] == 0,
         },
     }
+
+
+def _selfcheck_test_count() -> int:
+    """`tests/test_mutation_evidence.py` 里有几条用例 —— **数出来，不写死**。
+
+    这份产物要说「上面那个规模不含这一组，它是 N 条」。N 写死过一次，
+    加了用例之后那句话就悄悄过期了（报告里写着 5，文件里其实是 7）。
+    数一遍最省事：`tests/test_mutation_evidence.py` 里那一条断言拿它跟自己
+    收集到的条数对，两边任一变动都会当场红。
+    """
+    text = (HERE / "tests" / "test_mutation_evidence.py").read_text(encoding="utf-8")
+    return len(re.findall(r"^def test_", text, re.M))
 
 
 def _redact(text: str) -> str:
@@ -486,11 +533,13 @@ def _markdown(rep: dict) -> str:
              f"{base['passed'] + base['failed'] + base['skipped']} 条），"
              f"退出码 {base['returncode']}，{base['seconds']}s —— 先证明测试集本身是绿的，"
              "底下那些红才有意义。")
-    L.append(f"- 上面这个规模**不含** `tests/test_mutation_evidence.py`（5 条）："
+    L.append(f"- 上面这个规模**不含** `tests/test_mutation_evidence.py`"
+             f"（{rep['selfcheck_tests']} 条）："
              "那一组问的是「这份报告有没有过期」，而本模块每一轮都在被改坏的源码上跑 —— "
              f"它见到环境变量 `{_MUTATION_ENV}` 会跳过自己。"
              "「报告过期」由普通 `pytest` 抓，见那个文件。")
-    L.append(f"- 三个源文件跑完后逐字节还原：**{'是' if s['all_sources_reverted'] else '否（！）'}**"
+    L.append(f"- {rep['source_count']} 个源文件跑完后逐字节还原："
+             f"**{'是' if s['all_sources_reverted'] else '否（！）'}**"
              "（逐文件 `sha256` 见 `mutations_report.json` 的 `sources` / `sources_after`）。")
     L.append("")
     L.append("## 对照表")

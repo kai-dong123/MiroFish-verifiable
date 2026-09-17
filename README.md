@@ -1,19 +1,32 @@
-> **This is a fork of MiroFish.** The upstream code is kept as-is; what is added is
-> `backend/verification/` — a set of runtime guards and offline reproductions that make
-> the simulation's output **decidable**.
+> **This is a fork of MiroFish.** What is added is `backend/verification/` — runtime
+> guards and offline reproductions that make **one narrow question decidable: can this
+> run's outputs be trusted?** It does **not** judge simulation quality, and it applies
+> only to MiroFish-class · camel-oasis simulations. The boundary section linked below
+> says exactly how far it reaches — please read it before quoting that claim.
 >
 > - Upstream: [666ghj/MiroFish](https://github.com/666ghj/MiroFish),
 >   baseline `39d849138ef254f6c737ab4c4705e5545dbe31d4`
 > - What was added, and where the boundary of this work lies:
 >   [`backend/verification/README.md`](backend/verification/README.md)
+> - **Upstream files edited:** the three entry scripts
+>   (`run_parallel_simulation.py` / `run_reddit_simulation.py` / `run_twitter_simulation.py`)
+>   each gain an opt-in `--guards` hook that is **off by default** — a run without that
+>   flag behaves exactly as upstream. Plus the usual fork bookkeeping
+>   (`NOTICE` / `README`s / `.gitignore`). File-by-file list with dates: [`NOTICE`](NOTICE)
 > - License: AGPL-3.0 (per AGPL-3.0 §5 this fork is likewise released under AGPL-3.0);
 >   see [`NOTICE`](NOTICE)
 >
-> **One command to see what it does** (no API key, no network, no cost):
+> **Install, then one command to see what it does** (no API key, no LLM calls, no cost):
 >
 > ```bash
-> cd backend && python -m verification.run_all
+> cd backend
+> pip install -r requirements.txt
+> python -m verification.run_all
 > ```
+>
+> One caveat, so "offline" is not read too broadly: the tokenizer fetches a small static
+> encoding table on first use and caches it. Nothing else touches the network — details in
+> [`backend/verification/README.md`](backend/verification/README.md).
 
 <div align="center">
 
@@ -192,6 +205,12 @@ docker compose up -d
 Reads `.env` from root directory by default, maps ports `3000 (frontend) / 5001 (backend)`
 
 > Mirror address for faster pulling is provided as comments in `docker-compose.yml`, replace if needed.
+
+> ⚠️ **The Docker route gives you *upstream* MiroFish — not what this fork adds.**
+> `docker-compose.yml` pulls the published upstream image
+> (`ghcr.io/666ghj/mirofish:latest`), and that image contains no `backend/verification/`.
+> To see what this fork adds, use Option 1 (run from source) and follow
+> [`backend/verification/README.md`](backend/verification/README.md).
 
 ## 📬 Join the Conversation
 

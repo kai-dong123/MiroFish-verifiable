@@ -1,17 +1,30 @@
-> **这是 MiroFish 的一个 fork。** 上游代码原样保留，新增的是 `backend/verification/`
-> ——让仿真的输出变得**可判定**的一组运行时守卫与离线复现。
+> **这是 MiroFish 的一个 fork。** 新增的是 `backend/verification/` —— 一组运行时守卫
+> 与离线复现，让**一个很窄的问题**变得可判定：**这一次跑的产出能不能信？**
+> 它**不**评判仿真质量，且只对 MiroFish 类 · camel-oasis 系仿真实例有效。
+> 下面链接的边界一节写清了它到底管到哪一层 —— 引用上面那句话之前请先读它。
 >
 > - 上游：[666ghj/MiroFish](https://github.com/666ghj/MiroFish)，
 >   基线版本 `39d849138ef254f6c737ab4c4705e5545dbe31d4`
 > - 新增内容与自研边界见 [`backend/verification/README.md`](backend/verification/README.md)
+> - **被改动的上游文件**：三个入口脚本
+>   （`run_parallel_simulation.py` / `run_reddit_simulation.py` / `run_twitter_simulation.py`）
+>   各加了一个**默认关闭**的可选 `--guards` 钩子 —— 不带这个参数跑，行为与上游逐字一致。
+>   另有常规 fork 账目（`NOTICE` / 两份 `README` / `.gitignore`）。
+>   逐个文件的清单与改动日期见 [`NOTICE`](NOTICE)
 > - 许可证：AGPL-3.0（依 AGPL-3.0 第 5 条，本 fork 同样以 AGPL-3.0 发布），
 >   详见 [`NOTICE`](NOTICE)
 >
-> **一条命令看它做什么**（不要 API key、不联网、不花钱）：
+> **先装依赖，再一条命令看它做什么**（不要 API key、不发 LLM 请求、不花钱）：
 >
 > ```bash
-> cd backend && python -m verification.run_all
+> cd backend
+> pip install -r requirements.txt
+> python -m verification.run_all
 > ```
+>
+> 一句例外，免得把「离线」读大了：分词器首次使用要下一份静态编码表，之后走缓存。
+> 除此以外不碰网络 —— 细节见
+> [`backend/verification/README.md`](backend/verification/README.md)。
 
 <div align="center">
 

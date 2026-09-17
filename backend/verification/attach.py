@@ -8,7 +8,7 @@
     ...
     install_if_requested(args, log=log_manager.info)
 
-（两个入口要先把 `backend/` 放进 `sys.path`，见各脚本里的那一行。）
+（三个入口都先把 `backend/` 放进 `sys.path`，见各脚本里的那一行。）
 
 **默认是 `off`：不装，行为与上游逐字一致。** 这一点是刻意的 —— 一个能让你
 对比「装与不装」的装置，默认状态必须是「不装」，否则就没有对比可言。

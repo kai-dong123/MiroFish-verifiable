@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import re
 
 import pytest
 
@@ -153,6 +154,67 @@ def test_the_suite_fingerprint_does_not_depend_on_line_endings(tmp_path):
     assert MU._suite_fingerprint(lf) == MU._suite_fingerprint(crlf), (
         "指纹又按字节算了 —— 它会在**每一个用默认 git 配置 clone 的人**"
         "那里先红一次，而那里根本没有问题")
+
+
+def test_the_counts_in_this_report_are_counted_not_typed(report):
+    """报告里那几个**数目**必须是从现场数出来的，不是写死在正文里的。
+
+    这一条也是踩出来的。报告原先有一句话是「上面这个规模**不含**
+    `tests/test_mutation_evidence.py`（5 条）」，另有一句「**三个**源文件跑完后
+    逐字节还原」。后来这个文件加了两条用例（5 → 7），源文件的集合也从三个变成了
+    四个 —— 两句话都**没人再去看一眼**，产物照样签发，一路带到要公开的目录里。
+
+    数目字写死在正文里，就等于给自己留了一个**没有任何东西会去核**的声明。
+    现在这两处都由现场数出来（`_selfcheck_test_count()` / `len(sources)`），
+    这一条把「数出来的那个数」和「现场实际有多少」钉在一起：谁加了用例、
+    谁往 `sources` 里添了文件，这里都会当场红，而不是等它漂进报告。
+    """
+    here = len(re.findall(r"^def test_", pathlib.Path(__file__).read_text(encoding="utf-8"),
+                          re.M))
+    # 上面这个 `here` 就是**这个文件自己**的用例数 —— 加了用例它会跟着涨。
+    assert report["selfcheck_tests"] == here, (
+        f"报告说那一组是 {report['selfcheck_tests']} 条，现场是 {here} 条 —— "
+        f"数目漂了。{_RERUN}")
+
+    assert report["source_count"] == len(report["sources"]), (
+        f"报告说 {report['source_count']} 个源文件，`sources` 里其实是 "
+        f"{len(report['sources'])} 个。{_RERUN}")
+
+    text = MARKDOWN.read_text(encoding="utf-8")
+    assert f"（{report['selfcheck_tests']} 条）" in text, (
+        f"人读的那份里没写「（{report['selfcheck_tests']} 条）」。{_RERUN}")
+    assert f"{report['source_count']} 个源文件" in text, (
+        f"人读的那份里没写「{report['source_count']} 个源文件」。{_RERUN}")
+
+
+def test_no_recorded_mutation_leaks_a_host_path(report):
+    """产物里不许出现本机绝对路径 —— 它是给外面看的。
+
+    `edits[].file` 原先写的是 `str(pathlib.Path)`，于是一份要公开的报告里
+    明晃晃地记着 `D:\\open_source\\...\\camel_guards.py` 这样的**带盘符、带用户名**
+    的全路径。那条路径与结论毫无关系，却把「这是在哪台机器上跑的」一并交了出去。
+    （`e2e_stub` 的产物早就只写相对路径，只有这里漏了。）
+
+    这一条按**形状**抓，不按某个具体前缀抓：盘符、UNC、`/home/`、`/Users/` 都算。
+    """
+    bad = []
+    for m in report["mutations"]:
+        for e in m["edits"]:
+            f = e["file"]
+            if (pathlib.PurePosixPath(f).is_absolute()
+                    or pathlib.PureWindowsPath(f).is_absolute()
+                    or f.startswith(("/", "\\\\"))):
+                bad.append(f"{m['id']}: {f}")
+    assert not bad, (
+        "产物里有绝对路径：\n  " + "\n  ".join(bad) + f"\n{_RERUN}")
+
+    # 顺带核一句：报告里记的那个相对路径，真能在 backend/ 下找到 ——
+    # 换个写法把路径写没了、却仍然「不是绝对路径」，这里会红。
+    for m in report["mutations"]:
+        for e in m["edits"]:
+            assert (BACKEND / e["file"]).is_file(), (
+                f"报告里记的 `{e['file']}` 在 backend/ 下找不到 —— "
+                f"它记的到底是哪个文件？{_RERUN}")
 
 
 def test_the_text_sha_ignores_line_endings(tmp_path):

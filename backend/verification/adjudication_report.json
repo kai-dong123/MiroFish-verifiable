@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17 02:52:53",
+  "generated_at": "2026-09-17 22:24:30",
   "not_a_pass_rate": true,
   "what_this_is": "一套**跨复现的**判据：把三条复现各自的读数摆到一张桌上判。每条都自带 falsifier，所以「它有没有鉴别力」是可机检的。",
   "what_this_is_NOT": "不是分数，不是通过率，不是质量评价。判不了的那几条**根本没被判定**，不算「未通过」—— 所以这张表**不许被聚合成任何比率**。",
@@ -12,17 +12,17 @@
   },
   "script": {
     "path": "verification/adjudicate.py",
-    "sha256": "666dd074a46f97f4e033e742cbb667aa575c7a950867d8c179563aee7860d4c9"
+    "sha256": "4a88375c8d00eeea71330d5006424d82879e156a9a26656b4bec70ecb79467e8"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-17T02:51:15",
-    "readings_sha256": "0fe5fb3aef3080df532cef2a99008d82ae8f04d2845ffb9f43840c49d5ac104b"
+    "generated_at": "2026-09-17T22:23:32",
+    "readings_sha256": "9b2f025f1ca6ef8171035968114e407c0ac8995be321cbdf6f84c4e6bd52f791"
   },
   "e2e_report": {
     "path": "e2e_report.json",
     "present": true,
-    "generated_at": "2026-09-17T02:52:35",
+    "generated_at": "2026-09-17T22:24:18",
     "arms": [
       "roomy_e2e",
       "bigtext_e2e",
@@ -357,7 +357,7 @@
       "trusted": true,
       "no_trust_because": [],
       "values": {
-        "two_e2e.timestamp_pushed": 1
+        "two_e2e.timestamp_pushed": 2
       },
       "operands": [
         "two_e2e.timestamp_pushed"
@@ -522,5 +522,5 @@
     "not_a_rate": true,
     "note": "判不了的既不算通过也不算否决，所以这里没有分母。"
   },
-  "seconds": 0.21
+  "seconds": 0.08
 }

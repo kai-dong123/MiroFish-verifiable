@@ -39,7 +39,7 @@ WARNING - Message with 277 tokens exceeds remaining budget of 133. Slicing into 
 
 ## 最小复现（自包含，不发 LLM 请求、不要 API key、几秒跑完）
 
-（唯一要用到网的地方：分词器的编码表首次使用要下一份静态数据，约 3.6 MB，之后走缓存。它不是 LLM 调用。）
+（唯一要用到网的地方：分词器的编码表首次使用要下一张几 MB 的静态表，之后走缓存。它不是 LLM 调用。）
 
 ```python
 import warnings

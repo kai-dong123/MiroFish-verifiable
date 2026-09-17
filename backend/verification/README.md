@@ -16,26 +16,36 @@
 ```bash
 cd backend
 pip install -r requirements.txt      # 装置依赖的 camel / oasis 也在里面
+pip install pytest                   # 装置自带的测试要它 —— 它不在 requirements.txt 里
 python -m verification.run_all
 ```
 
-**不要 API key、不要 Zep、不发 LLM 请求、不花钱。** 本机约 38 秒跑完（三次计时 37.1 /
-37.8 / 37.8 秒；其中十来秒是最后那步**对账**）。
+**不要 API key、不要 Zep、不发 LLM 请求、不花钱。** 机器闲着时本机实测 **37.1 / 37.8 /
+37.8 秒**跑完（其中一部分是最后那步**对账**）。
 
 > ⚠️ **这个秒数是「机器闲着的时候」的数，别拿它当刻度。** 同一台机器、同一份代码，
-> 实测在 **38 ~ 86 秒**之间浮动 —— 取决于当时机器多忙。**跑得慢不代表装置有问题**，
+> 实测在 **37 ~ 86 秒**之间浮动 —— 取决于当时机器多忙。**跑得慢不代表装置有问题**，
 > 装置自己也**不计时、不落盘耗时** —— 报告里没有秒数这一栏。这一条特意写出来，
 > 是因为「我这儿怎么跑了 80 秒」是照 README 走一遍的人最容易先怀疑自己的地方。
 
 > ⚠️ **一处例外，免得把「离线」读大了：分词器要一份数据文件。** 装置用的
 > `OpenAITokenCounter` 走 tiktoken，而 tiktoken 的编码表是首次使用时下的静态数据
-> （**本机实测落盘 3.6 MB** —— 这是**观测值不是常数**：大小与编码名都随 `tiktoken`
-> 版本变；同一节的 `o200k_base` / `n_vocab=200019` 也是**现场取值**，报告的环境一节会记下来）。**缓存热了一个网络请求
-> 都不发**（实测 0.000 秒）；**冷缓存时要下这一次** —— 这是个**观测量、不是常数**，
+> （**本机实测落盘 3,613,922 字节 ≈ 3.6 MB** —— 这是**观测值不是常数**：大小与编码名
+> 都随 `tiktoken` 版本变；同一节的 `o200k_base` / `n_vocab=200019` 也是**现场取值**，
+> 报告的环境一节会记下来）。**缓存热了，一个网络请求都不发** ——
+> 说「0.000 秒」是指**网络这一侧**：进程里第一次取编码器仍要 **0.7 秒**
+> （解析本地那 3.6 MB 的表，不走网），同一进程里再取才是 0.000 秒。
+> **冷缓存时要下这一次** —— 这是个**观测量、不是常数**，
 > 取决于网络：本机两次分别量到 **3.5 秒**和 **6.5 秒**。所以准确的说法是
 > 「**不发 LLM 请求、不调 API**」，不是「这台机器上不需要任何网络」。
 > 这条不能含糊 —— 切片那一节的数字（270 条 / 5130 token）**全依赖这个分词器**，
-> 换个计数方式就不是这些数了。报告的**环境**一节会把编码名和缓存目录记下来。
+> 换个计数方式就不是这些数了。报告的**环境**一节会把编码名、缓存目录和
+> **这份表的实测字节数**（`tokenizer_cache_bytes`）记下来。
+>
+> **那个「3.6 MB」只在这一处写成具体数**，别的地方一律只说「一张几 MB 的静态表」——
+> 它是会随 `tiktoken` 版本漂的量，抄得越多、烂得越多；要具体数就去读产物里那个
+> 现场量出来的字段。（跟下面「守卫自己的测试」里那句「**这个条数只写在这一处**」
+> 是同一个病：会漂的数字抄第二遍，就一定会腐烂。）
 >
 > （`tiktoken` 不在 `requirements.txt` 里，它是随 `camel-ai` 一起下来的；
 > `run_all.py` 量环境时直接 `import tiktoken`，所以这一点靠的是上游那层依赖。）
@@ -106,17 +116,21 @@ agent.memory = ...                       # 塞一个真的 ScoreBasedContextCrea
 ### 守卫自己的测试
 
 ```bash
-python -m pytest verification/tests -q         # 当前 154 条，十来秒
+python -m pytest verification/tests -q         # 当前 171 条，十来秒
 ```
 
 > ⚠️ **这个条数只写在这一处。** 加测试之后**只改这里**，别在别的章节再抄一遍 ——
 > 抄了就一定会腐烂：实测有一次只同步了一处，另外两处停在旧数字上，
 > 而**照 README 跑一遍的人立刻会看出对不上**（屏幕上打着的是真实条数）。
+>
+> 这条规矩现在**有东西兜着**：`tests/test_readme_claims.py` 会把这一行里的数字
+> 和 `pytest --collect-only` 数出来的真实条数对一遍 —— 加了用例却忘了改这里，
+> 它会当场红，而不是等它漂到你面前。
 
 **只需要 camel**，不需要 flask / zep / API key（上游 `backend/tests/` 里那些要完整
 后端才收集得动，所以这两套是分开的）。
 
-七个文件，管七件不同的事：
+十一个文件，管十一件不同的事：
 
 | 文件 | 管什么 |
 |---|---|
@@ -127,6 +141,10 @@ python -m pytest verification/tests -q         # 当前 154 条，十来秒
 | `test_e2e_stub.py` | **端到端那一跑量到的东西是真的**：替身无状态（并发下不乱）、分词器是真的、旋钮读不到就回落、读数缺失时**不编数**、转录里不留本机路径、缺 `e2e_report.json` 时新判据判「不可判定」而不是静默消失 |
 | `test_mutation_evidence.py` | **变异留痕的产物还在、还没过期**（见下） |
 | `test_reconcile_evidence.py` | **对账自检的产物还在、还没过期**（见下） |
+| `test_readme_claims.py` | **这份 README 里写死的数目**（用例条数）和现场对得上 —— 免得它像上面那个「154」一样悄悄腐烂 |
+| `test_docs_claims.py` | **`docs/开源及第三方资源使用清单.md` 里写死的行数**和 `wc -l` 对得上、三个分项与合计加得起来 —— 那份清单自己写着「这是最容易过期的一栏」，而它交到评委手上之前确实就错过两处 |
+| `test_environment_pins.py` | **照 README 装出来的环境就是装置量的那个环境**：两个仿真内核锁的版本 == 装的版本（整张引文表挂在这上面）、`mcp<2` 这条上界还在、那个真会炸的导入真的没炸 —— 配一条**阴性对照**（把 2.x 的条件造出来）证明它不是恒绿的 |
+| `test_upstream_baseline.py` | **我们基于哪个上游版本**：六处写的是同一个 commit（抄歪一处就红）、那个 commit 真在仓库里且是 `HEAD` 的祖先 —— 配一条阴性对照证明它不恒真；**浅克隆只在「查出来是阴性」时才跳过**（阳性直接采信） |
 
 #### 守卫：两个方向都要成立
 
@@ -198,8 +216,9 @@ python -m pytest verification/tests -q         # 当前 154 条，十来秒
 > （这不是设想 —— 写这一节的时候，扫描先把**这份 README 自己**扫红了。）
 >
 > 顺带两处做法：读源码用 `PathFinder.find_spec` 查路径，**不 import 模块** ——
-> `import oasis` 要 9.4 秒（拖 flask 那一套 web 栈），真去 import 会让这套测试
-> 从两秒变十一秒。一个没人愿意跑的测试和没有测试是一样的下场。另外，下半的扫描
+> `import oasis` 要九秒上下（拖 flask 那一套 web 栈，本机两次 9.2 / 8.7 秒），
+> 而引文这一套**整份跑完只要 0.06 秒**：真去 import，它就变成十秒量级，
+> 为了读几行源码而已。一个没人愿意跑的测试和没有测试是一样的下场。另外，下半的扫描
 > **不含 `tests/` 目录** —— 那些正则就写在测试文件里，扫自己等于自投罗网。
 
 #### 变异留痕：上面那些「验过它不是恒真的」，产物在 `MUTATIONS.md`
@@ -208,12 +227,17 @@ python -m pytest verification/tests -q         # 当前 154 条，十来秒
 所以那些话现在有产物兜着：
 
 ```bash
-python -m verification.mutations     # 在 backend/ 下跑；约四十秒
+python -m verification.mutations     # 在 backend/ 下跑；约十分钟（24 轮，每轮都是一整遍测试）
 ```
 
 它逐条改坏被测的代码（**真实的源文件，不是替身**），跑一遍测试，记下红了几条、
 红在哪几条、原样输出是什么，再按字节还原。产物两份：
 `MUTATIONS.md`（人读）与 `mutations_report.json`（机读，另有一道「报告没过期」的测试盯着）。
+
+> ⏳ **它是本装置里最慢的一步**，别把「怎么这么久」读成卡住了：本机一次实测
+> **基线 21.3 秒 + 24 轮共 568.7 秒 ≈ 9.8 分钟** —— 每一轮都是**把整套测试重跑一遍**
+> （所以「多少轮」乘上「整套测试多久」就是它的量级）。要只跑其中几条看结果，
+> 用 `python -m verification.mutations --only J7`（多条用逗号隔开，如 `--only G1,V3`）。
 
 四件值得单说的事：
 
@@ -391,7 +415,8 @@ python scripts/run_parallel_simulation.py --config your_config.json --guards bot
 ## 端到端：替身模型跑一整局
 
 ```bash
-python -m verification.e2e_stub            # 三档臂，约一分半（三档加起来实测 74 ~ 82 秒）
+python -m verification.e2e_stub            # 三档臂，约一分二十秒（本机一次实测 24.8 / 31.8 / 20.8 秒，
+                                           # 合计 77.4 秒；几次运行落在 74 ~ 82 秒）
 python -m verification.e2e_stub --keep     # 留下临时目录，方便逐字看现场
 ```
 
@@ -523,7 +548,8 @@ python scripts/run_parallel_simulation.py \
 装置那条探针消息是「【记录开始】…数据 数据…【记录结束】」（763 字），草稿那条是
 「记录0，记录1，…记录89，」（440 字）。两条完全不同的消息，在这个分词器下
 **都恰好数出 277 token**，于是记录数与实增 token 撞在了一起。换分词器、或者谁改了
-一边的探针消息，两边就会各走各的，而**不会有任何东西响**。
+一边的探针消息，两边就会各走各的 —— **那正是这一步要响的地方**：它比的就是这三个数，
+任何一边动了而没重跑它，它当场报 `×` 并退 `1`。
 
 这一步**不重跑**装置那三条（它们的正文刚跑出来还热着），只跑那两份草稿，
 多花十来秒。它**不并进汇总里那个 `x/3`** —— 三条复现回答的是「仿真会不会坏」，
@@ -540,7 +566,7 @@ python scripts/run_parallel_simulation.py \
 和 `MUTATIONS.md` 同一个形状 —— **改坏 → 跑 → 记录 → 逐字节还原**，两轮：
 
 ```bash
-python -m verification.reconcile_selfcheck     # 在 backend/ 下跑；约二十几秒
+python -m verification.reconcile_selfcheck     # 在 backend/ 下跑；约五十秒（本机实测 48.9 秒）
 ```
 
 | 轮 | 改了什么 | 跑什么 | 期望 |
@@ -553,7 +579,7 @@ python -m verification.reconcile_selfcheck     # 在 backend/ 下跑；约二十
 * **它不重跑装置那两条，而且这不是偷懒。** 植入只动了草稿那一个文件，而三条复现
   **都不读草稿** —— 脚本当场静态核一遍这件事（`repro_0*.py` 里不出现 `upstream`），
   所以装置侧的正文在两轮之间是**同一份文本**：不是「重跑后仍然一致」，是**根本不受影响**。
-  把这句话说清楚，比多花二十秒再跑一遍更有用，而且它不会因环境而变。
+  把这句话说清楚，比多花几十秒再跑一遍更有用，而且它不会因环境而变。
 * **它证明的和不证明的**：对账只回答「两边是不是同一组」，**回答不了「这一组数对不对」**。
   后者是复现自己那条线的事。产物里显式标了 `not_a_pass_rate: true` ——
   **B 轮那个退出码 `1` 是期望的结果**，不是失败率。
@@ -567,17 +593,30 @@ python -m verification.reconcile_selfcheck     # 在 backend/ 下跑；约二十
 
 ### ① 切片正反馈环 —— `repro_01_slicing.py`
 
-`camel/agents/chat_agent.py` 的 `update_memory`（884 / 886 / 933 / 943 / 948 行）：
+`camel/agents/chat_agent.py` 的 `update_memory`（中间的空行与注释行略去，其余**逐字**）：
 
 ```python
-remaining_budget = max(0, token_limit - ctx_tokens)   # ctx_tokens 是**截断后**的
-if current_tokens <= remaining_budget:               # ← 不满足才走切片
-    _write_single_record(message, role, base_ts); return
-base_chunk_size  = max(1, remaining_budget) // 10
-prefix_token_len = len(token_counter.encode("[chunk 1/1000 of a long message]\n"))
-chunk_body_limit = max(1, base_chunk_size - prefix_token_len)
-num_chunks       = math.ceil(len(all_token_ids) / chunk_body_limit)
+# 逐字引自 camel.agents.chat_agent
+remaining_budget = max(0, token_limit - ctx_tokens)            # 884
+if current_tokens <= remaining_budget:                         # 886
+    _write_single_record(message, role, base_ts)               # 887
+    return                                                     # 888
+base_chunk_size = max(1, remaining_budget) // 10               # 933
+sample_prefix = "[chunk 1/1000 of a long message]\n"           # 942
+prefix_token_len = len(token_counter.encode(sample_prefix))    # 943
+chunk_body_limit = max(1, base_chunk_size - prefix_token_len)  # 948
+num_chunks = math.ceil(len(all_token_ids) / chunk_body_limit)  # 951
 ```
+
+> 那个第一行 `# 逐字引自 …` **不是**装饰：`tests/test_citations.py` 认这个标记，
+> 之后每一行末尾的 `# 数字` 都会**逐字**拿去和上游第 N 行比。写这一段的时候
+> 它当场红过一次 —— 原先这里把 942 行的那个字面量**拼进了 943 行的表达式**，
+> 于是摆在读者面前的是一行**上游根本没有**的代码，而它看着比真的还顺眼。
+
+上面几行的意思：
+`remaining_budget` 用的是**截断后**的 `ctx_tokens`（884）；`if` 不满足才走切片（886）；
+残余预算先被 `// 10` 砍一刀（933）；正文容量要再减去**前缀**（942 / 943 / 948）；
+条数由正文容量算出来（951）。
 
 （`prefix_token_len` 在 `gpt-4o-mini` 的编码下量出来是 **12**，但上游写的是这个
 表达式、不是字面量 —— 换个分词器就不是 12 了。）

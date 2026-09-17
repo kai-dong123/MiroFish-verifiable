@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17 02:52:53",
+  "generated_at": "2026-09-17 22:24:30",
   "not_a_pass_rate": true,
   "what_this_is": "对**真读数**做单点受控扰动，逐条检验这套判据有没有鉴别力。",
   "what_this_is_NOT": "不是「判据对不对」的证明 —— 它证明的是「一处改动会让它动」，证明不了「判据和读数不会一起错」。真锚在对照臂上。",
@@ -14,8 +14,8 @@
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-17T02:51:15",
-    "readings_sha256": "0fe5fb3aef3080df532cef2a99008d82ae8f04d2845ffb9f43840c49d5ac104b"
+    "generated_at": "2026-09-17T22:23:32",
+    "readings_sha256": "9b2f025f1ca6ef8171035968114e407c0ac8995be321cbdf6f84c4e6bd52f791"
   },
   "claims": {
     "count": 15,

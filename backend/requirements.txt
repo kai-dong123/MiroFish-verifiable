@@ -22,6 +22,14 @@ httpx>=0.27.0
 camel-oasis==0.2.5
 camel-ai==0.2.78
 
+# 这一行是**必需的上界**，不是保守写法。camel-ai 自己声明的是 `mcp>=1.3.0`，
+# 上界开放 —— pip 会解析到 mcp 2.x，而 mcp 2.x 把 `FastMCP` 从 `mcp.server`
+# 移走了，于是 camel-ai 一导入就炸：
+#     ImportError: cannot import name 'FastMCP' from 'mcp.server'
+# 本装置（以及上游那三个入口脚本）只要 import camel 就会拉进一大批 mcp 子模块，
+# 所以漏了这一行，clone 下来照 README 装完的环境里**连 import 都过不去**。
+mcp<2
+
 # ============= 文件处理 =============
 PyMuPDF>=1.24.0
 # 编码检测（支持非UTF-8编码的文本文件）

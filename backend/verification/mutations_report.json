@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17 03:02:45",
+  "generated_at": "2026-09-17 22:42:27",
   "not_a_pass_rate": true,
   "what_this_is": "逐条改坏被测代码、看测试红不红的对照表。**红色是期望的结果**；这不是通过率、不是覆盖率、不是得分。",
   "environment": {
@@ -10,31 +10,33 @@
   },
   "script": {
     "path": "verification/mutations.py",
-    "sha256": "59648592dcfb6748d9e9589019dc2e3af39623b6dac0b829e0ad9edfd4fb3f65"
+    "sha256": "6f8510961a740bc0f9917b3d9fd5ea9802d764f258b123b8c36d88d649283b0c"
   },
   "sources": {
-    "verification/adjudicate.py": "666dd074a46f97f4e033e742cbb667aa575c7a950867d8c179563aee7860d4c9",
+    "verification/adjudicate.py": "4a88375c8d00eeea71330d5006424d82879e156a9a26656b4bec70ecb79467e8",
     "verification/camel_guards.py": "eca0e2c41c00ced7e57cbe83fbbce94aecb40b9cce155530a393560abdb898c2",
-    "verification/repro_02_timestamp.py": "3e4f5b210dc093b7bce3983c3654c5a9dcb9bc146e42389ccf83234ee160e3c9",
-    "verification/tests/test_citations.py": "a0c97d8bccd82fdad6c63174c0dc59ce75319624d4e8b138e1e2fdc21cfd32c3"
+    "verification/repro_02_timestamp.py": "4cafd1652f914504dd7ae9d1adfa641ea7e20d667eb9ec272db8f868ee32cbf7",
+    "verification/tests/test_citations.py": "62f99a89df992f421457e7913163df538553a3ff08b0b74a86d5f4cdc1df9108"
   },
   "sources_after": {
-    "verification/adjudicate.py": "666dd074a46f97f4e033e742cbb667aa575c7a950867d8c179563aee7860d4c9",
+    "verification/adjudicate.py": "4a88375c8d00eeea71330d5006424d82879e156a9a26656b4bec70ecb79467e8",
     "verification/camel_guards.py": "eca0e2c41c00ced7e57cbe83fbbce94aecb40b9cce155530a393560abdb898c2",
-    "verification/repro_02_timestamp.py": "3e4f5b210dc093b7bce3983c3654c5a9dcb9bc146e42389ccf83234ee160e3c9",
-    "verification/tests/test_citations.py": "a0c97d8bccd82fdad6c63174c0dc59ce75319624d4e8b138e1e2fdc21cfd32c3"
+    "verification/repro_02_timestamp.py": "4cafd1652f914504dd7ae9d1adfa641ea7e20d667eb9ec272db8f868ee32cbf7",
+    "verification/tests/test_citations.py": "62f99a89df992f421457e7913163df538553a3ff08b0b74a86d5f4cdc1df9108"
   },
-  "suite_sha256": "e9a50b138298b28c3aedecc6887f9f257db6bf762975d799dc82c176a325b0ce",
+  "source_count": 4,
+  "selfcheck_tests": 9,
+  "suite_sha256": "11db13af8e03b0a3be99bcb718b98ca224560c5bb1bf4ff69aab70e530de5121",
   "baseline": {
     "returncode": 0,
     "failed": 0,
-    "passed": 128,
-    "skipped": 26,
+    "passed": 137,
+    "skipped": 34,
     "errors": 0,
     "failed_ids": [],
     "failed_by_file": {},
-    "seconds": 21.32,
-    "raw_tail": "...............ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n128 passed, 26 skipped in 17.58s"
+    "seconds": 10.56,
+    "raw_tail": "...............ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n137 passed, 34 skipped in 9.30s"
   },
   "mutations": [
     {
@@ -44,7 +46,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    if own_tokens > limit:",
           "new": "    if own_tokens >= limit:"
         }
@@ -53,8 +55,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal"
@@ -62,8 +64,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 20.78,
-      "raw_tail": "...............ssssssssssss.......F..................................... [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 127 passed, 26 skipped in 17.00s",
+      "seconds": 10.29,
+      "raw_tail": "...............ssssssssssss.......F..................................... [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 136 passed, 34 skipped in 9.03s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -75,7 +77,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    \"\"\"替换 `ChatAgent.update_memory` 的那个函数。两个开关在这里读。\"\"\"\n    original = _state[\"original\"]",
           "new": "    \"\"\"替换 `ChatAgent.update_memory` 的那个函数。两个开关在这里读。\"\"\"\n    original = _state[\"original\"]\n    return original(self, message, role, timestamp)  # 变异：空操作"
         }
@@ -84,8 +86,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 10,
-      "passed": 118,
-      "skipped": 26,
+      "passed": 127,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_install_is_idempotent",
@@ -102,8 +104,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 10
       },
-      "seconds": 20.52,
-      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 118 passed, 26 skipped in 16.89s",
+      "seconds": 10.29,
+      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 127 passed, 34 skipped in 9.01s",
       "failed_in_target": 10,
       "matched": true,
       "reverted": true
@@ -115,7 +117,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    if own_tokens > limit:",
           "new": "    if False:"
         }
@@ -124,8 +126,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 2,
-      "passed": 126,
-      "skipped": 26,
+      "passed": 135,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit",
@@ -134,8 +136,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 2
       },
-      "seconds": 21.42,
-      "raw_tail": "...............ssssssssssss......FF..................................... [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 126 passed, 26 skipped in 17.79s",
+      "seconds": 10.2,
+      "raw_tail": "...............ssssssssssss......FF..................................... [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 135 passed, 34 skipped in 8.95s",
       "failed_in_target": 2,
       "matched": true,
       "reverted": true
@@ -147,7 +149,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "STEP = 1e-3",
           "new": "STEP = 1e-7"
         }
@@ -156,8 +158,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset"
@@ -165,8 +167,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 21.3,
-      "raw_tail": "...............ssssssssssss.................F........................... [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 127 passed, 26 skipped in 17.57s",
+      "seconds": 10.35,
+      "raw_tail": "...............ssssssssssss.................F........................... [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 136 passed, 34 skipped in 9.08s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -178,7 +180,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    if last is not None and value < last + STEP:\n        value = last + STEP\n    agent._ts_guard_last = value",
           "new": "    agent._ts_guard_last = value"
         }
@@ -187,8 +189,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 4,
-      "passed": 124,
-      "skipped": 26,
+      "passed": 133,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock",
@@ -199,8 +201,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 4
       },
-      "seconds": 21.83,
-      "raw_tail": "...............ssssssssssss...........F..FFF............................ [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 124 passed, 26 skipped in 18.19s",
+      "seconds": 10.25,
+      "raw_tail": "...............ssssssssssss...........F..FFF............................ [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 133 passed, 34 skipped in 8.99s",
       "failed_in_target": 4,
       "matched": true,
       "reverted": true
@@ -212,7 +214,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    except Exception:  # noqa: BLE001\n        # 算不出来就别自作聪明 —— 交回原方法。\n        if _state[\"timestamp\"]:\n            _note_timestamp(self, timestamp)\n        return original(self, message, role, timestamp)",
           "new": "    except Exception:  # noqa: BLE001\n        raise"
         }
@@ -221,8 +223,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted"
@@ -230,8 +232,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 20.83,
-      "raw_tail": "...............ssssssssssss........F.................................... [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 127 passed, 26 skipped in 17.30s",
+      "seconds": 10.16,
+      "raw_tail": "...............ssssssssssss........F.................................... [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 136 passed, 34 skipped in 8.92s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -243,7 +245,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    if _state[\"patched\"]:\n        _state[\"slicing\"] = slicing\n        _state[\"timestamp\"] = timestamp\n        return _state",
           "new": "    if False:\n        _state[\"slicing\"] = slicing\n        _state[\"timestamp\"] = timestamp\n        return _state"
         }
@@ -252,8 +254,8 @@
       "claim": "README「守卫：两个方向都要成立」：七处变异都变红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_install_is_idempotent"
@@ -261,8 +263,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 20.45,
-      "raw_tail": "...............ssssssssssssF............................................ [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 127 passed, 26 skipped in 16.82s",
+      "seconds": 10.12,
+      "raw_tail": "...............ssssssssssssF............................................ [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 136 passed, 34 skipped in 8.88s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -274,7 +276,7 @@
       "target": "verification/tests/test_repro_verdicts.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\repro_02_timestamp.py",
+          "file": "verification/repro_02_timestamp.py",
           "old": "    same = (gap / tick) < 1.0 if tick > 0 else False",
           "new": "    same = want_same"
         }
@@ -283,8 +285,8 @@
       "claim": "README「判词」：判词写死 → 红 16 条",
       "returncode": 1,
       "failed": 16,
-      "passed": 112,
-      "skipped": 26,
+      "passed": 121,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]",
@@ -307,8 +309,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 16
       },
-      "seconds": 20.94,
-      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 112 passed, 26 skipped in 17.33s",
+      "seconds": 10.16,
+      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 121 passed, 34 skipped in 8.92s",
       "failed_in_target": 16,
       "matched": true,
       "reverted": true
@@ -320,7 +322,7 @@
       "target": "verification/tests/test_repro_verdicts.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\repro_02_timestamp.py",
+          "file": "verification/repro_02_timestamp.py",
           "old": "    same = (gap / tick) < 1.0 if tick > 0 else False",
           "new": "    same = (gap / tick) <= 1.0 if tick > 0 else False"
         }
@@ -329,8 +331,8 @@
       "claim": "README「判词」：`<` 写成 `<=` → 红 3 条",
       "returncode": 1,
       "failed": 3,
-      "passed": 125,
-      "skipped": 26,
+      "passed": 134,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]",
@@ -340,8 +342,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 23.53,
-      "raw_tail": "...............ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss....F............F...... [ 93%]\n.......F..                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 125 passed, 26 skipped in 19.72s",
+      "seconds": 10.08,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss....F..... [ 84%]\n.......F.............F.....                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 134 passed, 34 skipped in 8.86s",
       "failed_in_target": 3,
       "matched": true,
       "reverted": true
@@ -353,7 +355,7 @@
       "target": "verification/tests/test_repro_verdicts.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\repro_02_timestamp.py",
+          "file": "verification/repro_02_timestamp.py",
           "old": "    n = gap / tick if tick > 0 else float(\"nan\")\n    return (\"**同一拍**（与预期相反）\" if same\n            else f\"**跨到 {n:,.0f} 拍**（与预期相反）\")",
           "new": "    return (\"同拍 → 碰撞才发生\" if same\n            else \"跨拍 → 误打误撞免疫\")"
         }
@@ -362,8 +364,8 @@
       "claim": "README「判词」：去掉「与预期相反」那一支 → 红 3 条",
       "returncode": 1,
       "failed": 3,
-      "passed": 125,
-      "skipped": 26,
+      "passed": 134,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed",
@@ -373,8 +375,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 25.4,
-      "raw_tail": "...............ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n...FF...F.                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 125 passed, 26 skipped in 21.52s",
+      "seconds": 10.31,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n.................FF...F....                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 134 passed, 34 skipped in 9.09s",
       "failed_in_target": 3,
       "matched": true,
       "reverted": true
@@ -386,7 +388,7 @@
       "target": "verification/tests/test_citations.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "file": "verification/tests/test_citations.py",
           "old": "(\"camel.agents.chat_agent\", 933,",
           "new": "(\"camel.agents.chat_agent\", 934,"
         }
@@ -395,8 +397,8 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size"
@@ -404,8 +406,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 25.4,
-      "raw_tail": "...............ssssssssssss............................F................ [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 127 passed, 26 skipped in 21.30s",
+      "seconds": 10.13,
+      "raw_tail": "...............ssssssssssss............................F................ [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 136 passed, 34 skipped in 8.89s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -417,7 +419,7 @@
       "target": "verification/tests/test_citations.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "file": "verification/tests/test_citations.py",
           "old": "(\"camel.agents.chat_agent\", 884,",
           "new": "(\"camel.agents.chat_agent\", 999999,"
         }
@@ -426,8 +428,8 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget"
@@ -435,8 +437,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 24.96,
-      "raw_tail": "...............ssssssssssss..........................F.................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 127 passed, 26 skipped in 20.99s",
+      "seconds": 10.16,
+      "raw_tail": "...............ssssssssssss..........................F.................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 136 passed, 34 skipped in 8.91s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -448,7 +450,7 @@
       "target": "verification/tests/test_citations.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "file": "verification/tests/test_citations.py",
           "old": "\"base_chunk_size = max(1, remaining_budget) // 10\",",
           "new": "\"base_chunk_size = max(1, remaining_budget) // 100\","
         }
@@ -457,8 +459,8 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size"
@@ -466,8 +468,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 25.64,
-      "raw_tail": "...............ssssssssssss............................F................ [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 127 passed, 26 skipped in 21.66s",
+      "seconds": 10.3,
+      "raw_tail": "...............ssssssssssss............................F................ [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 136 passed, 34 skipped in 9.02s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -479,7 +481,7 @@
       "target": "verification/tests/test_citations.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "file": "verification/tests/test_citations.py",
           "old": "(\"camel.memories.base\", 143,",
           "new": "(\"camel.memories.base_missing\", 143,"
         }
@@ -488,8 +490,8 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 126,
-      "skipped": 27,
+      "passed": 135,
+      "skipped": 35,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_citations.py::test_every_citation_module_is_reachable"
@@ -497,8 +499,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 25.37,
-      "raw_tail": "...............ssssssssssss.......................................s..... [ 46%]\n......F...........................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 126 passed, 27 skipped in 21.33s",
+      "seconds": 10.15,
+      "raw_tail": "...............ssssssssssss.......................................s..... [ 42%]\n......F......ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 135 passed, 35 skipped in 8.91s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -510,12 +512,12 @@
       "target": "verification/tests/test_citations.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "file": "verification/tests/test_citations.py",
           "old": "(\"oasis.environment.env\", 55,",
           "new": "(\"oasis.environment.env\", 193,"
         },
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\tests\\test_citations.py",
+          "file": "verification/tests/test_citations.py",
           "old": "\"semaphore: int = 128\",",
           "new": "\"await asyncio.gather(*tasks)\","
         }
@@ -524,8 +526,8 @@
       "claim": "README「引文：文档里的行号不许腐烂」：上半五处变异都红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_citations.py::test_no_duplicate_citations"
@@ -533,8 +535,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 24.91,
-      "raw_tail": "...............ssssssssssss............................................. [ 46%]\n.......F..........................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 127 passed, 26 skipped in 20.94s",
+      "seconds": 10.11,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n.......F.....ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 136 passed, 34 skipped in 8.86s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -546,7 +548,7 @@
       "target": "verification/tests/test_citations.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "base_chunk_size - prefix_token_len",
           "new": "base_chunk_size - 12"
         }
@@ -555,8 +557,8 @@
       "claim": "README「引文」：下半把那个写法植回 `camel_guards.py`，当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size"
@@ -564,8 +566,39 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 24.93,
-      "raw_tail": "...............ssssssssssss............................................. [ 46%]\n..........F.......................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 127 passed, 26 skipped in 20.85s",
+      "seconds": 10.28,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n..........F..ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 136 passed, 34 skipped in 8.96s",
+      "failed_in_target": 1,
+      "matched": true,
+      "reverted": true
+    },
+    {
+      "id": "C7",
+      "group": "引文·逐字块",
+      "what": "逐字块里的行号错开一格（886 → 885，那一行是空行）",
+      "target": "verification/tests/test_citations.py",
+      "edits": [
+        {
+          "file": "verification/README.md",
+          "old": "if current_tokens <= remaining_budget:                         # 886",
+          "new": "if current_tokens <= remaining_budget:                         # 885"
+        }
+      ],
+      "expect_failed": 1,
+      "claim": "README「引文」：标了行号的逐字块，行号错了当场红",
+      "returncode": 1,
+      "failed": 1,
+      "passed": 136,
+      "skipped": 34,
+      "errors": 0,
+      "failed_ids": [
+        "verification/tests/test_citations.py::test_verbatim_blocks_match_upstream_line_for_line[-camel.agents.chat_agent-]"
+      ],
+      "failed_by_file": {
+        "verification/tests/test_citations.py": 1
+      },
+      "seconds": 13.88,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n............Fssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_verbatim_blocks_match_upstream_line_for_line[-camel.agents.chat_agent-]\n1 failed, 136 passed, 34 skipped in 12.59s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -577,7 +610,7 @@
       "target": "verification/tests/test_adjudicate.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "file": "verification/adjudicate.py",
           "old": "        hits = [f\"{a}.{m}\" for a, m in c[\"operands\"] if (a, m) in railed]",
           "new": "        _arms = {a for a, _ in railed}\n        _mets = {m for _, m in railed}\n        hits = [f\"{a}.{m}\" for a, m in c[\"operands\"]\n                if (a, m) in railed or a in _arms or m in _mets]"
         }
@@ -586,8 +619,8 @@
       "claim": "README「裁决：三种结果不是两种」：贴界按单元格判，退化成乘积当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets"
@@ -595,8 +628,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 24.5,
-      "raw_tail": ".F.............ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets\n1 failed, 127 passed, 26 skipped in 20.66s",
+      "seconds": 10.4,
+      "raw_tail": ".F.............ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets\n1 failed, 136 passed, 34 skipped in 9.16s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -608,7 +641,7 @@
       "target": "verification/tests/test_adjudicate.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "file": "verification/adjudicate.py",
           "old": "\"check\": c[\"check\"], \"verdict\": UNDECIDED,",
           "new": "\"check\": c[\"check\"], \"verdict\": FAIL_,  # 变异：没测到就当没通过"
         }
@@ -617,8 +650,8 @@
       "claim": "README「裁决」：缺读数判不可判定，折进「否决」当场红",
       "returncode": 1,
       "failed": 4,
-      "passed": 124,
-      "skipped": 26,
+      "passed": 133,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous",
@@ -630,8 +663,8 @@
         "verification/tests/test_adjudicate.py": 3,
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 25.04,
-      "raw_tail": "F.F....F.......ssssssssssss............................................. [ 46%]\n...............................F..ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous\nFAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed\nFAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided\n4 failed, 124 passed, 26 skipped in 21.10s",
+      "seconds": 10.2,
+      "raw_tail": "F.F....F.......ssssssssssss............................................. [ 42%]\n.............ssss....................F......ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous\nFAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed\nFAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided\n4 failed, 133 passed, 34 skipped in 8.93s",
       "failed_in_target": 3,
       "matched": true,
       "reverted": true
@@ -643,7 +676,7 @@
       "target": "verification/tests/test_adjudicate.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "file": "verification/adjudicate.py",
           "old": "            if after[cid][\"verdict\"] != base[cid][\"verdict\"]:",
           "new": "            if True:  # 变异：声明了就算数，不去试它"
         }
@@ -652,8 +685,8 @@
       "claim": "README「裁决·非空泛」：falsifier 必须实例化，只查在不在当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous"
@@ -661,8 +694,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 25.05,
-      "raw_tail": ".....F.........ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous\n1 failed, 127 passed, 26 skipped in 20.96s",
+      "seconds": 10.12,
+      "raw_tail": ".....F.........ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous\n1 failed, 136 passed, 34 skipped in 8.86s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -674,7 +707,7 @@
       "target": "verification/tests/test_adjudicate.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "file": "verification/adjudicate.py",
           "old": "        return 1\n    return 0\n\n\nif __name__ == \"__main__\":",
           "new": "        return 0  # 变异：有恒真判据也当表是好的\n    return 0\n\n\nif __name__ == \"__main__\":"
         }
@@ -683,8 +716,8 @@
       "claim": "README「裁决：恒真就不许退 0」：判据恒真时退出码必须非 0",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green"
@@ -692,8 +725,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 25.18,
-      "raw_tail": "..............Fssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green\n1 failed, 127 passed, 26 skipped in 21.34s",
+      "seconds": 10.18,
+      "raw_tail": "..............Fssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green\n1 failed, 136 passed, 34 skipped in 8.91s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -705,7 +738,7 @@
       "target": "verification/tests/test_adjudicate.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "file": "verification/adjudicate.py",
           "old": "        print(f\"\\n○ 没测到：{e}\")\n        return 2",
           "new": "        print(f\"\\n○ 没测到：{e}\")\n        return 1  # 变异：折成「没达到预期」"
         }
@@ -714,8 +747,8 @@
       "claim": "README「退出码：三种不是两种」：前提不成立退 2，折成 1 当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback"
@@ -723,8 +756,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 24.71,
-      "raw_tail": ".............F.ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback\n1 failed, 127 passed, 26 skipped in 20.82s",
+      "seconds": 10.21,
+      "raw_tail": ".............F.ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback\n1 failed, 136 passed, 34 skipped in 8.96s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -736,7 +769,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "    _state[\"patched\"] = True\n    _arrange_counters_dump()",
           "new": "    _state[\"patched\"] = True  # 变异：不安排落盘"
         }
@@ -745,8 +778,8 @@
       "claim": "README「守卫端到端」：装了守卫就得安排落盘，拿掉当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit"
@@ -754,8 +787,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 25.76,
-      "raw_tail": "...............ssssssssssss...................F......................... [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit\n1 failed, 127 passed, 26 skipped in 21.81s",
+      "seconds": 10.09,
+      "raw_tail": "...............ssssssssssss...................F......................... [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit\n1 failed, 136 passed, 34 skipped in 8.85s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -767,7 +800,7 @@
       "target": "verification/tests/test_e2e_stub.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\adjudicate.py",
+          "file": "verification/adjudicate.py",
           "old": "    if not path.is_file():\n        return None\n    try:",
           "new": "    if not path.is_file():\n        # 变异：没跑过就编一份读数 —— 于是那五条照判「通过」\n        return {\"results\": [{\"readings\": {\n            \"readings\": {\n                \"roomy_e2e\": {\"written_whole\": 1, \"still_sliced\": 0,\n                              \"timestamp_pushed\": 1, \"db_posts\": 1},\n                \"bigtext_e2e\": {\"written_whole\": 1, \"still_sliced\": 1,\n                               \"timestamp_pushed\": 0, \"db_posts\": 1},\n                \"two_e2e\": {\"written_whole\": 2, \"still_sliced\": 0,\n                            \"timestamp_pushed\": 1, \"db_posts\": 2}},\n            \"boundaries\": []}}]}\n    try:"
         }
@@ -776,8 +809,8 @@
       "claim": "README「裁决：三种结果不是两种」：端到端读数缺了要判不可判定，编一份补上当场红",
       "returncode": 1,
       "failed": 1,
-      "passed": 127,
-      "skipped": 26,
+      "passed": 136,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [
         "verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception"
@@ -785,8 +818,8 @@
       "failed_by_file": {
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 24.75,
-      "raw_tail": "...............ssssssssssss............................................. [ 46%]\n..............................F...ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception\n1 failed, 127 passed, 26 skipped in 20.89s",
+      "seconds": 9.91,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n.............ssss...................F.......ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception\n1 failed, 136 passed, 34 skipped in 8.72s",
       "failed_in_target": 1,
       "matched": true,
       "reverted": true
@@ -798,7 +831,7 @@
       "target": "verification/tests/test_camel_guards.py",
       "edits": [
         {
-          "file": "D:\\open_source\\mirofish-verifiable\\backend\\verification\\camel_guards.py",
+          "file": "verification/camel_guards.py",
           "old": "STEP = 1e-3",
           "new": "STEP = 1e-3  # 阴性对照：这行不该有行为差异"
         }
@@ -807,21 +840,21 @@
       "claim": "本模块自己的纪律：不做任何语义改动的编辑，一条都不许红",
       "returncode": 0,
       "failed": 0,
-      "passed": 128,
-      "skipped": 26,
+      "passed": 137,
+      "skipped": 34,
       "errors": 0,
       "failed_ids": [],
       "failed_by_file": {},
-      "seconds": 25.52,
-      "raw_tail": "...............ssssssssssss............................................. [ 46%]\n..................................ssssssssssssss........................ [ 93%]\n..........                                                               [100%]\n128 passed, 26 skipped in 21.53s",
+      "seconds": 9.92,
+      "raw_tail": "...............ssssssssssss............................................. [ 42%]\n.............ssss...........................ssssssssssssssssss.......... [ 84%]\n...........................                                              [100%]\n137 passed, 34 skipped in 8.72s",
       "failed_in_target": 0,
       "matched": true,
       "reverted": true
     }
   ],
   "summary": {
-    "total": 24,
-    "matched": 24,
+    "total": 25,
+    "matched": 25,
     "mismatches": [],
     "all_sources_reverted": true,
     "baseline_green": true
