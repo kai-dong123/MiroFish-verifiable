@@ -16,6 +16,11 @@
 
 `MIROFISH_MUTATION_RUN` 在跑的时候跳过自己：那几轮是拿**改坏的源码**在跑，
 收集到的条数本来就会变，那不是发现，是自问自答。
+
+同一类东西还有一处：README 的「装与跑」里那句
+**`Requires-Python: >=3.10.0,<3.12`**。那也不是我们定的数，是 `camel-oasis`
+包元数据里的值 —— 上游放宽了，README 那句话就过期，而**没有任何东西会因此变红**。
+所以它也在这里现场对一遍（同一份 README，同一种病）。
 """
 
 from __future__ import annotations
@@ -103,3 +108,68 @@ def test_the_file_count_in_the_readme_matches_reality(readme_text):
     for name in files:
         assert f"`{name}`" in readme_text, (
             f"`{name}` 在 `tests/` 下，README 那张表里却没有它 —— 加一行。")
+
+
+#: README 里引 `camel-oasis` 的 `Requires-Python` 时用的写法。**只认这一处**：
+#: 前面那句「`camel-ai 0.2.78` 是 `<3.13,>=3.10`」故意不匹配 —— 它没有
+#: `Requires-Python: ` 这个前缀，写的是给人读的简写。核的是被引用的那一个。
+_QUOTED_BOUND = re.compile(r"Requires-Python:\s*([^\s`，。]+)")
+
+
+def _bound_mismatch(readme: str, live: str) -> str | None:
+    """README 引的界和现场元数据对不上就返回一句人话，对得上返回 `None`。
+
+    单拎出来是为了下面那条阴性对照能拿它验一次：**它现在不报错，
+    可能只是因为它永远不报错。**
+    """
+    m = _QUOTED_BOUND.search(readme)
+    if not m:
+        return "README 里找不到引用的 `Requires-Python: …`"
+    if m.group(1) == live:
+        return None
+    return f"README 引的是 `{m.group(1)}`，现场元数据是 `{live}`"
+
+
+def test_the_python_bound_quoted_in_the_readme_matches_the_live_metadata(readme_text):
+    """README 说「3.10 / 3.11 装得上、3.12 装不上、卡住的是 camel-oasis」。
+
+    这三句都不是我们的判断，是从依赖元数据里读出来的。**读出来的东西会漂。**
+    所以现场读一遍；顺便把「卡住的是谁」这个归属也验掉 ——
+    真正的约束是四个直接相关包的**交集**（`camel-oasis <3.12`、`camel-ai <3.13`、
+    `tiktoken >=3.8`、`mcp >=3.10`），卡住上界的是 `camel-oasis`。
+    哪天 `camel-ai` 收得比它还紧，README 那句归因就指错人了，这一条会红。
+    """
+    from importlib.metadata import metadata
+
+    live = metadata("camel-oasis")["Requires-Python"]
+    problem = _bound_mismatch(readme_text, live)
+    assert problem is None, (
+        f"{problem}。\n以包元数据为准改 `verification/README.md`（那句界**只写在那一个地方**）—— "
+        "它是 `camel-oasis` 自己声明的，不是我们设的。")
+
+    assert "<3.12" in live, (
+        f"`camel-oasis` 现在声明 `{live}` —— 它不再排除 3.12 了，"
+        "README 那句「3.12 装不上」跟着过期。")
+
+    other = metadata("camel-ai")["Requires-Python"]
+    assert "<3.12" not in other, (
+        f"`camel-ai` 现在声明 `{other}`，也把 3.12 挡在外面了 —— "
+        "README 把上界归给了 `camel-oasis`，这个归属要跟着改。")
+
+
+def test_the_python_bound_comparison_would_flag_a_wrong_bound(readme_text):
+    """阴性对照：把界换成一个假的，上面那段比较必须说「不对」。
+
+    没有这一条，`_bound_mismatch` 可能是恒返回 `None` 的（正则写歪了、
+    或者元数据根本没读出来），那么上面那条测试永远绿 —— 而 README 里那串
+    数字**一次都没被核过**。（跟 `test_docs_claims.py` 里那条数目对照同一个道理。）
+    """
+    from importlib.metadata import metadata
+
+    live = metadata("camel-oasis")["Requires-Python"]
+
+    # 先拿真值确认它不报错，否则下面那个「报错」可能只是因为它总在报错
+    assert _bound_mismatch(readme_text, live) is None, (
+        "拿真值喂进去也说不对 —— 那 `_bound_mismatch` 本身坏了，上面那条是假绿。")
+    assert _bound_mismatch(readme_text, ">=3.9") is not None, (
+        "换一个假的上界进去，它居然还说「对得上」—— 那么上面那条什么都没核。")

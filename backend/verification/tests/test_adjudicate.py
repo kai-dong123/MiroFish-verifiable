@@ -232,6 +232,63 @@ def test_a_claim_already_failed_does_not_need_a_falsifier():
     assert out["kind"] == "已否决", out["detail"]
 
 
+def test_every_falsifier_result_the_checker_can_emit_is_renderable():
+    """**闭集里四种结果，检查器吐得出、渲染器就得画得出。**
+
+    这条是 2026-09-19 拿血换来的。`adjudicate.py` 与 `selfproof.py` 各有一张
+    「判据非空泛性」表，两张表**各抄了一份**结果→写法的映射；`selfproof` 那份
+    只写了三态，少了「已否决」（判据本来就判「否决」）。而本机的判据**从来没
+    真的判过否决**，于是那个洞跑不到 —— 直到把它拿到 Linux 上跑（那台机器的
+    时钟刻度比 camel 那个 `1e-6` 偏移还细，真有几条判据翻了面），
+    `selfproof` 当场 `KeyError: '已否决'`：**报告算完了，写不出来。**
+
+    所以这里不测「本机出现过的那几种」，测**四种全部**：
+    先确认这四种都真吐得出来（否则闭集里的是空话），再确认映射表一个不少。
+    两份产物现在是同一张表（`A.FALSIFIER_MARKS`），键一缺就在这里红。
+    """
+    # 「不可判定」的入口是**读数缺席**（`("Z", "x")` 不在 `CELLS` 里），不是给
+    # `undecidable=` 传一段话 —— 那个参数是缺席时**用的说明文字**。话传了而读数
+    # 给全了，这条会被判成「恒真」，于是这条测试自己就成了它要抓的那种错：
+    # 测的东西和以为在测的东西不是一回事。
+    und = _claim("T20", (("Z", "x"),), lambda v, t: True,
+                 undecidable="没量到", to_fix="去量")
+    red = _claim("T21", (("A", "x"),), lambda v, t: False)
+    vac = _claim("T22", (("A", "x"),), lambda v, t: True)          # 没有 falsifier
+    flip = _claim("T23", (("A", "x"),), lambda v, t: v[0] >= 5,
+                  check="`A.x` ≥ 5", thresholds=((r"≥\s*([\d.]+)", "下界"),),
+                  falsifier={("A", "x"): 1})
+
+    got = {f["id"]: f["kind"] for f in
+           A.falsifier_report((und, red, vac, flip), CELLS, {}, {})}
+    assert got == {"T20": "不可判定", "T21": "已否决",
+                   "T22": "恒真", "T23": "可翻面"}, got
+
+    assert set(A.FALSIFIER_MARKS) == set(A.FALSIFIER_KINDS), (
+        f"两张表不同键：渲染用 {sorted(A.FALSIFIER_MARKS)}，"
+        f"闭集是 {sorted(A.FALSIFIER_KINDS)}")
+    assert set(got.values()) <= set(A.FALSIFIER_MARKS), (
+        f"检查器吐出了渲染器画不出来的结果："
+        f"{sorted(set(got.values()) - set(A.FALSIFIER_MARKS))}")
+
+
+@_SKIP_UNDER_MUTATION
+def test_the_selfproof_renderer_survives_a_denied_claim(sp):
+    """再把那个**真实的崩溃**在产物上走一遍：给自证报告塞一条「已否决」的
+    falsifier，渲染器必须照样出得来。
+
+    上面那条测的是机制，这条测的是**那份产物渲染函数**真的接到了同一张表上 ——
+    只测机制的话，渲染器里再手抄一份三态的表也照样绿。
+    """
+    import copy
+
+    rep = copy.deepcopy(sp)
+    rep["falsifiers"] = [{"id": "T99", "kind": "已否决", "detail": "试一下"}]
+    text = S.render_markdown(rep)
+    assert "T99" in text, "自证的渲染器没能把这一行画出来"
+    assert A.FALSIFIER_MARKS["已否决"] in text, (
+        f"画出来的不是 {A.FALSIFIER_MARKS['已否决']!r} —— 渲染器里又抄了一份表？")
+
+
 def test_undecided_is_not_counted_as_vacuous():
     """缺读数翻不动，**不是**恒真 —— 两者不能混成一个数。"""
     row = _one(_claim("T14", (("Z", "x"),), lambda v, t: True,

@@ -272,7 +272,9 @@ MUTATIONS = (
     _M("J2", G_ADJ_MISS, "把「缺读数」折进「否决」—— 正是本装置抓别人的那件事",
        T_ADJ, [(ADJUDICATE, '"check": c["check"], "verdict": UNDECIDED,',
                 '"check": c["check"], "verdict": FAIL_,  # 变异：没测到就当没通过')],
-       expect=3, claim="README「裁决」：缺读数判不可判定，折进「否决」当场红"),
+       # 期望值 3 → 4（2026-09-19）：当时「四种结果都吐得出」那条测试还不存在，所以
+       # 折进去之后只有三条会红。现在多了一条守在出口的闭集检查，这一处改坏会多红一条。
+       expect=4, claim="README「裁决」：缺读数判不可判定，折进「否决」当场红"),
 
     _M("J3", G_ADJ_VAC, "falsifier 只查在不在，**不实例化** —— 于是它永远「翻得动」",
        T_ADJ, [(ADJUDICATE,

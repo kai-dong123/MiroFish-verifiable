@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19 14:35:37",
+  "generated_at": "2026-09-19 15:14:39",
   "not_a_pass_rate": true,
   "what_this_is": "一套**跨复现的**判据：把三条复现各自的读数摆到一张桌上判。每条都自带 falsifier，所以「它有没有鉴别力」是可机检的。",
   "what_this_is_NOT": "不是分数，不是通过率，不是质量评价。判不了的那几条**根本没被判定**，不算「未通过」—— 所以这张表**不许被聚合成任何比率**。",
@@ -12,17 +12,17 @@
   },
   "script": {
     "path": "verification/adjudicate.py",
-    "sha256": "a41c597c8091c2010b14c8f62dedfd0e1230824f8dbafadfda1083ca5f3c47d0"
+    "sha256": "1b6a09898333019f1144861542ad0ef268b3ad2dc1250687a924fec1d1b0b6bf"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-19T14:35:04",
-    "readings_sha256": "8f6827b28a27e91cd1d2bba9e2dff28cc34493469e40b6391f94dd9a5ab9b58a"
+    "generated_at": "2026-09-19T15:14:06",
+    "readings_sha256": "7b7b296a9844690a1d1861527ec920edbd52f49f0a565a09e33bb0e89eeacfb8"
   },
   "e2e_report": {
     "path": "e2e_report.json",
     "present": true,
-    "generated_at": "2026-09-19T14:35:31",
+    "generated_at": "2026-09-19T15:14:33",
     "arms": [
       "roomy_e2e",
       "bigtext_e2e",
@@ -58,7 +58,7 @@
       "端到端"
     ]
   },
-  "cells_total": 66,
+  "cells_total": 69,
   "railed_cells": {
     "guard_off_1.residual": "截断**之后**算出来的，按构造就贴着上限 —— 它不是一个自由的输入",
     "guard_off_2.residual": "同上",
@@ -67,7 +67,7 @@
     "guard_on.records_added": "1 是这个量的最小值（写一条消息不可能产生 0 条记录），所以它只说明「没坏」，**不说明「好」**",
     "clock.tick_ns": "取样窗口内的**最小值**，受时钟分辨率限制 —— 它量不出比一拍更细的东西",
     "clock.ticks_per_bump": "分母是上面那个下限受制的量，比值跟着它走",
-    "guard_off_one_tick.gap_ns": "**这一臂的输入就是量出来的那一拍本身** —— 它是边界，不是随便挑的间隔；判定用的是严格 `<`，`gap == tick` 刻意算作「跨过去了」",
+    "guard_off_sub_bump.gap_ns": "**这一臂的间隔取的是那个偏移的一半（500 ns）**，为的是让它在**任何**时钟刻度下都落在「跨拍、但相差小于偏移」这一侧 —— 刻度比 500 ns 粗的机器上它跨了好几拍，比它细的机器上它跨了一拍，而两种机器上它都该违反。**这一臂是取消掉「隔一拍」那一臂换来的**：旧的写法按「拍」取间隔，判定就跟着宿主机时钟走了（Linux 实测翻面）",
     "slicing_unfixed.ticks_ratio": "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；间隔由实际工作量决定、很稳，分母本身是随机量 —— **这一列抖得比间隔那一列厉害**，不该当精确值用",
     "slicing_unfixed.gap_s": "满记忆这个前提沿用了复现一的**严格不等式**关（写入后 token 超过上限才算启动截断），所以这一臂同样坐在边界上",
     "slicing_fixed.ticks_ratio": "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；间隔由实际工作量决定、很稳，分母本身是随机量 —— **这一列抖得比间隔那一列厉害**，不该当精确值用",
@@ -177,18 +177,20 @@
     {
       "id": "B6",
       "layer": "复现二",
-      "what": "违反只在「同拍」时出现 —— 隔一拍就合法，说明节拍是成因",
-      "check": "`guard_off_same.violations` ≥ 1 且 `guard_off_one_tick.violations` == 0",
+      "what": "违反的分界是**两次落点相差小于 camel 那个 1 微秒偏移**，不是「同一拍」——相差半个偏移（跨了拍）照样违反，相差两倍偏移就不违反",
+      "check": "`guard_off_same.violations` ≥ 1 且 `guard_off_sub_bump.violations` ≥ 1 且 `guard_off_above_bump.violations` == 0",
       "verdict": "通过",
       "trusted": true,
       "no_trust_because": [],
       "values": {
         "guard_off_same.violations": 1,
-        "guard_off_one_tick.violations": 0
+        "guard_off_sub_bump.violations": 1,
+        "guard_off_above_bump.violations": 0
       },
       "operands": [
         "guard_off_same.violations",
-        "guard_off_one_tick.violations"
+        "guard_off_sub_bump.violations",
+        "guard_off_above_bump.violations"
       ],
       "tainted_by_railing": [],
       "undecidable_because": null,
@@ -221,18 +223,18 @@
     {
       "id": "B9",
       "layer": "复现三",
-      "what": "栅格上最小的那一格（1 微秒）就已经让落库次序变样",
-      "check": "`probe_0.flipped` == True 且 `probe_0.probe_s` ≤ 0.000001 秒",
+      "what": "把 0 号 agent 拖慢 0.1 毫秒，落库次序就变样 —— 而这个次序决定 `post_id`",
+      "check": "`probe_1.flipped` == True 且 `probe_1.probe_s` ≤ 0.001 秒",
       "verdict": "通过",
       "trusted": true,
       "no_trust_because": [],
       "values": {
-        "probe_0.flipped": true,
-        "probe_0.probe_s": 1e-06
+        "probe_1.flipped": true,
+        "probe_1.probe_s": 0.0001
       },
       "operands": [
-        "probe_0.flipped",
-        "probe_0.probe_s"
+        "probe_1.flipped",
+        "probe_1.probe_s"
       ],
       "tainted_by_railing": [],
       "undecidable_because": null,
@@ -267,7 +269,7 @@
     {
       "id": "B5",
       "layer": "复现三",
-      "what": "两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— 所以「1 微秒就能让次序变样」这个阈值**根本没有安全余量**",
+      "what": "两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— 所以「0.1 毫秒就能让次序变样」（B9 那个阈值）**根本没有安全余量**",
       "check": "`real_llm_call.gap_s` ≥ 0.001",
       "verdict": "不可判定",
       "trusted": null,
@@ -444,7 +446,7 @@
       "id": "B6",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_off_one_tick.violations 改成 2 → 通过 变 否决"
+      "detail": "把 guard_off_above_bump.violations 改成 2 → 通过 变 否决"
     },
     {
       "id": "B7",
@@ -456,7 +458,7 @@
       "id": "B9",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 probe_0.flipped 改成 False → 通过 变 否决"
+      "detail": "把 probe_1.flipped 改成 False → 通过 变 否决"
     },
     {
       "id": "B10",
@@ -522,5 +524,5 @@
     "not_a_rate": true,
     "note": "判不了的既不算通过也不算否决，所以这里没有分母。"
   },
-  "seconds": 0.05
+  "seconds": 0.06
 }

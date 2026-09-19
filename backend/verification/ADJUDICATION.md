@@ -1,8 +1,8 @@
 # 裁决留痕（自动生成，别手改）
 
-> 生成时间 **2026-09-19 14:35:37** · Python 3.11.9 · `cd backend && python -m verification.adjudicate`（0.05s）
+> 生成时间 **2026-09-19 15:14:39** · Python 3.11.9 · `cd backend && python -m verification.adjudicate`（0.06s）
 
-> 判的是 **`verification_report.json`** 里那一次运行的读数（那份报告生成于 2026-09-19T14:35:04，读数指纹 `8f6827b28a27…`）—— **不重跑**。**钉的是读数不是文件**：报告重写一遍、数没变，这份产物就没过期。
+> 判的是 **`verification_report.json`** 里那一次运行的读数（那份报告生成于 2026-09-19T15:14:06，读数指纹 `7b7b296a9844…`）—— **不重跑**。**钉的是读数不是文件**：报告重写一遍、数没变，这份产物就没过期。
 
 ## 这份产物是什么、不是什么
 
@@ -22,9 +22,9 @@
 | `B2` | 复现一 | √ 通过 | 采信 | guard_off_1.records_added=270、guard_off_2.records_added=270、guard_off_1.tokens_added=5130、guard_off_2.tokens_added=5130 |
 | `B3` | 复现一 | √ 通过 | 采信 | guard_on.head_intact=True、guard_off_1.head_intact=False |
 | `B4` | 复现一 | √ 通过 | 采信 | guard_off_1.expansion=18.5199 |
-| `B6` | 复现二 | √ 通过 | 采信 | guard_off_same.violations=1、guard_off_one_tick.violations=0 |
+| `B6` | 复现二 | √ 通过 | 采信 | guard_off_same.violations=1、guard_off_sub_bump.violations=1、guard_off_above_bump.violations=0 |
 | `B7` | 复现二 | √ 通过 | 采信 | guard_on_same.violations=0、guard_on_same.gap_ns=0.0 |
-| `B9` | 复现三 | √ 通过 | 采信 | probe_0.flipped=True、probe_0.probe_s=1e-06 |
+| `B9` | 复现三 | √ 通过 | 采信 | probe_1.flipped=True、probe_1.probe_s=0.0001 |
 | `B10` | 复现三 | √ 通过 | **不采信**（贴界） | orders.deterministic=True |
 | `B5` | 复现三 | ○ 不可判定 | —（判不了） | real_llm_call.gap_s=—（**读数里没有这一格**） |
 | `B8` | 复现一 | ○ 不可判定 | —（判不了） | guard_on.write_seconds=—（**读数里没有这一格**）、guard_off_1.write_seconds=—（**读数里没有这一格**） |
@@ -59,9 +59,9 @@
 - 判据：`guard_off_1.expansion` ≥ 10
 - 结果：**通过**｜成立
 
-### `B6` · 复现二 —— 违反只在「同拍」时出现 —— 隔一拍就合法，说明节拍是成因
+### `B6` · 复现二 —— 违反的分界是**两次落点相差小于 camel 那个 1 微秒偏移**，不是「同一拍」——相差半个偏移（跨了拍）照样违反，相差两倍偏移就不违反
 
-- 判据：`guard_off_same.violations` ≥ 1 且 `guard_off_one_tick.violations` == 0
+- 判据：`guard_off_same.violations` ≥ 1 且 `guard_off_sub_bump.violations` ≥ 1 且 `guard_off_above_bump.violations` == 0
 - 结果：**通过**｜成立
 
 ### `B7` · 复现二 —— 守卫开着时**同样是同拍**（碰撞还在），但违反为零 —— 破坏不了了
@@ -69,9 +69,9 @@
 - 判据：`guard_on_same.violations` == 0 且 `guard_on_same.gap_ns` == 0
 - 结果：**通过**｜成立
 
-### `B9` · 复现三 —— 栅格上最小的那一格（1 微秒）就已经让落库次序变样
+### `B9` · 复现三 —— 把 0 号 agent 拖慢 0.1 毫秒，落库次序就变样 —— 而这个次序决定 `post_id`
 
-- 判据：`probe_0.flipped` == True 且 `probe_0.probe_s` ≤ 0.000001 秒
+- 判据：`probe_1.flipped` == True 且 `probe_1.probe_s` ≤ 0.001 秒
 - 结果：**通过**｜成立
 
 ### `B10` · 复现三 —— 耗时全相同时，两遍次序逐位相同 —— 这一层是确定的，乱的是喂给它的耗时
@@ -82,7 +82,7 @@
 - 具体是哪些格子贴界：orders.deterministic
 - 这条本身不结实在哪：比较基准是「耗时全相同」这个退化情形，不是「按提交顺序」
 
-### `B5` · 复现三 —— 两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— 所以「1 微秒就能让次序变样」这个阈值**根本没有安全余量**
+### `B5` · 复现三 —— 两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— 所以「0.1 毫秒就能让次序变样」（B9 那个阈值）**根本没有安全余量**
 
 - 判据：`real_llm_call.gap_s` ≥ 0.001
 - 结果：**不可判定**｜缺 real_llm_call.gap_s
@@ -127,7 +127,7 @@
 
 ## 判据非空泛性（逐条拿单点扰动试）
 
-每条判据都声明了一个 `falsifier`：**一处具名的单点读数改动**。它必须真的能把这条判据翻面 —— 翻不动的就是**判据恒真**，它判出来的「通过」什么也不说明。
+每条判据都声明了一个 `falsifier`：**一处具名的单点读数改动**。它必须真的能把这条判据翻面 —— 翻不动的就是**判据恒真**，它判出来的「通过」什么也不说明。（本来就判「否决」的那几条不适用 —— 它已经红了。）
 
 | 判据 | 试的结果 | 明细 |
 |---|---|---|
@@ -135,9 +135,9 @@
 | `B2` | √ 翻得动 | 把 guard_off_2.records_added 改成 269 → 通过 变 否决 |
 | `B3` | √ 翻得动 | 把 guard_off_1.head_intact 改成 True → 通过 变 否决 |
 | `B4` | √ 翻得动 | 把 guard_off_1.expansion 改成 1.5 → 通过 变 否决 |
-| `B6` | √ 翻得动 | 把 guard_off_one_tick.violations 改成 2 → 通过 变 否决 |
+| `B6` | √ 翻得动 | 把 guard_off_above_bump.violations 改成 2 → 通过 变 否决 |
 | `B7` | √ 翻得动 | 把 guard_on_same.violations 改成 1 → 通过 变 否决 |
-| `B9` | √ 翻得动 | 把 probe_0.flipped 改成 False → 通过 变 否决 |
+| `B9` | √ 翻得动 | 把 probe_1.flipped 改成 False → 通过 变 否决 |
 | `B10` | √ 翻得动 | 把 orders.deterministic 改成 False → 通过 变 否决 |
 | `B5` | —（缺读数） | 缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable` |
 | `B8` | —（缺读数） | 缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable` |

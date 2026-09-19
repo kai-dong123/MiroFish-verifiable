@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19 14:35:37",
+  "generated_at": "2026-09-19 15:14:40",
   "not_a_pass_rate": true,
   "what_this_is": "对**真读数**做单点受控扰动，逐条检验这套判据有没有鉴别力。",
   "what_this_is_NOT": "不是「判据对不对」的证明 —— 它证明的是「一处改动会让它动」，证明不了「判据和读数不会一起错」。真锚在对照臂上。",
@@ -10,12 +10,12 @@
   },
   "script": {
     "path": "verification/selfproof.py",
-    "sha256": "ac0cfccfa05d68ecf2b5f0be27998693e6416e13fbdede78fc984d313ff02cc3"
+    "sha256": "f862fe4c8d65efbca76bdfc3e8cc089ba8f8d6c7fb4488ffd8d6a36e9e017296"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-19T14:35:04",
-    "readings_sha256": "8f6827b28a27e91cd1d2bba9e2dff28cc34493469e40b6391f94dd9a5ab9b58a"
+    "generated_at": "2026-09-19T15:14:06",
+    "readings_sha256": "7b7b296a9844690a1d1861527ec920edbd52f49f0a565a09e33bb0e89eeacfb8"
   },
   "claims": {
     "count": 15,
@@ -325,9 +325,9 @@
     {
       "id": "P6",
       "layer": "读数",
-      "why": "让「隔一拍」也出现违反 —— 那样「违反只在同拍出现」这个因果说法就垮了",
+      "why": "让「相差大过那个偏移」那一臂也出现违反 —— 那样「分界是那个偏移」这个因果说法就垮了",
       "edit": {
-        "guard_off_one_tick.violations": 2
+        "guard_off_above_bump.violations": 2
       },
       "unrail": [],
       "unmeasured": {},
@@ -395,9 +395,9 @@
     {
       "id": "P8",
       "layer": "读数",
-      "why": "把 1 微秒那一格改成「没变样」—— 灵敏度那句话就不成立了",
+      "why": "把 0.1 毫秒那一格改成「没变样」—— 灵敏度那句话就不成立了",
       "edit": {
-        "probe_0.flipped": false
+        "probe_1.flipped": false
       },
       "unrail": [],
       "unmeasured": {},
@@ -701,7 +701,7 @@
       "id": "B6",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_off_one_tick.violations 改成 2 → 通过 变 否决"
+      "detail": "把 guard_off_above_bump.violations 改成 2 → 通过 变 否决"
     },
     {
       "id": "B7",
@@ -713,7 +713,7 @@
       "id": "B9",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 probe_0.flipped 改成 False → 通过 变 否决"
+      "detail": "把 probe_1.flipped 改成 False → 通过 变 否决"
     },
     {
       "id": "B10",
@@ -804,5 +804,5 @@
     "all_ok": true
   },
   "problems": [],
-  "seconds": 0.04
+  "seconds": 0.05
 }

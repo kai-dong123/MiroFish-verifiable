@@ -171,3 +171,124 @@ def test_negative_tick_does_not_explode():
     verdict = _tick_verdict(1.0 * MS, -0.40 * MS, want_same=True)
 
     assert isinstance(verdict, str) and verdict
+
+
+# ---------------------------------------------------------------------------
+# 判据不许绑在宿主机上
+# ---------------------------------------------------------------------------
+#
+# 2026-09-19：把装置搬到 Linux 上跑（CPython 3.11.16，时钟刻度 100 ns，
+# 本机 Windows 是 375500 ns），**两条判据当场翻成「否决」**：
+#
+#   * `repro_02` 的那一臂间隔取的是「当场量到的一拍」—— 在刻度比 camel 那个
+#     `1e-6` 偏移粗的机器上，它恰好等于「跨过了那个偏移」，于是看着像「跨拍就
+#     免疫」；换到刻度更细的机器上同一臂照样违反。
+#   * `repro_03` 的判据取的是「本机 1 微秒那一格就翻」—— 那个数其实是**这台
+#     机器的调度粒度**，Linux 上要 100 微秒才翻。
+#
+# 两处改法是同一个：**判据的输入要写成与宿主机无关的量**（camel 的偏移、
+# 两平台都翻的栅格点），本机量到的数降级成读数。
+#
+# 下面两条把这件事钉死。它们看的是**源码的形状**，不跑那两个脚本 ——
+# 因为要防的正是「下次谁又把判据写回本机的数」，而那种改动跑起来照样绿。
+
+import ast
+import pathlib
+
+from verification import repro_02_timestamp as _R2
+from verification import repro_03_concurrency as _R3
+
+
+def _tree(mod):
+    return ast.parse(pathlib.Path(mod.__file__).read_text(encoding="utf-8"))
+
+
+def _loop_tuples(tree):
+    """源码里所有「`for ... in (元组, 元组, ...)`」的字面元组。"""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.For) and isinstance(node.iter, ast.Tuple):
+            got = [e for e in node.iter.elts
+                   if isinstance(e, ast.Tuple) and len(e.elts) == 3]
+            if got:
+                yield got
+
+
+def test_the_timestamp_arms_are_written_in_units_of_the_offset_not_the_tick():
+    """`repro_02` 四臂的间隔必须**按 camel 那个偏移**写，不按本机量到的一拍写。
+
+    先认值（半个偏移 / 两倍偏移这种换算不能在重构里被改掉），再认写法
+    （源码里必须看得见 `CAMEL_BUMP`）—— 只认值的话，有人把本机量到的那一拍
+    直接写死成一个数字，值碰巧对了也看不出来。
+    """
+    arms = [t for t in _loop_tuples(_tree(_R2))
+            if "守卫关" in ast.unparse(t[0].elts[0])]
+    assert arms, "没在 repro_02 源码里找到那四臂 —— 这条断言成了空话"
+
+    gaps = [e.elts[1] for e in arms[0]]
+    got = [eval(ast.unparse(g), {"CAMEL_BUMP": _R2.CAMEL_BUMP})  # noqa: S307
+           for g in gaps]
+    want = [0.0, _R2.CAMEL_BUMP / 2, _R2.CAMEL_BUMP * 2, 0.0]
+    assert got == want, (
+        f"四臂的间隔不再是「0 / 半个偏移 / 两倍偏移 / 0」：{got}\n"
+        f"判据的输入必须与宿主机的时钟刻度无关，否则换台机器就翻面。")
+
+    # 同拍那两臂的间隔就是 0，没什么可写的；**要按偏移写的是跨拍那两臂**。
+    for g in gaps:
+        text = ast.unparse(g)
+        if eval(text, {"CAMEL_BUMP": _R2.CAMEL_BUMP}) == 0.0:   # noqa: S307
+            continue
+        assert "CAMEL_BUMP" in text, (
+            f"这一臂的间隔写成 `{text}` —— 没有以 `CAMEL_BUMP` 为单位。"
+            f"换成宿主机的数（比如当场量到的一拍）会让判定随机器变。")
+
+
+def test_no_host_measured_quantity_decides_the_concurrency_criterion():
+    """`repro_03` 的判据那一格必须是字面量，本机量到的最小格点不得有否决权。
+
+    量出来的 `smallest`（本机 1 微秒 / Linux 100 微秒）是**读数**，它进报告、
+    不进判据。判据取的是栅格上两个平台都翻的那一格。
+    """
+    tree = _tree(_R3)
+
+    cuts = [n for n in ast.walk(tree)
+            if isinstance(n, ast.Assign)
+            and any(getattr(t, "id", None) == "cut" for t in n.targets)]
+    assert len(cuts) == 1, f"`cut` 应恰好定义一次，实为 {len(cuts)} 次"
+    cut = cuts[0].value
+    assert isinstance(cut, ast.Constant) and cut.value == 1e-4, (
+        f"判据那一格必须是写死的字面量 0.1 毫秒，实为 `{ast.unparse(cut)}`；"
+        f"写成算出来的量就会随宿主机变。")
+
+    smallest = [n for n in ast.walk(tree)
+                if isinstance(n, ast.Assign)
+                and any(getattr(t, "id", None) == "smallest" for t in n.targets)]
+    assert smallest, "源码里没有 `smallest` —— 这条断言成了空话"
+
+    # 决定红绿的那些 `if`（分支里给 `ok` 赋值的那些）的条件里出现过的名字。
+    # **只扫这些**，不扫全部 `if`：`if smallest is not None:` 这种是「读数拿得
+    # 到就打印一行」的护栏，它不决定红绿 —— 把它算进来，这条断言就成了
+    # 「不许打印本机读数」，那是另一件事。
+    def _decides_ok(node) -> bool:
+        for sub in list(node.body) + list(node.orelse):
+            for inner in ast.walk(sub):
+                if isinstance(inner, ast.Assign) and any(
+                        getattr(t, "id", None) == "ok" for t in inner.targets):
+                    return True
+        return False
+
+    in_tests = {n.id for node in ast.walk(tree)
+                if isinstance(node, ast.If) and _decides_ok(node)
+                for n in ast.walk(node.test) if isinstance(n, ast.Name)}
+    assert in_tests, "一个「给 `ok` 赋值」的 `if` 都没扫到 —— 这条断言成了空话"
+    assert "cut" in in_tests, (
+        "`cut` 没出现在任何分支条件里 —— 那它就不是判据的输入，"
+        "上面那条「必须是字面量」也就没钉住东西")
+    assert "smallest" not in in_tests, (
+        f"本机量出来的 `smallest` 进了分支条件：{sorted(in_tests)}。"
+        f"那是**这台机器**的调度粒度（Windows 1 微秒、Linux 100 微秒），"
+        f"拿它当判据就是把判据绑在宿主机上。")
+
+    src = ast.unparse(tree)
+    assert "smallest_flipped_s" in src, (
+        "`smallest` 降级成读数之后仍须进报告（`smallest_flipped_s`），"
+        "否则就是把它藏起来而不是交代清楚")

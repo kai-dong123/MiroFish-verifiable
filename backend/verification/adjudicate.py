@@ -80,6 +80,23 @@ NO_TRUST_VACUOUS = "判据恒真"
 #: 而前三条复现的读数**不许不在**。
 LAYERS = ("复现一", "复现二", "复现三", "跨复现", "端到端")
 
+#: `falsifier_report` 能吐出来的「试的结果」，**闭集**。
+#: 与它配对的还有两张表：`FALSIFIER_MARKS`（渲染成字）和 `falsifier_report` 里
+#: 那个 `flipped` 映射（记进 json）。三者必须同键 —— 少一处就是一个跑不到的洞。
+#:
+#: **这一条是拿血换的**：`selfproof.py` 的渲染器原先只认三态（少了 `已否决`），
+#: 而本机从来没有一条判据真的判过「否决」，于是那个洞一直跑不到。2026-09-19
+#: 把它拿到 Linux 上跑（那台机器的时钟刻度比 camel 那个 `1e-6` 偏移还细，
+#: 于是真有几条判据翻了面），`selfproof` 当场 `KeyError: '已否决'` ——
+#: 报告**算完了、写不出来**。现在三张表同键，且 `falsifier_report` 出口处校验。
+FALSIFIER_KINDS = ("可翻面", "恒真", "已否决", "不可判定")
+
+#: 每种「试的结果」在人读产物里的写法。
+FALSIFIER_MARKS = {"可翻面": "√ 翻得动",
+                   "恒真": "× **恒真**",
+                   "已否决": "× 已否决（不适用）",
+                   "不可判定": "—（缺读数）"}
+
 
 class AdjudicationError(Exception):
     """判据表本身有问题 —— 这种错必须在生成表**之前**停下来。"""
@@ -225,12 +242,15 @@ CLAIMS = (
 
     # ---- 复现二（同拍）----------------------------------------------------
     _c("B6", "复现二",
-       "违反只在「同拍」时出现 —— 隔一拍就合法，说明节拍是成因",
-       "`guard_off_same.violations` ≥ 1 且 `guard_off_one_tick.violations` == 0",
-       (("guard_off_same", "violations"), ("guard_off_one_tick", "violations")),
-       lambda v, t: v[0] >= t[0] and v[1] == 0,
+       "违反的分界是**两次落点相差小于 camel 那个 1 微秒偏移**，不是「同一拍」——"
+       "相差半个偏移（跨了拍）照样违反，相差两倍偏移就不违反",
+       "`guard_off_same.violations` ≥ 1 且 `guard_off_sub_bump.violations` ≥ 1 "
+       "且 `guard_off_above_bump.violations` == 0",
+       (("guard_off_same", "violations"), ("guard_off_sub_bump", "violations"),
+        ("guard_off_above_bump", "violations")),
+       lambda v, t: v[0] >= t[0] and v[1] >= t[0] and v[2] == 0,
        thresholds=((r"≥\s*([\d.]+)", "违反数下界"),),
-       falsifier={("guard_off_one_tick", "violations"): 2}),
+       falsifier={("guard_off_above_bump", "violations"): 2}),
 
     _c("B7", "复现二",
        "守卫开着时**同样是同拍**（碰撞还在），但违反为零 —— 破坏不了了",
@@ -240,13 +260,20 @@ CLAIMS = (
        falsifier={("guard_on_same", "violations"): 1}),
 
     # ---- 复现三（并发）----------------------------------------------------
+    # ⚠️ 这一条**取的是栅格上 0.1 毫秒那一格，不是最小的那一格**。
+    # 原先取的是 1 微秒那一格 —— 本机翻、Linux 不翻（100 微秒才翻），
+    # 于是同一条判据在两个平台上一个「通过」一个「否决」。根因是那个
+    # 「最小的格」量的是**宿主机调度粒度**，不是这一层的性质。
+    # 现在判据落在两平台都翻的格点上；「最小的那一格」降到 `readings` 里当读数，
+    # 照样打出来，但**不给它否决权**（同第二节那句「物理时钟量出来的东西
+    # 不该有否决权」）。
     _c("B9", "复现三",
-       "栅格上最小的那一格（1 微秒）就已经让落库次序变样",
-       "`probe_0.flipped` == True 且 `probe_0.probe_s` ≤ 0.000001 秒",
-       (("probe_0", "flipped"), ("probe_0", "probe_s")),
+       "把 0 号 agent 拖慢 0.1 毫秒，落库次序就变样 —— 而这个次序决定 `post_id`",
+       "`probe_1.flipped` == True 且 `probe_1.probe_s` ≤ 0.001 秒",
+       (("probe_1", "flipped"), ("probe_1", "probe_s")),
        lambda v, t: v[0] is True and v[1] <= t[0],
        thresholds=((r"≤\s*([\d.]+)\s*秒", "耗时差上界"),),
-       falsifier={("probe_0", "flipped"): False}),
+       falsifier={("probe_1", "flipped"): False}),
 
     _c("B10", "复现三",
        "耗时全相同时，两遍次序逐位相同 —— 这一层是确定的，乱的是喂给它的耗时",
@@ -259,7 +286,7 @@ CLAIMS = (
     # ---- 不可判定 ---------------------------------------------------------
     _c("B5", "复现三",
        "两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— "
-       "所以「1 微秒就能让次序变样」这个阈值**根本没有安全余量**",
+       "所以「0.1 毫秒就能让次序变样」（B9 那个阈值）**根本没有安全余量**",
        "`real_llm_call.gap_s` ≥ 0.001",
        (("real_llm_call", "gap_s"),),
        lambda v, t: v[0] >= t[0],
@@ -537,6 +564,14 @@ def falsifier_report(claims=CLAIMS, cells=None, railed=None, unmeasured=None,
                 kind, detail = "恒真", (
                     f"把 {probe} → 仍然判 {base[cid]['verdict']}，"
                     f"**这条判据对这次单点扰动无感**")
+        # 出口处校验：新增一种 `kind` 却忘了同步那两张表，就在这里停下 ——
+        # 而不是等到某台机器上真的出现那一种、渲染器才当场崩。
+        if kind not in FALSIFIER_KINDS:
+            raise AdjudicationError(
+                f"{cid} 试出来的结果是 {kind!r}，不在 {FALSIFIER_KINDS} 里。"
+                f"新加了一种结果就必须同步 `FALSIFIER_MARKS`（渲染）"
+                f"和这里的 `flipped` 映射（json）—— 漏一处的后果是"
+                f"**某天在某台机器上渲染器当场崩**，而不是这里红一条。")
         out.append({"id": cid, "kind": kind,
                     # `不可判定` 是 None：它翻不动的原因是**缺读数**，
                     # 记 False 会跟「恒真」混成同一个数。
@@ -615,13 +650,11 @@ def render_markdown(rep: dict) -> str:
     L += ["## 判据非空泛性（逐条拿单点扰动试）", "",
           "每条判据都声明了一个 `falsifier`：**一处具名的单点读数改动**。"
           "它必须真的能把这条判据翻面 —— 翻不动的就是**判据恒真**，"
-          "它判出来的「通过」什么也不说明。", "",
+          "它判出来的「通过」什么也不说明。"
+          "（本来就判「否决」的那几条不适用 —— 它已经红了。）", "",
           "| 判据 | 试的结果 | 明细 |", "|---|---|---|"]
     for f in rep["falsifiers"]:
-        mark = {"可翻面": "√ 翻得动", "恒真": "× **恒真**",
-                "已否决": "× 已否决（不适用）",
-                "不可判定": "—（缺读数）"}[f["kind"]]
-        L.append(f"| `{f['id']}` | {mark} | {f['detail']} |")
+        L.append(f"| `{f['id']}` | {FALSIFIER_MARKS[f['kind']]} | {f['detail']} |")
 
     s = rep["summary"]
     L += ["", "## 汇总（**不是分数**）", "",
