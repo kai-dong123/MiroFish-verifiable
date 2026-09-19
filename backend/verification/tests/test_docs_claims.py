@@ -33,11 +33,31 @@ DOC = REPO / "docs" / "开源及第三方资源使用清单.md"
 
 
 @pytest.fixture(scope="module", autouse=True)
-def _not_inside_a_mutation_run():
+def _not_inside_a_source_mutation_run():
+    """变异轮里**有理由才跳** —— 不是「见了变异就跳」。
+
+    这个文件量两样东西：`verification/` 下的行数，和清单第一节那张
+    「对上游的改动」表。**只有前一样**会随源码被改坏而变 —— 那一轮里问它
+    等于自问自答。清单那张表不一样：除非那一轮动的就是清单自己，
+    否则它和源码被改坏没关系，**该跑就得跑**。
+
+    原先这里写的是「只要在跑变异就跳过全部」——那正是本装置专门批评别人的
+    那件事（**能判的判成不判**，见 `test_upstream_baseline.py` 里记着的那次误跳）。
+    `D1` 那条变异（把清单里的数目改歪）当初就是因为这个才做不出来：
+    它要抓的检查被那句无条件的跳过挡在了外面。
+    """
     from verification import mutations as MU
-    if os.environ.get(MU._MUTATION_ENV):
-        pytest.skip(f"正在跑变异 {os.environ[MU._MUTATION_ENV]}："
-                    "源码此刻是被改坏的那个状态，行数本来就会变")
+    label = os.environ.get(MU._MUTATION_ENV)
+    if not label:
+        return
+    if label == "baseline":
+        return                        # 一点没改：量出来的就是真的，没有理由跳
+    touched = MU.targets_of(label.removeprefix("mutation:"))
+    if not touched:                   # 认不出这次动的是谁 —— 稳妥起见还是跳
+        pytest.skip(f"正在跑变异 {label}：认不出这次动的是哪个文件，稳妥起见跳过。")
+    if all(t.startswith("verification/") for t in touched):
+        pytest.skip(f"正在跑变异 {label}：动的是 `verification/` 下的文件（{sorted(touched)}），"
+                    "这个文件量的行数此刻本来就会变")
 
 
 @pytest.fixture(scope="module")
@@ -170,3 +190,195 @@ def test_the_test_count_here_is_not_a_second_copy(doc_text):
         f"README 写 {a.group(1)} 条，清单写 {b.group(1)} 条。"
         "两处指的是同一批测试，必须同进同退 —— "
         "README 那处是被 `pytest --collect-only` 核过的，清单这处以它为准。")
+
+
+# ---------------------------------------------------------------------------
+# 第一节那张「对上游的改动」表
+#
+# 那是本作品**最要命的一张表**：「交付本体是上游的衍生仓库」这句话全靠它落地，
+# 而它此前是**纯手工**的。写这段检查之前，那张表里错了三处（都是实测出来的）：
+#
+#   1. `backend/requirements.txt` 被改了 15 行（`mcp<2` 上界 + `tiktoken` 锁定），
+#      **表里根本没有这一行** —— 漏报自己的改动；
+#   2. `.gitignore` 那格写「11 插入 / 2 删除」，而 `11` 是 `--stat` 的**变化行总数**
+#      （9 插入 + 2 删除），插入数被多读了一遍，实际是 9 / 2；
+#   3. 表头没写用不用 `--ignore-all-space`，而三脚本那行用的是忽略空白、
+#      `.gitignore` 那行用的是原始 —— **同一张表里两种口径**，谁也看不出来。
+#
+# 三处都是「数字看起来和真的一样」那一类。所以这里两件事一起核：
+# **逐行的数目对现场 diff**，以及**改动过的文件一个都不能漏**。
+# ---------------------------------------------------------------------------
+
+_NUMBERS = re.compile(r"(\d+) 行插入(?: / (\d+) 行删除)?")
+
+
+def _baseline() -> str:
+    """上游基线 commit —— 从写它的那六处取，不在这里再抄一遍。"""
+    from test_upstream_baseline import _STATED_IN, _sha_stated_in
+    return _sha_stated_in(_STATED_IN[0])
+
+
+def _diff_table_rows(doc_text: str) -> list:
+    """只取第一节那张表的数据行（表头/分隔行不要），返回每个单元格的列表。
+
+    定位方式是从表头往下取连续的 `|` 开头的行 —— 不靠「第几个表格」这种会漂的说法。
+    """
+    lines = doc_text.splitlines()
+    start = next((i for i, l in enumerate(lines) if l.startswith("| 上游文件 | 改动 |")), None)
+    assert start is not None, (
+        "第一节那张「对上游的改动」表的表头找不到了 —— "
+        "改写法就把这里的定位一起改。")
+    rows = []
+    for line in lines[start + 2:]:
+        if not line.startswith("|"):
+            break
+        rows.append([c.strip() for c in line.strip().strip("|").split("|")])
+    return rows
+
+
+def _mismatch(path: str, stated_ins: int, stated_del: int) -> str | None:
+    """现场量一次 `path`，和写死的数目比。对得上返回 `None`，对不上返回人话。
+
+    抽成函数是为了能被下面那条**阴性对照**直接喂一个错数字 —— 没有那一条，
+    这段比较逻辑自己是恒真的还是真在比，谁也说不清。
+    """
+    from test_upstream_baseline import _git
+    out = _git("diff", "--numstat", "--ignore-all-space", _baseline(), "--", path)
+    if out is None or out.returncode != 0:
+        return None                      # 没条件判 —— 由调用处决定跳过
+    text = out.stdout.strip()
+    actual_ins, actual_del = (int(x) for x in text.split()[:2]) if text else (0, 0)
+    if (actual_ins, actual_del) == (stated_ins, stated_del):
+        return None
+    return (f"  {path}：清单写 {stated_ins} 插入 / {stated_del} 删除，"
+            f"现场是 {actual_ins} 插入 / {actual_del} 删除")
+
+
+def test_every_changed_file_is_listed_in_the_diff_table(doc_text):
+    """表里**一个改动过的文件都不能漏** —— 漏报自己的改动，也是「边界说不清」。
+
+    这是这张表最容易烂的地方，而且烂了看不出来：多列一行很显眼，
+    **少列一行完全不显眼** —— 读者只看到一张整齐的表。
+    （真实发生过：`backend/requirements.txt` 被改了 15 行，表里没有它。）
+    """
+    from test_upstream_baseline import _git
+    # `-c core.quotePath=false`：**不加它，git 会把非 ASCII 路径转成八进制转义**
+    # （`docs/\345\274\200...`）—— 于是清单里那个中文文件名永远匹配不上，
+    # 这条检查会以「漏列一个文件」的样子报假警。这个坑当场踩到过。
+    out = _git("-c", "core.quotePath=false", "diff", "--name-only", _baseline())
+    if out is None or out.returncode != 0:
+        pytest.skip("拿不到 git / 这里不是 git 仓库 / 没有基线 commit：无从对 diff。"
+                    "（浅克隆 `--depth 1`、或从 GitHub 下载的 ZIP，都会这样 —— "
+                    "想要这条检查成立就用 `git clone` 拉全历史。）")
+
+    changed = {l.strip().replace("\\", "/") for l in out.stdout.splitlines() if l.strip()}
+    assert changed, "对基线 commit 的 diff 是空的 —— 那本作品就不是衍生作品了，先查基线串。"
+    rows = _diff_table_rows(doc_text)
+    assert len(rows) >= 8, (
+        f"那张表只有 {len(rows)} 行 —— 被拆散或改写了？这一条检查的就是它的完整性。")
+    listed = {r[0].strip("`").strip() for r in rows}
+    dirs = tuple(p.rstrip("/") + "/" for p in listed if p.endswith("/"))
+
+    missing = sorted(p for p in changed
+                     if p not in listed and not p.startswith(dirs))
+    assert not missing, (
+        "这些文件被改过（或新增），但那张表里没有：\n"
+        + "\n".join(f"  {p}" for p in missing)
+        + "\n**加上去，并把数目量准**；或者把表头那句「改动清单」改掉。"
+          "漏报自己的改动，和把没用到的东西写进依赖表一样，都是自研边界没说完。")
+
+
+def test_the_diff_numbers_match_a_live_diff(doc_text):
+    """表里每一行的插入/删除数，都拿现场 diff 重算一遍。"""
+    rows = _diff_table_rows(doc_text)
+    wrong, checked = [], 0
+    for cells in rows:
+        path = cells[0].strip("`").strip()
+        m = _NUMBERS.search(cells[2])
+        if not m:
+            continue                      # 新增文件/目录那几行报的是「—」
+        assert not path.endswith("/"), f"目录行不该写数目：{cells[0]}"
+        ins, dele = int(m.group(1)), int(m.group(2) or 0)
+        if not _can_diff(path):
+            pytest.skip(f"拿不到 git / 这里不是 git 仓库 / 没有基线 commit：核不了 {path}。")
+        bad = _mismatch(path, ins, dele)
+        if bad:
+            wrong.append(bad)
+        checked += 1
+    assert checked >= 6, (
+        f"只核到 {checked} 行带数目的 —— 表被改写了就等于没查。")
+    assert not wrong, (
+        "对上游的改动数目对不上了：\n" + "\n".join(wrong) +
+        "\n量法写在表头：`git diff --numstat --ignore-all-space <基线>`。")
+
+
+def _can_diff(path: str) -> bool:
+    from test_upstream_baseline import _git, _is_repo
+    if not _is_repo():
+        return False
+    out = _git("diff", "--numstat", "--ignore-all-space", _baseline(), "--", path)
+    return out is not None and out.returncode == 0
+
+
+def test_the_tokenizer_cache_bytes_agree_everywhere(doc_text):
+    """编码表落盘字节数：**三处写的是同一个数**（清单、装置 README、生成的产物）。
+
+    它是《清单》第二节里最后一个纯手写的数。三处不是「多抄一遍保险」，
+    而是「同一件事写了三遍」—— 一处改了另两处不动，读的人不会知道该信哪个。
+    产物那份是 `run_all` 实测落盘、写进环境一节的（`tokenizer_cache_bytes`）。
+
+    **这条不新增跳过**：两份提交进仓库的（清单 + 装置 README）必须对上；
+    生成的那份在盘上就一起核，不在就只核前两处 —— 少一份核对不是「没条件判」。
+    """
+    from test_readme_claims import README as DEVICE_README
+    device = DEVICE_README.read_text(encoding="utf-8")
+
+    def bytes_claims(text: str) -> set:
+        # 按**上下文**定位（「落盘 … 字节」），不靠位数猜 ——
+        # 第一版写成「7 位以上的数字+字节」，结果把《清单》里另一个数
+        # `11,343 字节`（随包 LICENSE 的大小）连前面那个中文逗号一起吞了进来。
+        return {int(m.replace(",", ""))
+                for m in re.findall(r"落盘[^\d]{0,8}([\d,]+)\s*字节", text)}
+
+    in_doc, in_device = bytes_claims(doc_text), bytes_claims(device)
+    assert in_doc, "《清单》里那个「3,613,922 字节」找不到了 —— 改写法就一起改正则。"
+    assert in_device, "装置 README 里那个编码表字节数找不到了 —— 它是这个数的另一处落点。"
+    assert in_doc == in_device, (
+        f"同一个数两处写得不一样：《清单》{sorted(in_doc)}，装置 README {sorted(in_device)}。\n"
+        "两处指的都是 `run_all` 实测落盘的那个字节数 —— 以实测那份为准，"
+        "**别顺手改一个**。")
+
+    report = VERIFICATION / "verification_report.json"
+    if report.is_file():                       # run_all 跑过才有；没有就不核这一份
+        import json
+        generated = json.loads(report.read_text(encoding="utf-8"))
+        env = generated.get("environment", {})
+        assert env.get("tokenizer_cache_bytes") in in_doc, (
+            f"生成的产物里记的是 {env.get('tokenizer_cache_bytes')}，"
+            f"而两处正文写的是 {sorted(in_doc)} —— "
+            "正文那个数字是从这份产物里引的，引歪了就该按产物改回去。")
+
+
+def test_the_number_comparison_would_flag_a_wrong_number():
+    """阴性对照：**故意把一个数目写错**，喂给上面那段比较逻辑，它必须说「不对」。
+
+    没有这一条，`_mismatch` 可能是恒返回 `None` 的（比如命令写错、
+    或者 git 的输出解析出来永远是 0/0），那么上面那条测试就是绿的 ——
+    而表里的数字其实一个都没被核过。**一条永远绿的检查等于没有检查**
+    （本装置在别处栽过这个跟头，变异留痕就是为它存在的）。
+    """
+    path = "backend/requirements.txt"
+    if not _can_diff(path):                                  # pragma: no cover
+        pytest.skip("拿不到 git / 这里不是 git 仓库 / 没有基线 commit："
+                    "这条对照没有可用的样本。")
+
+    # 先拿**真数字**确认它不报错（否则下面那个「报错」可能只是因为它总在报错）
+    from test_upstream_baseline import _git
+    text = _git("diff", "--numstat", "--ignore-all-space", _baseline(), "--", path).stdout
+    ins, dele = (int(x) for x in text.split()[:2])
+    assert _mismatch(path, ins, dele) is None, (
+        "拿真数字喂进去它也说不对 —— 那 `_mismatch` 本身坏了，上面那条测试是假绿。")
+    assert _mismatch(path, ins + 1, dele) is not None, (
+        "把插入数改大 1，它居然还说「对得上」—— 那么上面那条测试什么都没核。")
+    assert _mismatch(path, ins, dele + 1) is not None, (
+        "把删除数改大 1，它居然还说「对得上」—— 删除那一半没被核过。")

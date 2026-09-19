@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 import pytest
 
@@ -51,7 +52,13 @@ _BOGUS = "0" * 40
 
 
 def _git(*args: str):
-    """跑一条 git 命令。`git` 不在、没仓库、浅克隆 —— 都返回 `None`（= 没条件判）。"""
+    """跑一条 git 命令。`git` 不在、浅克隆 —— 都可能返回 `None`（= 没条件判）。
+
+    ⚠️ **`None` 不等于「这里不是仓库」**：`git` 不在才会返回 `None`。
+    在**不是仓库**的目录里，`git` 会照常启动、照常退出，只是**退出码 128**
+    （`fatal: not a git repository`）—— 那是一个**有返回值的失败**，不是「跑不起来」。
+    分不清这两件事，就会把「没条件判」读成「判不过」（见 `_is_repo()`）。
+    """
     if shutil.which("git") is None:
         return None
     try:
@@ -60,6 +67,32 @@ def _git(*args: str):
                               errors="replace", timeout=120)
     except (OSError, subprocess.SubprocessError):        # pragma: no cover
         return None
+
+
+def _is_repo(where: pathlib.Path | None = None) -> bool:
+    """`where`（默认本仓库）**是不是一个 git 仓库** —— 问的是仓库在不在，不是 git 在不在。
+
+    **这条区分是踩出来的**：有人从 GitHub 点「Download ZIP」拿到一份**没有 `.git`**
+    的副本时，`git -C <那里> cat-file -t <基线串>` 会返回 **128**。此前那条测试把
+    「返回值非零」一律当成「这个对象不在」，于是这种人会看到一条**红**，而红上写的
+    指控是「**要么串打错了，要么这个 fork 的历史被人重写过**」。
+    **真正的原因（这里根本没有历史可查）不但没说出口，还被换成了一个更重的指控。**
+    这正是本装置专门抓别人的那件事：**把「没条件判」报成「判不过」**，
+    而且**报错的原因还是错的** —— 比不报更坏。
+
+    对照：同一件事在 `test_docs_claims.py` 那一侧**本来就是跳过的**。
+    同一套纪律，一个地方执行了、另一个地方没有（与 D-32 同型）。
+    """
+    target = REPO if where is None else where
+    if shutil.which("git") is None:
+        return False
+    try:
+        out = subprocess.run(["git", "-C", str(target), "rev-parse", "--is-inside-work-tree"],
+                             capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=120)
+    except (OSError, subprocess.SubprocessError):        # pragma: no cover
+        return False
+    return out.returncode == 0 and out.stdout.strip() == "true"
 
 
 def _sha_stated_in(path: pathlib.Path) -> str:
@@ -102,10 +135,19 @@ def test_that_commit_really_is_our_ancestor(stated):
     一开始这里写成了「浅克隆一律跳过」，结果在本机**当场误跳过一次**：
     本仓就是浅克隆，而基线 commit 明明在、祖先关系也成立 —— 那本该是一条绿，
     却被跳掉了。**能判的判成「不判」，和判错一样是在放水。**
+
+    **另一头也栽过**：这里曾经把「`git` 返回非零」当成「这个对象不在」，
+    于是**没有 `.git` 的副本**（从 GitHub 下载 ZIP 就是）会撞上一条红，
+    而红上指控的是「历史被人重写过」。**没条件判 ≠ 判不过** —— 先问清仓库在不在。
     """
+    if not _is_repo():
+        pytest.skip(
+            f"这里不是 git 仓库（`{REPO}` 下没有 `.git`）—— 比如从 GitHub "
+            "点「Download ZIP」拿到的副本。**没有历史可查，所以这一条是「没条件判」，"
+            "不是「判不过」**：既不能说基线 commit 是祖先，也不能说它不是。"
+            "想要这条检查成立，用 `git clone` 拿仓库（顺带这样才复核得了那张改动表）。")
     kind = _git("cat-file", "-t", stated)
-    if kind is None:
-        pytest.skip("拿不到 git（或这里不是仓库）：无从核这个串。")
+    assert kind is not None, "git 起不来，这一条判不了。"
     assert kind.returncode == 0, (
         f"`{stated}` 在这个仓库里**不是一个对象** —— 六处都写着它，"
         "可它根本不存在。要么串打错了，要么这个 fork 的历史被人重写过。")
@@ -133,8 +175,8 @@ def test_the_ancestor_check_is_not_vacuous(stated):
     或者命令写错却恰好返回 0，它就会一直绿，而基线其实早就漂了。
     「一条永远绿的检查」和没有检查是一回事（本装置在别处栽过这个跟头）。
     """
-    if _git("rev-parse", "--is-shallow-repository") is None:   # pragma: no cover
-        pytest.skip("拿不到 git：这一条没有可对照的东西。")
+    if not _is_repo():
+        pytest.skip("这里不是 git 仓库：这一条没有可对照的东西（理由同上）。")
 
     kind = _git("cat-file", "-t", _BOGUS)
     assert kind is not None and kind.returncode != 0, (
@@ -144,3 +186,34 @@ def test_the_ancestor_check_is_not_vacuous(stated):
     anc = _git("merge-base", "--is-ancestor", _BOGUS, "HEAD")
     assert anc is not None and anc.returncode != 0, (
         "一个不存在的串居然被判成了 `HEAD` 的祖先 —— 上面那条检查是恒真的。")
+
+
+def test_the_repo_check_is_not_vacuous():
+    """阴性对照：本仓**是**仓库、一个不在任何仓库里的目录**不是** —— 两问两答都得有。
+
+    守的是上面那两道 `_is_repo()` 门。**两个方向都得堵**：
+
+    - 谓词**恒真** → 门永远开着 → 没有 `.git` 的副本又撞上那条指控「历史被重写过」的红；
+    - 谓词**恒假** → 门永远关着 → **本仓里这条检查再也不跑了**，
+      而本仓恰恰是唯一它能判得动的地方 —— **能判的判成「不判」，和判错一样是在放水**
+      （`D-37` 就是这么栽的：那条跳过一度把本仓里一条本该绿的检查跳掉了）。
+
+    阳性那一半永远可判（本仓一定在），所以它写在前面、无条件执行。
+    """
+    assert _is_repo(), (
+        f"本仓（{REPO}）居然被判成「不是 git 仓库」——那么上面那条祖先检查"
+        "在**本仓里也永远是跳过的**，等于没跑。")
+
+    empty = pathlib.Path(tempfile.mkdtemp(prefix="not-a-repo-"))
+    try:
+        if _is_repo(empty):
+            # `git rev-parse --is-inside-work-tree` 会**向上找**。临时目录落在某个
+            # 仓库里面时，这台机器上就造不出「不在任何仓库里」的目录 ——
+            # 那是环境限制，不是发现（D-21 的教训：别让环境差异报成红）。
+            pytest.skip(
+                f"{empty} 落在某个仓库里面，这台机器上造不出「不在任何仓库里」的目录，"
+                "阴性那一半没法验。（**阳性那一半已经过了**，所以门本身不是恒真的。）")
+        assert not _is_repo(empty), (
+            f"{empty} 里没有 `.git`，却被判成 git 仓库 —— 谓词恒真，上面那两道门形同虚设。")
+    finally:
+        shutil.rmtree(empty, ignore_errors=True)

@@ -53,12 +53,20 @@ CITATIONS = HERE / "tests" / "test_citations.py"
 ADJUDICATE = HERE / "adjudicate.py"
 #: 变异的靶子不一定是代码 —— `C7` 改的是这份 README 里那段**逐字贴出来的源码**。
 README_MD = HERE / "README.md"
+#: 另外两个非代码靶子：依赖清单（版本钉）与仓库根那份《开源及第三方资源使用清单》
+#: （第一节那张「对上游的改动」表）。后者在 `backend/` **之外** —— 正是它逼出了
+#: `_rel` 那个回退分支的错（见 `_rel`）。
+REQUIREMENTS = BACKEND / "requirements.txt"
+DOC_CLAIMS = BACKEND.parent / "docs" / "开源及第三方资源使用清单.md"
 
 T_GUARDS = "verification/tests/test_camel_guards.py"
 T_VERDICTS = "verification/tests/test_repro_verdicts.py"
 T_CITATIONS = "verification/tests/test_citations.py"
 T_ADJ = "verification/tests/test_adjudicate.py"
 T_ADJ_E2E = "verification/tests/test_e2e_stub.py"
+T_ENV_PINS = "verification/tests/test_environment_pins.py"
+T_DOC_CLAIMS = "verification/tests/test_docs_claims.py"
+T_BASELINE = "verification/tests/test_upstream_baseline.py"
 
 #: 下半那条变异要植回去的**错引写法**。
 #:
@@ -93,8 +101,13 @@ def _rel(p) -> str:
     p = pathlib.Path(p)
     try:
         return str(p.relative_to(BACKEND)).replace("\\", "/")
-    except ValueError:                      # 不在 backend 下的（正常不会走到）
-        return p.name
+    except ValueError:
+        # 不在 `backend/` 下的（清单在仓库根的 `docs/` 里）。**这里原先回退成
+        # `p.name`，那是个错的 —— `_apply` 拿这个值去拼 `BACKEND / file` 来找文件，
+        # 只留文件名就会指向一个不存在的地方，变异根本落不下去。**
+        # 一直没炸，只因为当时还没有一条变异碰过 `backend/` 之外的文件。
+        # 写成 `../` 相对路径：既能被 `_apply` 拼回原地，又不把绝对路径漏进产物。
+        return "../" + str(p.relative_to(BACKEND.parent)).replace("\\", "/")
 
 
 def _M(mid, group, what, target, edits, *, expect=None, claim=""):
@@ -123,6 +136,9 @@ G_ADJ_VAC = "裁决·恒真"
 G_COUNTERS = "守卫·计数落盘"
 G_ADJ_E2E = "裁决·端到端"
 G_CITE_VERBATIM = "引文·逐字块"
+G_PINS = "环境·版本钉"
+G_DIFF_TABLE = "清单·改动表"
+G_BASELINE = "上游基线"
 G_CONTROL = "阴性对照"
 
 CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
@@ -314,6 +330,32 @@ MUTATIONS = (
        expect=1, claim="README「裁决：三种结果不是两种」：端到端读数缺了要判不可判定，"
                        "编一份补上当场红"),
 
+    # ---- 环境·版本钉：一处 -------------------------------------------------
+    # `tiktoken` 是装置**直接** import 的（`run_all.py` 拿它数 token），原先却
+    # 一个字都没写在 `requirements.txt` 里 —— 装上了只是因为 `camel-ai` 的传递依赖
+    # 把它带了进来。这一处变异就是「有人把后来补上的那个锁定放开」。
+    _M("P1", G_PINS, "把 `tiktoken` 的锁定从 `==0.7.0` 放成 `>=0.1`",
+       T_ENV_PINS, [(REQUIREMENTS, "tiktoken==0.7.0", "tiktoken>=0.1")],
+       expect=1, claim="环境版本钉：直接依赖被放成开区间 → 当场红"),
+
+    # ---- 清单·改动表：一处 -------------------------------------------------
+    # 第一节那张表的数字此前是**纯手写**的，而且写错过三处。这一处变异就是
+    # 「有人把其中一个数改歪」—— 它必须被现场 diff 当场抓住。
+    _M("D1", G_DIFF_TABLE, "清单改动表里把一个数目改歪（`requirements.txt` 15 → 16）",
+       T_DOC_CLAIMS, [(DOC_CLAIMS, "| 15 行插入 |", "| 16 行插入 |")],
+       expect=1, claim="清单第一节：改动数目和现场 diff 对不上 → 当场红"),
+
+    # ---- 上游基线：一处 ----------------------------------------------------
+    # 「先问一句这里到底是不是 git 仓库」那道门，是踩出来的：没有 `.git` 的副本
+    # （从 GitHub 下载 ZIP 就是）原会撞上一条红，而红上指控的是「历史被人重写过」。
+    # 这一处变异就是「那道门被焊死」—— 门永远关着，本仓里这条检查就再也不跑了。
+    _M("N1", G_BASELINE, "把「这里是不是 git 仓库」那道门焊死（`_is_repo()` 恒为假）",
+       T_BASELINE, [(BACKEND / T_BASELINE,
+                     '    return out.returncode == 0 and out.stdout.strip() == "true"',
+                     "    return False  # 变异：门永远关着")],
+       expect=1, claim="上游基线：门恒假 → 本仓里那条阴性对照当场红"
+                       "（**本仓明明在仓库里，却被判成不是**）"),
+
     # ---- 阴性对照 ----------------------------------------------------------
     _M("K0", G_CONTROL, "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",
        T_GUARDS, [(GUARDS, "STEP = 1e-3", "STEP = 1e-3  # 阴性对照：这行不该有行为差异")],
@@ -427,9 +469,61 @@ def _revert(backups: dict) -> bool:
     return ok
 
 
+def targets_of(mid: str) -> set:
+    """这次变异**动手改了哪些文件**（backend 相对路径，`_rel` 写下的那个形状）。
+
+    给测试用的：有些测试在变异轮里必须跳过自己 —— 因为它们量的东西
+    （行数、条数）**本来就该随着源码被改坏而变**，在那一轮里问等于自问自答。
+    但「该跳」是有条件的，不是「见了变异就跳」：那一轮里如果只动了一个
+    **它并不量**的文件，那些检查照样该跑。**能判的判成不判，和判错一样是在放水**
+    （`test_upstream_baseline.py` 的注释里记着本装置犯过的那次）。
+    """
+    for mut in MUTATIONS:
+        if mut["id"] == mid:
+            return {e["file"] for e in mut["edits"]}
+    return set()
+
+
+def _touched() -> set:
+    """本次要动手改的**每一个**文件（绝对路径）。
+
+    报告的 `sources` / `sources_after` 是「**碰过的都逐字节放回去了**」这句公开话
+    的落点。原先只列那四个源码 `.py`，可 `C7` 早就在改 `README.md` 了 ——
+    **碰了却不在名单里，那句话就没覆盖它**。所以这份名单按变异的实际靶子生成，
+    不再手写。
+    """
+    touched = {GUARDS, TIMESTAMP, CITATIONS, ADJUDICATE}
+    for mut in MUTATIONS:
+        for e in mut["edits"]:
+            p = pathlib.Path(e["file"])
+            touched.add(p if p.is_absolute() else (BACKEND / p).resolve())
+    return touched
+
+
+def _delta(round_res: dict, baseline: dict, target: str) -> tuple[int, int]:
+    """这一轮**相对基线多红了几条** —— 目标文件、以及整轮。
+
+    为什么不直接数红条：**基线自己红着的时候，那些红跟这条变异毫无关系**。
+    实测踩到过（2026-09-18）：基线红 2 条，两条都在 `test_docs_claims.py` 里，
+    而 `D1` 的靶子恰恰是那个文件 —— 于是它**按声明红掉的那 1 条**被数成了 3 条，
+    当场判成「与声明不符」，而它其实完全按声明变红了。
+    **判据被污染之后照样给出判定**，正是这个装置盯着别人的那件事。
+
+    基线全绿时，下面两个减法减的都是 0，结果与「原样数红条」逐字相同 ——
+    所以这一手**不动任何正常情形下的数字**，只在基线已经红了的时候起作用。
+    两个数（原样的、扣过的）都留在报告里，扣没扣由读者自己核。
+    （靶子上的红**少于**基线时，结果是负数 —— 照实记，不夹到 0：
+    那说明这条变异没让靶子多红，反而盖掉了基线那条红。）
+    """
+    in_target = (round_res["failed_by_file"].get(target, 0)
+                 - baseline["failed_by_file"].get(target, 0))
+    whole_round = round_res["failed"] - baseline["failed"]
+    return in_target, whole_round
+
+
 def run(only: set | None = None) -> dict:
-    sources = {GUARDS, TIMESTAMP, CITATIONS, ADJUDICATE}
-    source_before = {str(p.relative_to(BACKEND)).replace("\\", "/"): _sha(p.read_text(encoding="utf-8"))
+    sources = _touched()
+    source_before = {_rel(p): _sha(p.read_text(encoding="utf-8"))
                      for p in sorted(sources)}
 
     print("基线（一点没改）：", end=" ", flush=True)
@@ -451,16 +545,24 @@ def run(only: set | None = None) -> dict:
         if not reverted:
             raise RuntimeError("还原失败 —— 工作区被改坏在磁盘上了，先手工检查再继续")
 
-        in_target = res["failed_by_file"].get(mut["target"], 0)
+        in_target, whole_delta = _delta(res, baseline, mut["target"])
+        raw_in_target = res["failed_by_file"].get(mut["target"], 0)
+        base_in_target = baseline["failed_by_file"].get(mut["target"], 0)
         expect = mut["expect_failed"]
         matched = (in_target >= 1) if expect is None else (in_target == expect)
         records.append({**mut, **res, "failed_in_target": in_target,
+                        "failed_in_target_raw": raw_in_target,
+                        "baseline_in_target": base_in_target,
+                        "failed_delta": whole_delta,
                         "matched": matched, "reverted": reverted})
-        print(f"红 {in_target} 条（目标文件）· 整轮 {res['failed']} 条"
-              f" · {'相符' if matched else '**与声明不符**'}")
+        cut = "" if (raw_in_target == in_target and res["failed"] == whole_delta) else (
+            f"（原样 {raw_in_target} / 整轮 {res['failed']}；"
+            f"已扣掉基线本来就红的 {base_in_target} / {baseline['failed']} 条）")
+        print(f"红 {in_target} 条（目标文件）· 整轮 {whole_delta} 条"
+              f" · {'相符' if matched else '**与声明不符**'}{cut}")
 
     # 再确认一遍：全跑完，上面那 `sources` 里每个源文件都必须逐字节回到原样
-    source_after = {str(p.relative_to(BACKEND)).replace("\\", "/"): _sha(p.read_text(encoding="utf-8"))
+    source_after = {_rel(p): _sha(p.read_text(encoding="utf-8"))
                     for p in sorted(sources)}
     all_reverted = source_after == source_before
 
@@ -533,6 +635,12 @@ def _markdown(rep: dict) -> str:
              f"{base['passed'] + base['failed'] + base['skipped']} 条），"
              f"退出码 {base['returncode']}，{base['seconds']}s —— 先证明测试集本身是绿的，"
              "底下那些红才有意义。")
+    L.append("- **「红 N 条」一律是相对基线多出来的**（扣掉基线本来就红的那些）："
+             "基线全绿时它与「原样数红条」逐字相同；基线红了时，原样的那个数"
+             "也留在每条的明细里，扣没扣由读者自己核。"
+             "**为什么要减这一下**：判据被污染之后照样给判定，正是这个装置盯别人的那件事"
+             "（实测踩到过：基线红 2 条、靶子正好是那个文件，"
+             "一条**按声明红掉**的变异被数成 3 条、判成「与声明不符」）。")
     L.append(f"- 上面这个规模**不含** `tests/test_mutation_evidence.py`"
              f"（{rep['selfcheck_tests']} 条）："
              "那一组问的是「这份报告有没有过期」，而本模块每一轮都在被改坏的源码上跑 —— "
@@ -570,8 +678,15 @@ def _markdown(rep: dict) -> str:
         L.append("")
         L.append(f"- 组：{r['group']}　目标文件：`{r['target']}`")
         L.append(f"- 声明：{r['claim']}")
-        L.append(f"- 实测：目标文件红 **{r['failed_in_target']}** 条，"
-                 f"整轮红 **{r['failed']}** 条、绿 {r['passed']} 条、跳过 {r['skipped']} 条，"
+        raw_note = ""
+        if (r["failed_in_target_raw"] != r["failed_in_target"]
+                or r["failed"] != r["failed_delta"]):
+            raw_note = (f"（原样数：目标文件 {r['failed_in_target_raw']} 条、"
+                        f"整轮 {r['failed']} 条 —— 上面两个已经扣掉基线本来就红的 "
+                        f"{r['baseline_in_target']} / {base['failed']} 条）")
+        L.append(f"- 实测：目标文件红 **{r['failed_in_target']}** 条"
+                 f"（相对基线多红的），整轮红 **{r['failed_delta']}** 条{raw_note}、"
+                 f"绿 {r['passed']} 条、跳过 {r['skipped']} 条，"
                  f"退出码 {r['returncode']}，{r['seconds']}s")
         for e in r["edits"]:
             L.append(f"- 改：`{pathlib.Path(e['file']).name}`")
@@ -612,7 +727,9 @@ def _markdown(rep: dict) -> str:
         if not s["all_sources_reverted"]:
             L.append("- 源文件没还原干净：**先去 `git diff` 看一眼**，别接着往下做。")
         if not s["baseline_green"]:
-            L.append("- 基线本身就是红的：底下所有红条都无法解释，先修基线。")
+            L.append("- 基线本身就是红的：底下每条的「红几条」**已经扣掉**基线那部分，"
+                     "但基线红这件事本身仍然要修 —— 它说明交付物此刻是红的，"
+                     "而这份留痕说的是「改坏之后会不会红」，两件事不能互相顶账。")
     L.append("")
     return "\n".join(L)
 
