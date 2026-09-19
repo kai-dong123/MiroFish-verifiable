@@ -217,3 +217,207 @@ def test_the_repo_check_is_not_vacuous():
             f"{empty} 里没有 `.git`，却被判成 git 仓库 —— 谓词恒真，上面那两道门形同虚设。")
     finally:
         shutil.rmtree(empty, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------------
+# `NOTICE` 那张改动表 —— **它是《清单》里那张表的第二份副本**
+#
+# 2026-09-19 发现：`backend/requirements.txt` 被改了 15 行（`mcp<2` 上界 +
+# `tiktoken` 锁定），**《清单》那份早就补上了这一行，`NOTICE` 这份没跟着补**。
+# 而 `NOTICE` 抬头那句宣示比《清单》更强：「除下表所列文件外，上游代码未作改动
+# —— 包括未改动上游目录树中的任何其他文件。」表里少一行，**这句话就是假的**。
+#
+# 根因不是「忘了改」，是**同一张表有两份副本，而只有一份长了机检**：
+# D-38 修的是《清单》那份，修的时候没人想到另一份还在原地。
+# 所以这里钉两件事：**行一个不多一个不少**，以及**两份副本写的数目不许分家**。
+#
+# `NOTICE` 这张的判据比《清单》那张严：《清单》问的是「表里的数目对不对」，
+# 这里问的是「表 == 对基线 diff 出来的全部上游改动文件」——
+# 多列一个没改过的上游文件，和少列一个改过的，都是在说假话。
+# ---------------------------------------------------------------------------
+
+_NOTICE = REPO / "NOTICE"
+
+
+def _notice_table_rows() -> list:
+    """`NOTICE` 那张「对上游文件的改动声明」表的数据行（表头/分隔行不要）。"""
+    lines = _NOTICE.read_text(encoding="utf-8").splitlines()
+    start = next((i for i, l in enumerate(lines) if l.startswith("| 上游文件 | 改动 |")), None)
+    assert start is not None, (
+        "`NOTICE` 里那张改动表的表头找不到了 —— 改写法就把这里的定位一起改。")
+    rows = []
+    for line in lines[start + 2:]:
+        if not line.startswith("|"):
+            break
+        rows.append([c.strip() for c in line.strip().strip("|").split("|")])
+    return rows
+
+
+def _changed_vs_baseline():
+    """对基线 commit 的改动：`{路径: 状态首字母}`。`None` = 没条件判。"""
+    out = _git("-c", "core.quotePath=false", "diff", "--name-status",
+               _sha_stated_in(_STATED_IN[0]))
+    if out is None or out.returncode != 0:
+        return None
+    status = {}
+    for line in out.stdout.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) >= 2:                    # 重命名会是 `R100\t旧\t新`，取新路径
+            status[parts[-1].strip().replace("\\", "/")] = parts[0][0]
+    return status
+
+
+def test_notice_lists_exactly_the_upstream_files_we_touched():
+    """`NOTICE` 那张表 == 被我们改过的上游文件，**一个不多一个不少**。
+
+    这是「除下表所列文件外，上游代码未作改动」这句话的**唯一**机检。
+    在这条测试之前，那张表少列了 `backend/requirements.txt` —— 十五行的改动，
+    表里没有它，而抬头那句照旧说得斩钉截铁。**多列一行很显眼，少列一行完全不显眼**，
+    所以两个方向都要判。
+    """
+    changed = _changed_vs_baseline()
+    if changed is None:
+        pytest.skip("拿不到 git / 这里不是 git 仓库 / 没有基线 commit：无从对 diff。"
+                    "（浅克隆、或从 GitHub 下载的 ZIP 都会这样 —— "
+                    "想要这条检查成立就用 `git clone` 拉全历史。）")
+
+    # 阴性对照：我们自己的新文件必须是「新增」。若 `--name-status` 解析坏了、
+    # 把什么都读成「改动」，下面「一个不多」那半就会变成恒真的废话。
+    assert changed.get("NOTICE") == "A", (
+        "`NOTICE` 在本仓库里是**新增文件**，可 diff 的状态不是 `A` —— "
+        "状态解析坏了，这条测试的「一个不多」那半就不可信了。")
+
+    touched = sorted(p for p, s in changed.items() if s != "A")
+    assert touched, (
+        "对基线 commit 一个上游文件都没改过 —— 那先去查基线串，不是这条测试的事。")
+
+    listed = [r[0].strip("`").strip() for r in _notice_table_rows()]
+    missing = [p for p in touched if p not in listed]
+    extra = sorted({p for p in listed if changed.get(p) != "M"})
+    assert not (missing or extra), (
+        "`NOTICE` 那张改动表和对基线的 diff 对不上 —— "
+        "而它抬头上写着「除下表所列文件外，上游代码未作改动」。\n"
+        + ("  表里没有、但确实改过：\n" + "\n".join(f"    {p}" for p in missing) + "\n" if missing else "")
+        + ("  表里有、但没改过（或根本不是上游文件）：\n"
+           + "\n".join(f"    {p}" for p in extra) + "\n" if extra else "")
+        + "**补上/删掉，并把下面那段「改动的性质」里的数目一起重测。**"
+          "（若要列一行目录，得先把表头那句宣示改掉，再改这条检查。）")
+
+
+def test_notice_states_the_same_numbers_as_the_inventory():
+    """两份副本的**数目**不许分家 —— 引《清单》那张表，不另量一遍 git。
+
+    判据不重复劳动：《清单》那张表的数目已经被 `test_docs_claims.py`
+    逐行对着现场 diff 核过了，所以这里只要求 `NOTICE` 写的是同一个数。
+    「同一张表两份副本各说各的」，正是漏掉 `backend/requirements.txt` 那次的根因。
+    """
+    from test_docs_claims import _NUMBERS, _diff_table_rows
+    inventory = REPO / "docs" / "开源及第三方资源使用清单.md"
+    stated = {}
+    for cells in _diff_table_rows(inventory.read_text(encoding="utf-8")):
+        path = cells[0].strip("`").strip()
+        m = _NUMBERS.search(cells[2])
+        if m:
+            stated[path] = (int(m.group(1)), int(m.group(2) or 0))
+    assert stated, "《清单》那张表里一行带数目的都没有 —— 先去看 `test_docs_claims.py`。"
+
+    text = _NOTICE.read_text(encoding="utf-8")
+
+    # ① 逐个点名的那几份：`NOTICE` 必须写出同一个插入数。
+    for path in ("README.md", "README-ZH.md", "backend/requirements.txt"):
+        assert path in stated, f"《清单》表里少了 `{path}` 那一行。"
+        ins, _ = stated[path]
+        assert f"`+{ins}`" in text, (
+            f"《清单》说 `{path}` 是 `+{ins}`，而 `NOTICE` 里找不到这个数 —— "
+            "两份副本分家了，改一处必须改另一处。")
+
+    # ② 三个入口脚本是**合并成一句**说的：总数对得上才算。
+    scripts = ("backend/scripts/run_parallel_simulation.py",
+               "backend/scripts/run_reddit_simulation.py",
+               "backend/scripts/run_twitter_simulation.py")
+    ins_sum = sum(stated[p][0] for p in scripts if p in stated)
+    del_sum = sum(stated[p][1] for p in scripts if p in stated)
+    assert f"{ins_sum} 行插入、{del_sum} 行删除" in text, (
+        f"三个入口脚本合计在《清单》里是 {ins_sum} 插入 / {del_sum} 删除，"
+        f"而 `NOTICE` 里那句「{ins_sum} 行插入、{del_sum} 行删除」不在了 —— "
+        "两份副本分家了。")
+
+
+#: `NOTICE` 第三栏那个日期的形状。**只取开头那个 `YYYY-MM-DD`** ——
+#: 后面可以挂人话（比如「（`mcp<2` 先落在 09-17）」），人话不参与比对。
+_NOTICE_DATE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+
+
+def _date_mismatch(path: str, stated: str) -> str | None:
+    """现场问一次 git「这个文件最后一次改动是哪天」，和写死的比。
+
+    对得上返回 `None`。抽成函数是为了能被下面那条**阴性对照**直接喂一个错日期 ——
+    没有那一条，这段比较逻辑自己是恒真的还是真在比，谁也说不清。
+    """
+    out = _git("log", "-1", "--date=short", "--format=%ad", "--", path)
+    if out is None or out.returncode != 0 or not out.stdout.strip():
+        return None                      # 没条件判 —— 由调用处决定跳过
+    actual = out.stdout.strip()
+    if actual == stated:
+        return None
+    return f"  {path}：`NOTICE` 写 {stated}，现场是 {actual}"
+
+
+def test_notice_dates_match_the_last_commit_touching_each_file():
+    """表里第三栏那个日期是**量出来的**，不是抄的。
+
+    AGPL-3.0 §5(a) 要的是「显著的改动应予说明」**并且给出相关日期**。日期写错
+    和改动清单写漏是同一类问题：**声明的比实际强**。而在这一栏之前，
+    `NOTICE` 上写的是一句「改动均在本 fork 的工作期内完成」—— 那是范围，
+    不是日期；范围可以一直是对的，日期会烂。
+    """
+    if not _is_repo():
+        pytest.skip("这里不是 git 仓库：查不了提交历史，这一栏没条件判"
+                    "（与上面那条祖先检查同样的道理）。")
+    wrong, checked = [], 0
+    for cells in _notice_table_rows():
+        if len(cells) < 3:
+            pytest.fail(
+                f"`NOTICE` 那张表少了第三栏（`{cells[0]}` 那一行只有 {len(cells)} 格）"
+                " —— 改写法就把这条检查一起改。")
+        path = cells[0].strip("`").strip()
+        m = _NOTICE_DATE.match(cells[2].strip())
+        assert m, (
+            f"`{path}` 那一行的日期不是 `YYYY-MM-DD` 开头：{cells[2]!r} —— "
+            "「最后改动」这一栏要能被机器读。")
+        if _git("log", "-1", "--date=short", "--format=%ad", "--", path) is None:
+            pytest.skip("git 起不来，这一条判不了。")
+        bad = _date_mismatch(path, m.group(1))
+        if bad:
+            wrong.append(bad)
+        checked += 1
+    assert not wrong, (
+        "`NOTICE` 里那些日期和提交历史对不上了：\n" + "\n".join(wrong) +
+        "\n**改了上游文件就顺手把这一栏改掉** —— 它和那张改动表一样，"
+        "是「我们到底动过什么」的一部分。")
+    assert checked >= 7, (
+        f"只核到 {checked} 行带日期的 —— 表被拆散或改写了，这条检查就等于没跑。")
+
+
+def test_the_date_comparison_would_flag_a_wrong_date():
+    """阴性对照：拿真日期喂进去它不会乱报，改一天就必须报。
+
+    没有这一条，`_date_mismatch` 完全可能是**恒返回 `None`** 的
+    （命令写错、路径没传对、git 的输出被读歪）—— 那么上面那条测试就是一条
+    永远绿的检查，和没有检查是一回事。
+    """
+    if not _is_repo():
+        pytest.skip("这里不是 git 仓库：没有可对照的历史（理由同上）。")
+    rows = _notice_table_rows()
+    path = rows[0][0].strip("`").strip()
+    m = _NOTICE_DATE.match(rows[0][2].strip())
+    assert m, f"`{path}` 那一行的日期读不出来：{rows[0][2]!r}"
+    stated = m.group(1)
+
+    assert _date_mismatch(path, stated) is None, (
+        "把 `NOTICE` 里那个真日期喂进去它也说不对 —— 那 `_date_mismatch` 本身坏了，"
+        "上面那条测试是假绿。")
+    assert _date_mismatch(path, "1999-01-01") is not None, (
+        "把日期改成 1999-01-01 它还说对得上 —— 这条比较根本没在看日期。")

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19 13:53:19",
+  "generated_at": "2026-09-19 14:35:37",
   "not_a_pass_rate": true,
   "what_this_is": "一套**跨复现的**判据：把三条复现各自的读数摆到一张桌上判。每条都自带 falsifier，所以「它有没有鉴别力」是可机检的。",
   "what_this_is_NOT": "不是分数，不是通过率，不是质量评价。判不了的那几条**根本没被判定**，不算「未通过」—— 所以这张表**不许被聚合成任何比率**。",
@@ -16,13 +16,13 @@
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-19T13:48:07",
-    "readings_sha256": "049806acb5981fe1a90916fa8d4113bf9b182eb308930f518930c8cebe550870"
+    "generated_at": "2026-09-19T14:35:04",
+    "readings_sha256": "8f6827b28a27e91cd1d2bba9e2dff28cc34493469e40b6391f94dd9a5ab9b58a"
   },
   "e2e_report": {
     "path": "e2e_report.json",
     "present": true,
-    "generated_at": "2026-09-17T22:24:18",
+    "generated_at": "2026-09-19T14:35:31",
     "arms": [
       "roomy_e2e",
       "bigtext_e2e",
