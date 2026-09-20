@@ -227,6 +227,43 @@ def test_unmeasured_cells_are_declared_not_filled_in():
     assert kinds[("roomy_e2e", "db_posts")] == P.BOUND_UNMEASURED
 
 
+def test_an_arm_that_never_finished_is_undecided_not_failed():
+    """契约外的退出码 = 这一档**没跑完** → 「没测到」，不是「没达到预期」。
+
+    这一档跑的子进程是**上游原样的入口脚本**，契约只有 `{0, 1}`：
+
+    * **负值 = 被信号杀死**（POSIX 上 `wait()` 给 `-N`）：OOM killer、容器
+      `stop`、C 扩展段错误。计数与平台库那时也都没落下来 —— 但原先 `rc != 0`
+      排在「计数取不到」那一格**前面**，先一步把它判成 `ARM_FAILED`，
+      **替一个没跑完的档位宣布了结论**，读的人被指去查「守卫没被走到」。
+    * **`2`** 是 argparse 的「参数不对」—— 同样说明压根没跑起来。
+    """
+    ok = _fake_run("roomy_e2e", counters={"written_whole": 8}, posts=2)
+
+    assert E._arm_state({**ok, "rc": -9})[0] == E.ARM_UNMEASURED, "信号杀死"
+    assert E._arm_state({**ok, "rc": 2})[0] == E.ARM_UNMEASURED, "argparse 参数错"
+    assert "信号" in E._arm_state({**ok, "rc": -9})[1], (
+        "判了「没测到」却没说为什么 —— 屏幕上那一行读起来跟「数据不全」没区别")
+
+    # 反向对照：真跑成的那两档必须照旧判得动。少了这两条，一个「一律判没测到」
+    # 的实现也能让上面两行变绿。
+    assert E._arm_state({**ok, "rc": 1})[0] == E.ARM_FAILED, (
+        "真失败（上游脚本自己退 1）仍要判成「没达到预期」—— 那才是「真有东西要看」")
+    assert E._arm_state(ok)[0] == E.ARM_OK
+
+
+def test_the_screen_verdict_is_not_computed_a_second_time():
+    """屏幕那一行**不许自己再判一次** —— 记号、判词、理由都得从 `_arm_state` 来。
+
+    原先它自己判 `run["rc"] != 0`，于是同一档臂在机读件里是「没测到」、在屏幕上
+    却打 `×`：这正是 `_arm_code` 的 docstring 说已经修好的那件事
+    （「三处消费者各算各的」）换了处地方复发。
+    """
+    src = pathlib.Path(E.__file__).read_text(encoding="utf-8")
+    assert 'elif run["rc"] != 0:' not in src, (
+        "屏幕那一行又自己判了一次裸 `rc` —— 「三处各算各的」复发")
+
+
 def test_the_db_reader_returns_none_when_there_is_no_db(tmp_path):
     assert E._count_posts(tmp_path / "nope.db") is None
     empty = tmp_path / "empty.db"
@@ -266,7 +303,15 @@ def test_the_readings_block_is_the_shape_emit_readings_produces():
     assert body.count(P._READINGS_BEGIN) == 1
     assert body.count(P._READINGS_END) == 1
     assert P.parse_readings(body) == payload
-    assert P.readings_sha256(body) == P.readings_sha256(body)  # 确定性
+    # 「确定性」**不能靠拿它跟自己比来验** —— 同一次调用的返回值当然相等，
+    # 那一行是恒真的，删了也没人会发现（原先这里就是这么写的）。
+    # 有鉴别力的写法是让它**跨一次往返**：把块解析回来、再按同一规矩序列化，
+    # 两边必须给出同一个 sha。序列化不稳定（键序、浮点写法）时这条才红 ——
+    # 而那个 sha 正是产物里用来指认「这份读数」的指纹（`readings_sha256`），
+    # 它不稳的话，产物说的和它指的东西就对不上了。
+    assert P.readings_sha256(E._block_body(P.parse_readings(body))) \
+        == P.readings_sha256(body), (
+        "读数块「解析回来再序列化」之后 sha 变了 —— 这个指纹不能用来指认这份读数")
     assert P.non_gbk_chars(body) == "", "读数块里有 GBK 编不出的字（cmd 下会变 ?）"
 
 
@@ -312,6 +357,28 @@ def test_the_report_says_the_transcript_was_redacted(tmp_path):
     assert entry["redaction_applied"], "抹了却不说抹了什么"
     assert entry["readings"]["readings"]["two_e2e"]["db_posts"] == 4
     assert rep["not_a_pass_rate"] is True
+
+
+def test_the_stub_claim_in_the_product_is_read_off_the_transcript(tmp_path):
+    """**产物说「替身」得有证据。** `nature` 是按构造写的标签（写在那儿就恒为真），
+    `model_is_stub_observed` 才是**从子进程原文里认出来的**那一格。
+
+    两臂都试：原文里有那行 → `True`；把模型名换掉 → `False` 并把找到的名字记下来。
+    只有前一半的话，这一格又成了一个恒真的常量。
+    """
+    banner = f"替身模型已接管: model_type={A.STUB_MODEL_NAME!r}"
+    runs = _three_runs()
+    for r in runs:
+        r["body"] = banner
+    assert E._report(runs, "", tmp_path)["results"][0][
+        "model_is_stub_observed"] is True
+
+    runs[0]["body"] = "替身模型已接管: model_type='gpt-4o-mini'"
+    entry = E._report(runs, "", tmp_path)["results"][0]
+    assert entry["model_is_stub_observed"] is False, (
+        "有一档臂的原文里不是替身 —— 这一格不许还说「是」")
+    assert "gpt-4o-mini" in entry["stub_banner_names"], (
+        "判成 False 时要把「认到的是什么」留在产物里，读的人才知道去看哪一档")
 
 
 #: 这份产物**要入库**，所以它里面一个本机路径都不许有。
@@ -418,6 +485,11 @@ def test_a_missing_e2e_report_makes_that_layer_undecided(tmp_path, monkeypatch):
     assert by_id["E1"]["operands"] == ["roomy_e2e.written_whole"]
 
 
+def _banner(model: str) -> str:
+    """`attach.py` 打进转录的那一行 —— 按它自己的格式拼，不另抄一份写法。"""
+    return f"替身模型已接管: model_type={model!r}"
+
+
 def test_the_e2e_provenance_is_recorded_either_way():
     """「没跑过」和「跑了」都要说得出是哪一种 —— 否则少了几条断言
     会被读成「这张表就这么多」。"""
@@ -425,13 +497,49 @@ def test_the_e2e_provenance_is_recorded_either_way():
     assert absent["present"] is False and "e2e_stub" in absent["to_make_decidable"]
     got = {"generated_at": "X", "arms_missing": ["two_e2e"],
            "what_it_does_NOT_prove": "…",
-           "results": [{"arms": ["roomy_e2e", "bigtext_e2e"]}]}
+           "results": [{"arms": ["roomy_e2e", "bigtext_e2e"],
+                        "transcript_redacted": True,
+                        "transcript": _banner(A.STUB_MODEL_NAME)}]}
     present = A._e2e_provenance(got)
     assert present["present"] is True
     assert present["arms"] == ["roomy_e2e", "bigtext_e2e"]
     assert present["arms_missing"] == ["two_e2e"]
     assert present["model_is_stub"] is True, (
         "替身这件事必须跟着读数走到裁决器 —— 否则读的人会以为模型是真的")
+    assert "stub" in present["model_is_stub_why"], "这一格得说出它凭什么这么判"
+
+
+def test_the_stub_flag_is_read_off_the_transcript_not_written_in():
+    """**阴性对照**：把转录里的模型名换成真的，那一格必须跟着变成 `False`。
+
+    原先 `model_is_stub` 是写死的 `True`，上面那条测试照样绿 —— 因为写死的
+    常量当然等于它自己。一条恒真的检查等于没有检查（本装置的变异留痕就是
+    为这件事存在的）。所以这里给两种转录，要求这一格**跟着转录走**：
+
+    * 三档臂的转录里都是替身 → `True`；
+    * 只要有一档臂的转录里不是替身 → `False`，并说明为什么（读的人自己去看）。
+    """
+    def prov(name: str, *transcripts: str) -> dict:
+        # 正文在 `transcript`；`transcript_redacted` 是「抹过没有」那个布尔标记。
+        return A._e2e_provenance({
+            "generated_at": "X", "results": [
+                {"arms": [name], "transcript_redacted": True, "transcript": t}
+                for t in transcripts]})
+
+    real = _banner("gpt-4o-mini")
+    assert prov("a", _banner(A.STUB_MODEL_NAME)).get("model_is_stub") is True
+    assert prov("a", _banner(A.STUB_MODEL_NAME), _banner(A.STUB_MODEL_NAME))[
+        "model_is_stub"] is True
+    mixed = prov("a", _banner(A.STUB_MODEL_NAME), real)
+    assert mixed["model_is_stub"] is False, (
+        "有一档臂的转录里不是替身 —— 这一格不许还说「替身」")
+    assert "gpt-4o-mini" in mixed["model_is_stub_why"], (
+        "判成 False 时要把「找到的是什么」写出来，读的人才知道去看哪一档")
+    none_at_all = prov("a", "转录里根本没有那一行")
+    assert none_at_all["model_is_stub"] is False, (
+        "**找不到证据**的时候不许默认说替身 —— 没有证据和「是替身」是两件事")
+    assert not none_at_all["model_is_stub_why"].startswith("转录里写着"), (
+        "没找到的时候，理由不能长得像「找到了」")
 
 
 def test_the_e2e_claims_are_wired_into_the_real_corpus():

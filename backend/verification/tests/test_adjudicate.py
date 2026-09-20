@@ -142,6 +142,58 @@ def test_railing_is_judged_per_cell_not_by_the_product_of_two_sets():
     assert hit["tainted_by_railing"] == ["A.x"]
 
 
+def test_a_claim_that_no_single_change_can_flip_is_not_trusted():
+    """**「判据恒真 → 记 `trusted=False`」这条规则是实装的，不是写着的。**
+
+    它从建表那天就写在本模块开头和产物开头（「给不出、或者给了却翻不动它的，
+    检查器就判它**判据恒真**、记 `trusted=False`」），可算 `trusted` 的地方一度只看
+    贴界那一条 —— `NO_TRUST_VACUOUS` 全仓没有第二处引用。于是一份产物会**自己打
+    自己**：上半张表写「通过 · 采信」，下半张 falsifier 表写「恒真」。
+
+    这里造的是 E4 那个形状（真读数里那条就是这么脆的）：判据是 `x > y`，falsifier
+    把 `x` 改成 2 —— 只要 `y` 也是 0，改完 `2 > 0` 照样成立，它就翻不动了。
+    """
+    cells = {("A", "x"): 4, ("B", "y"): 0}
+    c = _claim("T7", (("A", "x"), ("B", "y")), lambda v, t: v[0] > v[1],
+               falsifier={("A", "x"): 2})
+    rows = A.evaluate((c,), cells, {}, {})
+    fals = A.falsifier_report((c,), cells, {}, {}, base_rows=rows)
+    assert [f["kind"] for f in fals] == ["恒真"], (
+        f"这个形状没被判成恒真，而是 {fals[0]['kind']!r} —— 前提不成立，"
+        f"下面那几条测不到东西")
+    assert rows[0]["trusted"] is True, (
+        "回填之前它应当是 `trusted=True` —— 否则测的不是回填这件事")
+
+    assert A.apply_vacuous_no_trust(rows, fals) == ["T7"]
+    assert rows[0]["trusted"] is False, (
+        "判据说「恒真就记 trusted=False」，回填却没动它 —— "
+        "那这条规则还是只写在注释里")
+    assert rows[0]["no_trust_because"] == [A.NO_TRUST_VACUOUS]
+    assert "判据恒真" in rows[0]["detail"], "理由要写进 detail，读产物的人才看得见"
+
+    s = A.summarize(rows, fals)
+    assert s["vacuous"] == ["T7"]
+    assert s["not_trusted"] == 1 and s["trusted"] == 0, (
+        "汇总必须反映回填**之后**的状态，否则上半张表和下半张表还是两套口径")
+
+
+def test_the_vacuous_backfill_leaves_things_alone_when_there_is_nothing_vacuous():
+    """反向对照：**没有恒真的判据时，回填一个都不该动。**
+
+    没有这一条，上面那条完全可能是靠「把 `trusted` 一律改成 False」过的。
+    """
+    c = _claim("T8", (("A", "x"),), lambda v, t: v[0] == 10,
+               falsifier={("A", "x"): 99})
+    rows = A.evaluate((c,), CELLS, {}, {})
+    fals = A.falsifier_report((c,), CELLS, {}, {}, base_rows=rows)
+    assert [f["kind"] for f in fals] == ["可翻面"], "前提不成立"
+    before = (rows[0]["trusted"], list(rows[0]["no_trust_because"]), rows[0]["detail"])
+
+    assert A.apply_vacuous_no_trust(rows, fals) == []
+    assert (rows[0]["trusted"], list(rows[0]["no_trust_because"]),
+            rows[0]["detail"]) == before, "没有恒真的判据被动了"
+
+
 def test_a_reading_that_is_not_there_is_undecided_not_failed():
     """**缺读数判「不可判定」，不判「否决」。**
 
@@ -420,6 +472,45 @@ def test_no_report_is_undecided_and_gets_no_traceback(monkeypatch, tmp_path):
     assert not (tmp_path / "a.json").exists(), "判都没判定，不该落下产物"
 
 
+def test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused(tmp_path):
+    """**读得成 JSON ≠ 结构对。** 结构不对要当场说清，不许甩 traceback。
+
+    这条在防的是「一半的防线」：原先只接住了 `JSONDecodeError`（文件不是 JSON），
+    没接住「是 JSON、但形状不对」。而 `cells_from` 是在**下标取值那一层**消费这份
+    报告的（`b["arm"]`、`block.get("readings", {})` 再 `.items()`）—— 那里抛的
+    `KeyError` / `AttributeError` / `TypeError` **不是** `AdjudicationError`，
+    于是逃出 `main()`、甩一个 traceback、按 Python 默认退成 `1`。
+    而 `1` 在这台装置里的意思是「**有子进程没跑成**」：一次「这份产物读不出来」
+    被报成了「跑了但失败了」，读者会去查一个并不存在的失败。
+
+    和 `load_report` 里 `JSONDecodeError` 那一段是同一个病。修法也同一条：
+    在读进来那一刻就把形状查一遍，判成**没测到**（`2`）。
+    """
+    bad = tmp_path / "verification_report.json"
+    # 合法 JSON，但 `results[0].readings.readings` 那一层是**数**不是**对象**
+    # —— 「有人手工补了一条」最常长成的样子。
+    bad.write_text(json.dumps({"results": [{"readings": {"readings": {"A": 1}}}]},
+                              ensure_ascii=False), encoding="utf-8")
+
+    with pytest.raises(A.AdjudicationError) as exc:
+        A.load_report(bad)
+    assert "结构不对" in str(exc.value), (
+        f"结构不对时抛的是 {exc.value!r} —— 得说清是**结构**的问题，"
+        "不然读的人会去查读数")
+    assert exc.value.__class__ is A.AdjudicationError, (
+        "必须是这一种异常：`main()` 只接得住它，别的一律逃出去变成 traceback")
+
+    # 端到端那份的惯例不同，**故意不改**：它读不了就返回 `None`，
+    # 下游按「不可判定」处理（同文件里那条 `load_e2e_report` 的说明）。
+    assert A.load_e2e_report(bad) is None, (
+        "端到端那份读不了时该返回 `None`（→ 不可判定），不是抛")
+
+    # 反向对照：好形状必须照过。少了这一半，一个「一律拒收」的实现也能让上面全绿。
+    good = tmp_path / "good.json"
+    good.write_text(json.dumps(_fake_report(), ensure_ascii=False), encoding="utf-8")
+    assert A.load_report(good)["results"], "好端端的一份报告被拒了"
+
+
 def test_a_vacuous_claim_makes_the_table_refuse_to_exit_green(monkeypatch, tmp_path):
     """有判据恒真就不许退 `0`。
 
@@ -593,6 +684,79 @@ def test_the_selfproof_ran_clean(sp):
         f"有例子的实测和它自己的表态对不上")
 
 
+# ---------------------------------------------------------------------------
+# 自证自己的出口也是**三态**（`0` 干净 / `1` 有问题 / `2` 缺前提）
+# ---------------------------------------------------------------------------
+#
+# 这一节此前是**整块空的**：`grep -n "S\.main\|SelfproofError" tests/*.py`
+# 零命中 —— 自证的退出码从来没被验过。而它和 `reconcile_selfcheck` 是同一条
+# 契约、同一种翻车方式：**「没测到」折进「没达到预期」**，或者更糟 ——
+# `SystemExit(None)` 退 `0`，一次什么都没量的运行报「一切正常」。
+#
+# 三档都用现造的 `run()` 测，**不跑真的自证**：真跑会依赖 `adjudicate.CLAIMS`，
+# 而 J1/J3/J4 那几个变异正是把它改坏的 —— 那几轮里真跑出来的数没有意义。
+
+def _fake_selfproof_run(monkeypatch, *, all_ok: bool, problems: list):
+    """把 `S.run` / `S.render_markdown` 换成现造的，只为测 `main` 的出口。"""
+    monkeypatch.setattr(S, "render_markdown", lambda rep: "（现造的）")
+    monkeypatch.setattr(S, "run", lambda: {
+        "meta": {"all_ok": all_ok, "grids_seen": [], "grids_missing": [],
+                 "cases_ok": 0, "claims_with_working_falsifier": [],
+                 "claims_vacuous": []},
+        "cases": [], "claims": {"count": 0}, "problems": problems})
+
+
+def test_a_missing_premise_makes_the_selfproof_exit_two_not_one(monkeypatch, tmp_path):
+    """前提不成立（端到端那层没跑过）→ `2`，**不是** `1`。
+
+    `1` 在装置自己的表里是「没达到预期」—— 那会让读者去查一个不存在的失败，
+    而实际发生的是**一个读数都没取到**。README 那句「退出码：三种，不是两种」
+    就是冲这个写的。
+    """
+    def boom():
+        raise S.SelfproofError("现造：没有 e2e 报告")
+    monkeypatch.setattr(S, "run", boom)
+
+    out_json, out_md = tmp_path / "s.json", tmp_path / "s.md"
+    rc = S.main(["--json", str(out_json), "--md", str(out_md)])
+
+    assert rc == 2, f"缺前提时自证退了 {rc} —— 该是 2（没测到），不许折进 1"
+    assert not out_json.is_file() and not out_md.is_file(), (
+        "前提都不成立，却还是落了一份产物下来 —— 下一轮谁读到它就会当成一次真跑")
+
+
+def test_an_adjudication_error_is_also_not_measured(monkeypatch, tmp_path):
+    """反向对照之一：另一类前提错误（`AdjudicationError`）走同一个出口。
+
+    少了这条，一个只 `except SelfproofError` 的实现也能让上面那条变绿 ——
+    而读数文件坏掉时抛的是另一类。
+    """
+    def boom():
+        raise A.AdjudicationError("现造：读数文件坏了")
+    monkeypatch.setattr(S, "run", boom)
+
+    assert S.main(["--json", str(tmp_path / "e.json"),
+                   "--md", str(tmp_path / "e.md")]) == 2, (
+        "`AdjudicationError` 没走「没测到」那条出口 —— 只接了一类前提错误")
+
+
+def test_a_problem_makes_the_selfproof_exit_one_and_a_clean_one_zero(
+        monkeypatch, tmp_path):
+    """反向对照之二：**真有**问题退 `1`、真干净退 `0`。
+
+    没有这一条，一个恒返回 `2` 的实现也能让上面那两条全绿 ——
+    而恒返回 `2` 会把自证唯一一类真发现（判据恒真、有死格）整个藏起来。
+    """
+    _fake_selfproof_run(monkeypatch, all_ok=False, problems=["现造：有死格"])
+    assert S.main(["--json", str(tmp_path / "a.json"),
+                   "--md", str(tmp_path / "a.md")]) == 1, (
+        "自证报了问题却退 0 —— 那这份产物就是在装绿")
+
+    _fake_selfproof_run(monkeypatch, all_ok=True, problems=[])
+    rc = S.main(["--json", str(tmp_path / "b.json"), "--md", str(tmp_path / "b.md")])
+    assert rc == 0, f"自证一切干净却退了 {rc} —— 该是 0"
+
+
 @_SKIP_UNDER_MUTATION
 def test_all_five_grids_were_reached(sp):
     """**五格必须全出现过**：通过·采信／通过·不采信／否决·采信／否决·不采信／
@@ -669,3 +833,107 @@ def test_the_artifacts_are_printable_on_a_chinese_windows_console(adj, sp):
                              if name == "ADJUDICATION.md" else S.render_markdown(rep))):
             bad = P.non_gbk_chars(text)
             assert not bad, f"{name}（{label}）里有 GBK 编不出的字符：{bad!r}"
+
+
+# ---------------------------------------------------------------------------
+# 落点：写不出来是「没测到」（`2`），不是「没达到预期」（`1`）
+# ---------------------------------------------------------------------------
+#
+# 这一节补的是一处**已经量到过**的边界：`--out` / `--json` / `--md` 指到一个不
+# 存在的目录时，落盘那一步抛 `FileNotFoundError`，没人接 → 进程退 `1`。按本装置
+# 自己的表，`1` 是「跑成了但没达到预期」—— 而那一刻**一个读数都没落下来**。
+#
+# 修法是跑之前先问一句落点。所以这里要钉的**不只是**「坏落点退 2」，还有
+# 「它是**在动手之前**退的」：判定算了一半才发现写不出去，结论就已经脏了。
+#
+# 两道出口都要问：门（跑之前）和 `except OSError`（门挡不住的那一半）。
+
+def _nowhere(tmp_path) -> str:
+    """一个**目录不存在**的落点。"""
+    return str(tmp_path / "没有这个目录" / "x")
+
+
+#: 一份现造的裁决产物 —— 只为了走到 `main` 的落盘那一步，不依赖任何真读数。
+_FAKE_ADJ = {
+    "summary": {"total": 1, "by_verdict": {A.PASS_: 1, A.FAIL_: 0, A.UNDECIDED: 0},
+                "trusted": 1, "not_trusted": 0, "undecided_trusted": 0,
+                "falsifiable": 1, "vacuous": 0},
+    "rows": [{"id": "现造", "verdict": A.PASS_, "trusted": True,
+              "undecidable_because": None, "no_trust_because": []}],
+    "falsifiers": [{"id": "现造", "kind": "能翻面"}],
+}
+
+
+def test_a_bad_place_stops_both_entry_points_before_they_compute(
+        monkeypatch, tmp_path, capsys):
+    """坏落点 → `2`，而且 `run()` **一次都没被调**。
+
+    「跑之前」这条不是洁癖：真算一场要读读数、判一遍、再自证一遍，然后把结论
+    丢掉、退回一个会被读成「有失败」的码。所以这里把 `run` 换成一个记账的桩 ——
+    它被调到就是这条测试要抓的事。
+
+    两道入口各测一个**不同的**旗标（一个 `--json`、一个 `--md`），免得只挡住了
+    其中一个。
+    """
+    calls: list = []
+    monkeypatch.setattr(A, "run", lambda: (calls.append("A"), {})[1])
+
+    rc = A.main(["--json", _nowhere(tmp_path), "--md", str(tmp_path / "a.md")])
+    out = capsys.readouterr().out
+    assert rc == 2, f"裁决：坏落点退了 `{rc}` —— 该退 `2`（没测到）"
+    assert "落点" in out, "得说清是**落点**的问题，不是读数的问题"
+    assert calls == [], "落点都不通，裁决却先算了一场 —— 该在动手之前就退"
+
+    monkeypatch.setattr(S, "run", lambda: (calls.append("S"), {})[1])
+    rc = S.main(["--json", str(tmp_path / "s.json"), "--md", _nowhere(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 2, f"自证：坏落点退了 `{rc}` —— 该退 `2`（没测到）"
+    assert "落点" in out
+    assert calls == [], (
+        f"落点都不通，两道入口还是先各算了一场：{calls} —— 该在动手之前就退")
+
+
+def test_a_write_that_fails_anyway_is_still_not_measured(
+        monkeypatch, tmp_path, capsys):
+    """门挡不住的那一半：目录在、真写的时候才炸，也必须是 `2`。
+
+    门只问得出「目录在不在、可不可写」，问不出磁盘满、路径太长、文件被占。
+    那一步抛的 `OSError` 要是没人接，进程还是退 `1` —— 同一个病换个入口。
+    """
+    def refuse(*a, **k):
+        raise OSError(28, "现造：磁盘满了")
+    monkeypatch.setattr(pathlib.Path, "write_text", refuse)
+    monkeypatch.setattr(A, "render_markdown", lambda rep: "（现造的）")
+
+    monkeypatch.setattr(A, "run", lambda: _FAKE_ADJ)
+    rc = A.main(["--json", str(tmp_path / "a.json"), "--md", str(tmp_path / "a.md")])
+    out = capsys.readouterr().out
+    assert rc == 2, f"裁决：写不下去时退了 `{rc}` —— 该退 `2`（没测到）"
+    assert "没测到" in out and "没落成" in out, (
+        "得说清「算出来了，但这一份产物没落成」—— 只说「失败」会把人指去查判据")
+
+    monkeypatch.setattr(S, "render_markdown", lambda rep: "（现造的）")
+    monkeypatch.setattr(S, "run", lambda: {"meta": {"all_ok": True}})
+    rc = S.main(["--json", str(tmp_path / "s.json"), "--md", str(tmp_path / "s.md")])
+    out = capsys.readouterr().out
+    assert rc == 2, f"自证：写不下去时退了 `{rc}` —— 该退 `2`（没测到）"
+    assert "没测到" in out and "没落成" in out
+
+
+def test_a_good_place_still_writes_the_artifacts(monkeypatch, tmp_path):
+    """反向对照：落点好着、写也写得成的时候，两份产物照落、退出码照原样。
+
+    少了这一条，一个「一律退 `2`」的实现也能让上面那两条全绿 —— 而它会把裁决
+    唯一的真发现（判据恒真）整个藏起来。这里连**退出码 0** 一起验：全通过、
+    没有恒真，就该是 `0`。
+    """
+    monkeypatch.setattr(A, "run", lambda: _FAKE_ADJ)
+    monkeypatch.setattr(A, "render_markdown", lambda rep: "（现造的）")
+
+    js, md = tmp_path / "a.json", tmp_path / "a.md"
+    rc = A.main(["--json", str(js), "--md", str(md)])
+
+    assert rc == 0, f"落点好着、产物也该落成，却退了 `{rc}`"
+    assert js.is_file() and md.is_file(), "落点好着，两份产物却没落下来"
+    assert json.loads(js.read_text(encoding="utf-8"))["summary"]["total"] == 1, (
+        "落下来的 json 不是这一场的产物")

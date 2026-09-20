@@ -23,14 +23,18 @@
 现场核一遍 —— 那一条是判据的一部分，所以两边都有。这里把全部引文收在一处，
 免得散着。）
 
-## 这个文件有两半，核的是两件不同的事
+## 这个文件有四半，核的是四件不同的事
 
-* **上半**（`CITATIONS`）：源码那一行**还对不对**。防的是上游一升级、行号一漂，
+* **第一半**（`CITATIONS`）：源码那一行**还对不对**。防的是上游一升级、行号一漂，
   一叠材料静静地引用错行。
-* **下半**（`KNOWN_MISQUOTES`）：**我们引的时候有没有引岔**。防的是源码纹丝不动、
-  我们的材料却把它写错。这两件事不重叠 —— 上半完全管不到下半，所以下半要单独有。
+* **第二半**（`KNOWN_MISQUOTES`）：**我们引的时候有没有引岔**。防的是源码纹丝不动、
+  我们的材料却把它写错。
+* **第三半**（`_verbatim_blocks`）：贴出来的那几段**是不是真的逐字那几行**。
+* **第四半**（块的形状）：上面三半都只管「认了标记之后」的事，这一半管**标记本身**
+  —— 不认标记的块整块免检、认了标记的块还能靠一行格式写歪**把自己静默摘出去**。
+  两个口子都真的漏过东西，所以要看形状而不能只看内容。
 
-下半只收**真出现过**的错，不收假想的。目前一条：曾经把 `prefix_token_len`
+第二半只收**真出现过**的错，不收假想的。目前一条：曾经把 `prefix_token_len`
 （943 行当场量出来的值）写成了字面量 `12`，还标成 948 行的原文。数值上对
 （那个分词器下恰好是 12）、引文上错，而当时没有任何东西会因此变红。
 """
@@ -40,6 +44,7 @@ from __future__ import annotations
 import functools
 import importlib.machinery
 import pathlib
+import re
 
 import pytest
 
@@ -366,3 +371,96 @@ def test_verbatim_blocks_match_upstream_line_for_line(path, module, rows):
             f"只有这个逐字块在管它。\n"
             f"  **先看那段话的论断还成不成立**；要是这行本来就不是原文，"
             f"把它改成原文，别把行号改成让它对得上的样子。")
+
+
+# --------------------------------------------------------------------------
+# 第四件事：**块本身的形状** —— 上面三半管的都是「认了标记之后」的事
+# --------------------------------------------------------------------------
+#
+# 标记是**自己写的**。这留下了两个口子，两个都真的漏过东西：
+#
+# ① **不认标记就整块免检。** 把行号写在**前面**（`884  remaining_budget = …`）
+#    比写在后面更像原文，可 `_verbatim_blocks` 只认「围栏第一行是标记」，
+#    于是这种块一个字都不核。2026-09-20 查出来材料里这么活着**三处**
+#    （README 的 `env.py` 块、`comment_751_759.md` 的同一块、issue ② 的 oasis 块）。
+#    其中 `env.py:55` 的引文还**漏了个逗号**（上游是 `semaphore: int = 128,`）——
+#    `CITATIONS` 用的是「必须包含」的子串比对，逗号漏了它不响。
+#
+# ② **认了标记，行却可以被静默跳过。** 一行要是没写成 `代码  # 行号`（比如
+#    `# 2740` 前面只留了一个空格），`_verbatim_blocks` 只是 `if m:` 不成立、
+#    **跳过去**，那一行就从机检里消失了，而测试照样绿。写这一节的时候就踩了。
+#
+# 所以下面两条**不看引文内容、只看块的形状**。内容是第三半在管。
+
+_FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
+_QUOTE_HEAD = re.compile(r"^\s*\d{2,}\s+\S")
+
+
+def _all_blocks() -> list:
+    """材料里**所有**代码块（认不认标记都在）：`[(文件, 首行, 块体行表)]`。"""
+    out = []
+    for path in _materials():
+        if path.suffix != ".md":
+            continue
+        for block in _FENCE.findall(path.read_text(encoding="utf-8")):
+            body = block.splitlines()
+            if body:
+                out.append((path, body[0].strip(), body))
+    return out
+
+
+def _lines_without_a_number(body: list) -> list:
+    """块体里**没写成 `代码  # 行号`** 的非空行（首行那个标记不算）。"""
+    return [ln for ln in body[1:] if ln.strip() and not re.match(_VERBATIM_LINE, ln)]
+
+
+def _looks_like_a_quote(body: list) -> bool:
+    """首行是不是「行号 代码」—— 也就是「看着像原文」的那种写法。"""
+    return bool(body) and bool(_QUOTE_HEAD.match(body[0]))
+
+
+def test_every_line_inside_a_claimed_block_carries_a_line_number():
+    """认了标记的块里，**每一行都得带行号** —— 格式写歪的行会被静默跳过。
+
+    跳过不是「报错」，是那一行**从机检里消失**，而测试照绿 ——
+    正是本文件开头说的那件事换了个地方发生。
+    """
+    bad = []
+    for path, head, body in _all_blocks():
+        if not head.startswith(_VERBATIM_MARK):
+            continue
+        bad += [f"{path.name}：{ln!r}" for ln in _lines_without_a_number(body)]
+    assert not bad, (
+        "认了标记的块里，下面这几行**没写成** `代码  # 行号`，"
+        "于是被静默跳过、根本没被核：\n  " + "\n  ".join(bad)
+        + f"\n格式要求：代码 + **两个以上空格** + `# 行号`（`{_VERBATIM_LINE}`）")
+
+
+def test_a_line_numbered_quote_block_is_never_left_unclaimed():
+    """长得像引文的块（首行是「行号 代码」）**必须认标记**，否则红。
+
+    不认标记就没有任何东西核它 —— 而它看上去比认了标记的那种更像原文。
+    """
+    bad = [f"{path.name}：{head!r}" for path, head, body in _all_blocks()
+           if _looks_like_a_quote(body) and not head.startswith(_VERBATIM_MARK)]
+    assert not bad, (
+        "下面这些块**长得像引文**（行号在前），却没有 `# 逐字引自 <模块>` 那一行，"
+        "所以机检看不见它们：\n  " + "\n  ".join(bad)
+        + "\n要么转成 `代码  # 行号` 再加标记行，要么把内容挪出代码块。")
+
+
+def test_the_two_block_shape_checks_can_actually_go_red():
+    """反向对照：上面那两条**不是恒真的** —— 喂坏的进去要能抓出来。
+
+    没有这一条，上面两条完全可能是**恒过**的（正则写歪、条件取反、写成了
+    `assert True`），而「没报」和「都对」长得一模一样。
+    """
+    good = ["# 逐字引自 m", "code()          # 12", "    x = 1       # 13"]
+    assert _lines_without_a_number(good) == [], "真格式喂进去也说不对，上面那条是假绿"
+    assert _lines_without_a_number(
+        ["# 逐字引自 m", "code() # 12"]) == ["code() # 12"], "只隔一个空格也算漏"
+
+    assert not _looks_like_a_quote(["# 逐字引自 m", "code  # 12"]), "认了标记的不该算伪引文"
+    assert _looks_like_a_quote([" 884   remaining_budget = 1"]), "行号在前的不认出来"
+    assert not _looks_like_a_quote(["37.1 / 37.8 / 37.8 秒"]), "纯读数不该被误判"
+    assert not _looks_like_a_quote([""]), "空块不该被误判"

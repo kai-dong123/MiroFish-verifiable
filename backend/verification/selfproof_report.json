@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19 15:14:40",
+  "generated_at": "2026-09-20 23:57:47",
   "not_a_pass_rate": true,
   "what_this_is": "对**真读数**做单点受控扰动，逐条检验这套判据有没有鉴别力。",
   "what_this_is_NOT": "不是「判据对不对」的证明 —— 它证明的是「一处改动会让它动」，证明不了「判据和读数不会一起错」。真锚在对照臂上。",
@@ -10,12 +10,12 @@
   },
   "script": {
     "path": "verification/selfproof.py",
-    "sha256": "f862fe4c8d65efbca76bdfc3e8cc089ba8f8d6c7fb4488ffd8d6a36e9e017296"
+    "sha256": "9a5ad33f0f3333bbd02a4e4316540bb3fa1638b4ad98f3bbbb5dc57f820f29e1"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-19T15:14:06",
-    "readings_sha256": "7b7b296a9844690a1d1861527ec920edbd52f49f0a565a09e33bb0e89eeacfb8"
+    "generated_at": "2026-09-20T23:57:44",
+    "readings_sha256": "112d814450897a23ac0ae4ded6bd723702eebe55f9f7511b1c58b60d1cca24e9"
   },
   "claims": {
     "count": 15,
@@ -570,19 +570,20 @@
     {
       "id": "P13",
       "layer": "断言",
-      "why": "**把 B4 声明的 falsifier 抽掉** —— 它照样判「通过」，但检查器应当**自己**把它标成恒真。这一例证明的是：「这条判据没有鉴别力」是**机器**判出来的，不是我在注释里说的",
+      "why": "**把 B4 声明的 falsifier 抽掉** —— 它照样判「通过」，但检查器应当**自己**把它标成恒真，并按「恒真 → 不采信」这一条规则把它从「通过·采信」降成「通过·不采信」。这一例证明的是：「这条判据没有鉴别力」是**机器**判出来的，而且判出来之后**真的不给它采信** —— 不是只在报告里写一句了事",
       "edit": {},
       "unrail": [],
       "unmeasured": {},
       "claims_amended": [
         "B4"
       ],
-      "touch": {},
+      "touch": {
+        "B4": "通过·不采信"
+      },
       "untouched": [
         "B1",
         "B2",
         "B3",
-        "B4",
         "B6",
         "B7",
         "B9",
@@ -595,7 +596,9 @@
         "E4",
         "E5"
       ],
-      "moved": {},
+      "moved": {
+        "B4": "通过·不采信"
+      },
       "vacuous": [
         "B4"
       ],
@@ -804,5 +807,5 @@
     "all_ok": true
   },
   "problems": [],
-  "seconds": 0.05
+  "seconds": 0.07
 }

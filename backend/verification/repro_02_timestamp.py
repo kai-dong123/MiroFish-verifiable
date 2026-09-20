@@ -17,9 +17,12 @@
     self.update_memory(assist_msg, ASSISTANT, timestamp=base_timestamp)         # 2742
     self.update_memory(func_msg,  FUNCTION,  timestamp=base_timestamp + 1e-6)   # 2747
 
-**那个 `1e-6` 比时钟自己的分辨率还细两三个数量级。** 第一节会**现场量出**
-本机 `time.time_ns()` 的最小步长（零点几毫秒量级）并把比值打出来 —— 不引用外部数字，
-因为这台机器上的数才是这份复现的依据。所以它分得开**一对**请求/回执
+**在写这句的那台机器上（Windows），那个 `1e-6` 比时钟自己的分辨率还细两三个
+数量级。** 第一节会**现场量出**本机 `time.time_ns()` 的最小步长（本机零点几毫秒；
+换平台会变 —— Linux 实测 100 纳秒，那时这个比值方向就反过来）并把比值打出来 ——
+不引用外部数字，因为这台机器上的数才是这份复现的依据。
+**这个比值是观测量，不是常数**：上面那句只在写它的那台机器上成立，真正被这份
+复现引用的是第一节量出来的那个比值。所以它分得开**一对**请求/回执
 （那是加在显式值上的算术，不看钟），却分不开**两次调用**：一次模型响应里并排的
 两个 tool 调用前后脚读钟，**读到同一个 `T`**。
 
@@ -80,6 +83,14 @@ from . import _probe as P
 
 #: camel 用来分开请求/回执的那个偏移（源码 2750 行）。
 CAMEL_BUMP = 1e-6
+
+#: 第二节那四臂用的冻钟起点（秒）。
+#:
+#: **它必须是常量，不能在两处各写一个 1000.0**：第二节跑臂时传 `freeze=` 用一次，
+#: 稍后往读数里写 `"frozen_clock"` 那一格时又用一次。两边分开写的话，
+#: 「这条读数取自冻钟」就成了一句**没人验的声明** —— 而它正是第二节全部判据的前提
+#: （冻钟把它们变成逐位可复核的，不读物理时钟）。
+SEC2_FREEZE = 1000.0
 
 
 def _role_type():
@@ -192,7 +203,7 @@ def _tick_verdict(gap: float, tick: float, want_same: bool) -> str:
 
 
 def main() -> bool | None:
-    P.title("复现二 · 同拍碰撞（离线、确定性、不要 API key）")
+    P.title("复现二 · 同拍碰撞（确定性、不调 LLM、不要 API key）")
     P.quiet_logging()
 
     if P.pieces() is None:
@@ -240,7 +251,7 @@ def main() -> bool | None:
                              ("守卫关 · 跨拍·大于偏移", CAMEL_BUMP * 2, False),
                              ("守卫开 · 同拍", 0.0, True)):
         G.set_flags(slicing=True, timestamp=flag)
-        ctx, bad = _run_two_calls(gap, freeze=1000.0)
+        ctx, bad = _run_two_calls(gap, freeze=SEC2_FREEZE)
         if ctx is None:
             P.bad(f"{label}：跑不出来")
             return None
@@ -253,9 +264,9 @@ def main() -> bool | None:
            "不是按本机的时钟刻度定的。所以这两行在哪个平台上都是同一件事。）")
 
     G.set_flags(slicing=True, timestamp=False)
-    ctx_off, bad_off = _run_two_calls(0.0, freeze=1000.0)
+    ctx_off, bad_off = _run_two_calls(0.0, freeze=SEC2_FREEZE)
     G.set_flags(slicing=True, timestamp=True)
-    ctx_on, bad_on = _run_two_calls(0.0, freeze=1000.0)
+    ctx_on, bad_on = _run_two_calls(0.0, freeze=SEC2_FREEZE)
     P.note(f"守卫关：{_shape(ctx_off)}")
     P.note(f"守卫开：{_shape(ctx_on)}")
 
@@ -352,6 +363,13 @@ def main() -> bool | None:
     for key, label, gap, bad in _sec2:
         arms[key] = label
         readings[key] = {"gap_ns": gap * 1e9, "violations": len(bad),
+                         # 这一格能被写成常量 `True`，靠的是**结构**而不是这句话：
+                         # `_run_two_calls` 的 `freeze` 参数**没有默认值**，所以
+                         # 任何产出读数的臂都必然是从冻钟里跑出来的。那条签名由
+                         # `tests/test_repro_verdicts.py::
+                         # test_the_frozen_clock_is_structural_not_a_written_flag`
+                         # 钉住 —— 谁哪天给它加个默认值，读数就不会再是冻钟的了，
+                         # 而这一格会继续印 `True`。
                          "frozen_clock": True}
 
     boundaries = [
@@ -376,13 +394,20 @@ def main() -> bool | None:
             arms[key] = label
             readings[key] = {"gap_s": gap,
                              "tick_s": tick_here,
-                             "ticks_ratio": gap / tick_here if tick_here > 0
-                             else float("nan")}
+                             # 分母量成 `0` 时**不写 `NaN`**：`json.dumps` 默认
+                             # `allow_nan=True`，会把裸 `NaN` 落进产物 —— 那是一份
+                             # **非严格 JSON**。Python 读得回来，`jq` 之类的严格
+                             # 解析器当场失败。用本仓统一的哨兵 `None`（= 没测到），
+                             # 与 `_probe.residual_budget` 同一套口径；消费方必须
+                             # 按下标取值，别直接拿去算。
+                             "ticks_ratio": (gap / tick_here if tick_here > 0
+                                             else None)}
             boundaries.append(
                 (key, "ticks_ratio",
                  "分母是**本节当场另量的一拍**，与第一节那个数不是同一个；"
                  "间隔由实际工作量决定、很稳，分母本身是随机量 —— "
-                 "**这一列抖得比间隔那一列厉害**，不该当精确值用"))
+                 "**这一列抖得比间隔那一列厉害**，不该当精确值用；"
+                 "分母量成 `0` 时这一格是 `null`（没测到），不是无穷大"))
             boundaries.append(
                 (key, "gap_s",
                  "满记忆这个前提沿用了复现一的**严格不等式**关（写入后 token "

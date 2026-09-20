@@ -155,7 +155,10 @@ def _fresh_filled(token_limit: int, filler_tokens: int):
 
 
 def main() -> bool | None:
-    P.title("复现一 · 切片正反馈环（离线、确定性、不要 API key）")
+    # 标题里**不写「离线」**：它要下一次分词器的编码表（见文件开头的说明）。
+    # 「不发 LLM 请求、不要 API key」是真的，「不联网」不是 —— 取不到时会明确报
+    # 「没测到」，但标题不该先把人往反方向带。
+    P.title("复现一 · 切片正反馈环（确定性、不调 LLM、不要 API key）")
     P.quiet_logging()
 
     if P.pieces() is None:
@@ -235,18 +238,25 @@ def main() -> bool | None:
            f"待写消息自身 {own} token）")
     # 每条臂**各算各的**（不共用一个上算出来的数）：三者的残余预算实测相同，
     # 但把「谁的量」写清楚，读数才不会在人改前提时悄悄错位。
+    #
+    # 残余预算量不到（`get_context()` 抛了）→ 这一节的前提不成立，**没测到**，
+    # 不是「没达到预期」。**不许退回一个 `-1` 之类的哨兵数接着算**：那个数
+    # 和一次合法测量撞车，而下面那条链正是拿它去做除法的。
+    _arms = (("guard_off_1", off1), ("guard_off_2", off2), ("guard_on", on))
+    if any(r["residual"] is None for _, r in _arms):
+        P.bad("残余预算没量到（`memory.get_context()` 抛了）—— "
+              "切片那几格的前提不成立，这一节不作数")
+        return None
     chains = {k: _chunk_body_limit(filled[0][1], r["residual"])
-              for k, r in (("guard_off_1", off1), ("guard_off_2", off2),
-                           ("guard_on", on))}
+              for k, r in _arms}
     chain = chains["guard_off_1"]
-    if off1["residual"] >= 0:
-        P.note(f"（守卫关着时，camel 拿 {off1['residual']} 这个数去做 "
-               f"//10 再减 {chain['prefix_token_len']} 的前缀扣减 → 每块正文容量 "
-               f"{chain['chunk_body_limit']} token）")
-        if chain["clamped"]:
-            P.note(f"（注意：上面那个 {chain['chunk_body_limit']} 是上游 "
-                   f"`max(1, ...)` **兜底兜出来的** —— 算出来的容量本来小于 1。"
-                   f"它是个夹逼产物，不是量出来的容量）")
+    P.note(f"（守卫关着时，camel 拿 {off1['residual']} 这个数去做 "
+           f"//10 再减 {chain['prefix_token_len']} 的前缀扣减 → 每块正文容量 "
+           f"{chain['chunk_body_limit']} token）")
+    if chain["clamped"]:
+        P.note(f"（注意：上面那个 {chain['chunk_body_limit']} 是上游 "
+               f"`max(1, ...)` **兜底兜出来的** —— 算出来的容量本来小于 1。"
+               f"它是个夹逼产物，不是量出来的容量）")
 
     # -- 判据 --------------------------------------------------------------
     P.step("判据")

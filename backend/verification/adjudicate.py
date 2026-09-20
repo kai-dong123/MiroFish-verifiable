@@ -11,7 +11,8 @@
 判据不是事后从读数里总结出来的（那样它只会复述代码干了什么）。每一条都是关于
 **系统**的假设，写在版本库里，并且必须自带一个 `falsifier`：**一处具名的单点读数
 改动，能把这条断言弄红**。给不出、或者给了却翻不动它的，检查器就判它**判据恒真**、
-记 `trusted=False`，理由写明「任何单点扰动都翻不动它」。
+记 `trusted=False`，理由写明「任何单点扰动都翻不动它」（回填在
+`apply_vacuous_no_trust()`：判据先判 → falsifier 再试 → **最后**改采信）。
 
 于是「这套判据有没有鉴别力」是被**机检**的，不是被声称的。`selfproof.py` 就是那台
 自证的机器。
@@ -54,6 +55,7 @@ import sys
 import time
 
 from . import _probe as P
+from .attach import STUB_MODEL_NAME, stub_banner_names   # 替身那件事只写一份（`attach.py`）
 
 HERE = pathlib.Path(__file__).resolve().parent          # backend/verification
 BACKEND = HERE.parent                                   # backend/
@@ -386,12 +388,77 @@ CLAIMS = (
 # 读数 → 单元格
 # ---------------------------------------------------------------------------
 
+def _report_shape_problem(rep) -> str | None:
+    """**能读的 JSON 不等于结构对。** 结构不对就返回一句为什么，否则 `None`。
+
+    为什么要单独查一遍：`cells_from` 是在**下标取值那一层**消费这份报告的
+    （`b["arm"]` / `b["kind"]`、`block.get("readings", {})` 再 `.items()`）。
+    文件被手工补过一条、或写到一半却恰好仍是**合法 JSON** 时，那里抛的是
+    `KeyError` / `AttributeError` / `TypeError` —— 它们**不是** `AdjudicationError`，
+    于是逃出 `main()`、甩一个 traceback、按 Python 默认退成 `1`；而 `1` 在本装置
+    里是「**有子进程没跑成**」。于是一次「这份产物读不出来」被报成了「跑了但失败
+    了」—— 和 `load_report` 里 `JSONDecodeError` 那一段是**同一个病**，只是那一半
+    只挡住了「读不成 JSON」，没挡住「读得成但结构不对」。
+    """
+    if not isinstance(rep, dict):
+        return "顶层不是一份对象"
+    results = rep.get("results")
+    if not isinstance(results, list):
+        return "`results` 不是一张表"
+    for i, entry in enumerate(results, 1):
+        if not isinstance(entry, dict):
+            return f"`results` 里第 {i} 条不是一份对象"
+        block = entry.get("readings")
+        if block is None:
+            continue
+        if not isinstance(block, dict):
+            return f"第 {i} 条的 `readings` 不是一份对象"
+        readings = block.get("readings", {})
+        if not isinstance(readings, dict):
+            return f"第 {i} 条的 `readings.readings` 不是一份对象"
+        for arm, vals in readings.items():
+            if not isinstance(vals, dict):
+                return f"第 {i} 条里 `{arm}` 那格不是一份对象"
+        bounds = block.get("boundaries", [])
+        if not isinstance(bounds, list):
+            return f"第 {i} 条的 `boundaries` 不是一张表"
+        for b in bounds:
+            if not isinstance(b, dict):
+                return f"第 {i} 条 `boundaries` 里有一条不是对象"
+            for k in ("arm", "metric", "kind", "why"):
+                if k not in b:
+                    return f"第 {i} 条 `boundaries` 里有一条缺 `{k}`"
+    return None
+
+
 def load_report(path: pathlib.Path = REPORT) -> dict:
     if not path.is_file():
         raise AdjudicationError(
             f"没有 `{path.name}` —— 先跑一次 `cd backend && python -m verification.run_all`。"
             f"本表判的是**那次运行**的读数，不自己重跑（重跑就不是同一批读数了）。")
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        rep = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError:
+        # **文件在、但读不成 JSON** —— 最可能是写到一半被打断了（`run_all` 是就地
+        # 覆盖写，不是先写临时文件再改名），也可能是被谁手改坏了。
+        #
+        # 这一种也要走 `AdjudicationError` 这条路（于是 `main()` 报「没测到」退 `2`），
+        # 不能让它以 `JSONDecodeError` 逃出去：那会甩一个 traceback、按 Python 的
+        # 默认退成 `1`，而 `1` 在本装置里是「**有子进程没跑成**」—— 于是一次
+        # 「读到一半」被报成了「跑了但失败了」。**装置自己说的话得跟自己的契约对得上**
+        # （README「退出码：三种不是两种」，`main()` 末尾那段同一条）。
+        raise AdjudicationError(
+            f"`{path.name}` 在、但不是一份能读的 JSON —— 多半是写到一半被打断了。"
+            f"重跑一次 `python -m verification.run_all` 整份重写；**别手工去修它**："
+            f"本表判的是那次运行的读数，改过就不是了。") from None
+    why = _report_shape_problem(rep)
+    if why is not None:
+        # 同上，**只是那一段漏掉的一半**：读得成 JSON、结构却不对。
+        raise AdjudicationError(
+            f"`{path.name}` 是能读的 JSON，但**结构不对**（{why}）—— 多半是被谁"
+            f"手工补过一条、或者写了一半。重跑一次 `python -m verification.run_all` "
+            f"整份重写；**别手工去修它**：本表判的是那次运行的读数，改过就不是了。")
+    return rep
 
 
 def load_e2e_report(path: pathlib.Path = E2E_REPORT):
@@ -406,11 +473,17 @@ def load_e2e_report(path: pathlib.Path = E2E_REPORT):
     if not path.is_file():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        rep = json.loads(path.read_text(encoding="utf-8"))
     except ValueError:
         # 文件在、但不是 JSON —— 这是**没测到**，不是「读数为空」。返回 None，
         # 让它按同样的路走到「不可判定」，而不是在这里崩掉整张表。
         return None
+    if _report_shape_problem(rep) is not None:
+        # 同上，只是那一段漏掉的一半：**读得成 JSON、结构却不对**。也返回 None
+        # （和「不在」同一条路）—— 于是 E1–E5 如实转「不可判定」，并带着
+        # 「跑一次 `e2e_stub`」那条补法，而不是在 `cells_from` 里崩掉整张表。
+        return None
+    return rep
 
 
 def cells_from(report: dict, *extra):
@@ -581,6 +654,39 @@ def falsifier_report(claims=CLAIMS, cells=None, railed=None, unmeasured=None,
     return out
 
 
+def apply_vacuous_no_trust(rows, fals) -> list:
+    """把「判据恒真」真的记成**不采信** —— 返回被回填的判据 id。
+
+    ⚠️ **这条规则此前只在两处写着，没有实装。** `NO_TRUST_VACUOUS` 这个常量从建表
+    那天就在，模块开头和产物开头也都写着「给不出、或者给了却翻不动它的，检查器就判
+    它**判据恒真**、记 `trusted=False`」，可 `evaluate()` 里算 `trusted` 只看贴界那一条
+    规则（`NO_TRUST_RAIL`），于是同一份产物会**自己打自己**：
+
+        上半张表 `E4 · 通过 · 采信`    下半张 falsifier 表 `E4 · 恒真`
+
+    这不是假想 —— 把 `roomy_e2e.db_posts` 从 2 改成 0（那是**替身那一跑往库里写了几条
+    帖**，本来就会漂的读数），E4 的 falsifier `{("two_e2e","db_posts"): 2}` 就翻不动它了，
+    而 `trusted` 仍是 `True`。产物上半张写「采信」、下半张写「恒真」，两句话都在同一份
+    JSON 里。
+
+    **为什么不塞进 `evaluate()`**：falsifier 要拿 `evaluate()` 的结果去比对
+    （`falsifier_report(base_rows=…)`），塞进去就成了判据自己判自己。
+    所以顺序是：判据先判 → falsifier 再试 → **最后**按试出来的结果回填采信。
+
+    `trusted is None`（不可判定）**不动** —— 恒真的那条不可能是不可判定
+    （`falsifier_report` 给缺读数的判的是「不可判定」、不是「恒真」），这里只改 `True`。
+    """
+    vacuous = [f["id"] for f in fals if f["kind"] == "恒真"]
+    hit = []
+    for r in rows:
+        if r["id"] in vacuous and r["trusted"] is True:
+            r["trusted"] = False
+            r["no_trust_because"] = list(r["no_trust_because"]) + [NO_TRUST_VACUOUS]
+            r["detail"] = r["detail"] + "；**判据恒真**（见下面的 falsifier 表）"
+            hit.append(r["id"])
+    return hit
+
+
 def summarize(rows, fals) -> dict:
     """汇总。**刻意不给出任何比率** —— 判不了的几条不是「没通过」。"""
     by_verdict = {v: sum(1 for r in rows if r["verdict"] == v)
@@ -708,8 +814,37 @@ def _e2e_provenance(e2e) -> dict:
             "arms_missing": e2e.get("arms_missing") or [],
             # 替身这件事必须跟着读数走到这里：判据表读的是「真入口脚本跑出来的
             # 计数」，而那个脚本里的模型是替身 —— 换一处理解就是另一回事了。
-            "model_is_stub": True,
+            # **从转录里读出来，不写死** —— 见 `_stub_provenance`。
+            **_stub_provenance(e2e),
             "what_it_does_NOT_prove": e2e.get("what_it_does_NOT_prove")}
+
+
+def _stub_provenance(e2e) -> dict:
+    """**「模型是替身」这件事，从产物自己的转录里读出来。**
+
+    原先这一格是写死的 `True`。那是个恒真值：判据表读的读数确实来自替身模型，
+    但**读的人被告知的是一个常量，而不是一条证据** —— 万一哪天有一档臂真的调了
+    模型（改错旋钮、环境变量串了），这一格照样说「替身」，而它恰恰就是用来防
+    「读的人以为模型是真的」的那一格。写死的字段和没有字段，在这一点上一样糟。
+
+    认的是 `attach.py` 打进转录的那一行（识别式也在 `attach.py` —— 打出去和认回来
+    共用一份写法）。**三档臂都写着替身才算替身**：只要有一条臂的转录里没有这个
+    标记，就**不标替身**并说明为什么 —— 宁可让读的人自己去看，也不替他下一个
+    他没证据下的结论。
+    """
+    # 正文在 `transcript` 里。`transcript_redacted` 是**另一个东西** —— 一个
+    # 布尔标记，说的是「上面那份正文抹过」（`e2e_stub._report`）。别读错字段。
+    texts = [r.get("transcript") or "" for r in (e2e.get("results") or [])]
+    found = stub_banner_names(texts)
+    if texts and found and all(name == STUB_MODEL_NAME for name in found):
+        return {"model_is_stub": True,
+                "model_is_stub_why":
+                    f"转录里写着 `model_type='{STUB_MODEL_NAME}'`（三档臂的转录都有）"}
+    return {"model_is_stub": False,
+            "model_is_stub_why":
+                "转录里**没有**全部写着"
+                f" `model_type='{STUB_MODEL_NAME}'`（找到的是 {found or '一个都没有'}）—— "
+                "这一格没有证据说模型是替身，所以不标替身"}
 
 
 def readings_digest_of(cells, railed, unmeasured) -> str:
@@ -729,6 +864,9 @@ def run() -> dict:
     cells, railed, unmeasured = cells_from(report, e2e)
     rows = evaluate(CLAIMS, cells, railed, unmeasured)
     fals = falsifier_report(CLAIMS, cells, railed, unmeasured, base_rows=rows)
+    # 「恒真 → 不采信」回填在这里，**在 `summarize` 之前** —— 汇总里的
+    # 「采信/不采信」必须反映回填之后的状态，否则上半张表和下半张表还是两套口径。
+    vacuous_no_trust = apply_vacuous_no_trust(rows, fals)
     return {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "not_a_pass_rate": True,
@@ -756,6 +894,9 @@ def run() -> dict:
         "unmeasured_cells": {f"{a}.{m}": w for (a, m), w in unmeasured.items()},
         "rows": rows,
         "falsifiers": fals,
+        # 这次有几条因为「判据恒真」被回填成不采信（`apply_vacuous_no_trust`）。
+        # **单独记一格** —— 否则「一条都没回填」和「本来就都采信」长得一模一样。
+        "vacuous_no_trust": vacuous_no_trust,
         "summary": summarize(rows, fals),
         "seconds": round(time.time() - t0, 2),
     }
@@ -771,6 +912,13 @@ def main(argv=None) -> int:
     ap.add_argument("--md", default=str(MD_PATH))
     args = ap.parse_args(argv)
 
+    # 落点先问一句，**问在 `run()` 之前**：判定算完再发现写不出去，等于白算一场，
+    # 而且那一步抛的 `FileNotFoundError` 没人接、进程退 `1`（按本表读成「没达到
+    # 预期」）—— 落点不通时我们什么都没量到，该退的是 `2`。
+    rc = P.refuse_out_path(args.json, args.md)
+    if rc is not None:
+        return rc
+
     try:
         rep = run()
     except AdjudicationError as e:
@@ -781,9 +929,16 @@ def main(argv=None) -> int:
         print(f"\n○ 没测到：{e}")
         return 2
 
-    pathlib.Path(args.json).write_text(
-        json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
-    pathlib.Path(args.md).write_text(render_markdown(rep), encoding="utf-8")
+    try:
+        pathlib.Path(args.json).write_text(
+            json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+        pathlib.Path(args.md).write_text(render_markdown(rep), encoding="utf-8")
+    except OSError as exc:
+        # 上面那道门挡不住的一半（目录在、文件建不出来）。判定已经算出来了，
+        # **但这一份没落成** —— 按三种结果说清楚，不退 `1`。
+        print(f"\n○ 没测到：判定写不下去（{exc.__class__.__name__}: {exc}）—— "
+              "表算出来了，但**这一份产物没落成**。")
+        return 2
 
     s = rep["summary"]
     print(f"\n→ {args.json}")

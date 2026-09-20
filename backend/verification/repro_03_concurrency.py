@@ -186,7 +186,11 @@ def main() -> bool | None:
     # -- 二、量灵敏度 ------------------------------------------------------
     P.step("二、量灵敏度：多小的耗时差能让落库次序变样")
     rows = _flip_threshold()
-    P.table([[f"{d * 1e6:,.0f} µs" if d < 1e-3 else f"{d * 1e3:,.1f} ms",
+    # 单位写「微秒」不写 `µs`：`µ`（U+00B5）**GBK 编不出**，中文 Windows 的 cmd 下
+    # 会被 `_harden_streams` 降级成 `?`。这段表格是要**逐字进产物**的（`run_all`
+    # 会把每条命令的输出原样转录进报告），所以同一个字符集规矩在读数块和这张表上
+    # 一样成立 —— 下面 `emit_readings` 那段早就这么写了，这里原先漏了一处。
+    P.table([[f"{d * 1e6:,.0f} 微秒" if d < 1e-3 else f"{d * 1e3:,.1f} 毫秒",
               "变了" if flip else "没变"]
              for d, flip in rows],
             header=["把一个 agent 拖慢", "落库次序"])

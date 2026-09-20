@@ -57,6 +57,7 @@ import platform
 import sys
 import time
 
+from . import _probe as P
 from . import adjudicate as A
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -207,10 +208,13 @@ CASES = (
 
     _case("P13", "断言",
           "**把 B4 声明的 falsifier 抽掉** —— 它照样判「通过」，"
-          "但检查器应当**自己**把它标成恒真。这一例证明的是："
-          "「这条判据没有鉴别力」是**机器**判出来的，不是我在注释里说的",
+          "但检查器应当**自己**把它标成恒真，并按「恒真 → 不采信」这"
+          "一条规则把它从「通过·采信」降成「通过·不采信」。这一例证明的是："
+          "「这条判据没有鉴别力」是**机器**判出来的，而且判出来之后"
+          "**真的不给它采信** —— 不是只在报告里写一句了事",
           claims=_amend("B4", falsifier=None),
-          touch={}, untouched=tuple(_ALL),
+          touch={"B4": "通过·不采信"},
+          untouched=tuple(i for i in _ALL if i != "B4"),
           vacuous=("B4",)),
 
     # ---- 端到端那一层：后加的读数来源也得受同一套检验 ---------------------
@@ -256,6 +260,11 @@ def run() -> dict:
     cells, railed, unmeasured = A.all_cells()
 
     base_rows = A.evaluate(A.CLAIMS, cells, railed, unmeasured)
+    # 基础状态也走**同一套回填**（恒真 → 不采信）：`grid_of(base[i])` 是下面逐条
+    # 比对的基准，它必须和 `adjudicate` 产物里那一格是同一个口径。
+    fals_base = A.falsifier_report(A.CLAIMS, cells, railed, unmeasured,
+                                   base_rows=base_rows)
+    A.apply_vacuous_no_trust(base_rows, fals_base)
     base = {r["id"]: r for r in base_rows}
 
     seen = {grid_of(r) for r in base_rows}
@@ -275,17 +284,22 @@ def run() -> dict:
 
         rows = A.evaluate(claims, cells, railed2, unmeasured2,
                           override=c["edit"] or None)
-        now = {r["id"]: r for r in rows}
-        # 表态写的是**整格**：`结果·采信`。只比结果会漏掉贴界降级 ——
-        # 「通过·不采信」变成「通过·采信」是**该看见**的一次变化（见 P10）。
-        moved = {i: grid_of(now[i]) for i in _ALL
-                 if grid_of(now[i]) != grid_of(base[i])}
 
         # falsifier **一律在没扰动过的读数上实例化**：一条判据的 falsifier 是
         # 关于「原始读数」的声明。拿扰动后的状态去试它自己，等于把它的扰动
         # 用掉之后再要求它再翻一次 —— 那会把自己判成恒真，是**假警报**。
         fals = A.falsifier_report(claims, cells, railed, unmeasured)
         vacuous = tuple(f["id"] for f in fals if f["kind"] == "恒真")
+        # 和 `adjudicate` **同一套口径**：恒真的判据记不采信。这条规则是**声明**在
+        # 裁决器里的，两份产物都得照做 —— 否则同一条判据在这边显示「采信」、在那边
+        # 显示「不采信」。回填必须在 `moved` **之前**，否则比的是没回填过的格子。
+        A.apply_vacuous_no_trust(rows, fals)
+
+        now = {r["id"]: r for r in rows}
+        # 表态写的是**整格**：`结果·采信`。只比结果会漏掉贴界降级 ——
+        # 「通过·不采信」变成「通过·采信」是**该看见**的一次变化（见 P10）。
+        moved = {i: grid_of(now[i]) for i in _ALL
+                 if grid_of(now[i]) != grid_of(base[i])}
 
         if moved != c["touch"]:
             problems.append(
@@ -317,8 +331,7 @@ def run() -> dict:
     # -- 元断言一：五格全出现 ---------------------------------------------
     missing = [g for g in GRIDS if g not in seen]
     # -- 元断言二：每条判据要么可翻面、要么明说缺读数 -----------------------
-    fals_base = A.falsifier_report(A.CLAIMS, cells, railed, unmeasured,
-                                   base_rows=base_rows)
+    # （`fals_base` 在上面就算过了 —— 基础状态的采信回填要用到它，别在这儿再算一遍。）
     vac_base = [f["id"] for f in fals_base if f["kind"] == "恒真"]
     unreachable = [f["id"] for f in fals_base if f["kind"] == "不可判定"]
 
@@ -436,6 +449,12 @@ def main(argv=None) -> int:
     ap.add_argument("--md", default=str(MD_PATH))
     args = ap.parse_args(argv)
 
+    # 落点先问一句，**问在 `run()` 之前**（同 `adjudicate`）：前提再全，写不出去也
+    # 是一条都没测到，该退 `2`。
+    rc = P.refuse_out_path(args.json, args.md)
+    if rc is not None:
+        return rc
+
     try:
         rep = run()
     except (A.AdjudicationError, SelfproofError) as e:
@@ -445,9 +464,16 @@ def main(argv=None) -> int:
         print(f"\n○ 没测到：{e}")
         return 2
 
-    pathlib.Path(args.json).write_text(
-        json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
-    pathlib.Path(args.md).write_text(render_markdown(rep), encoding="utf-8")
+    try:
+        pathlib.Path(args.json).write_text(
+            json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+        pathlib.Path(args.md).write_text(render_markdown(rep), encoding="utf-8")
+    except OSError as exc:
+        # 上面那道门挡不住的一半。**不允许退回 `1`**：那份绿色／红色是算出来了，
+        # 但这一份产物没落成，说「没达到预期」会把人指去查判据。
+        print(f"\n○ 没测到：自证写不下去（{exc.__class__.__name__}: {exc}）—— "
+              "逐例表态算出来了，但**这一份产物没落成**。")
+        return 2
 
     m = rep["meta"]
     print(f"\n→ {args.json}")

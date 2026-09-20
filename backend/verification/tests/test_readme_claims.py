@@ -173,3 +173,133 @@ def test_the_python_bound_comparison_would_flag_a_wrong_bound(readme_text):
         "拿真值喂进去也说不对 —— 那 `_bound_mismatch` 本身坏了，上面那条是假绿。")
     assert _bound_mismatch(readme_text, ">=3.9") is not None, (
         "换一个假的上界进去，它居然还说「对得上」—— 那么上面那条什么都没核。")
+
+
+# ---------------------------------------------------------------------------
+# 第三种同病：README 那句「三份产物的判定与本机一致」后面抄的那三个数
+# ---------------------------------------------------------------------------
+#
+# 那句话说的是「第二平台上重跑，判定与本机**一致**，具体是
+# `run_all` 3/3、`adjudicate` 13 通过 / 0 否决 / 2 不可判定、`selfproof` 15/15」。
+#
+# **正因为论断的内容是「一致」，拿本机产物去对它就是**在核那句话本身**，不是
+# 在核另一台机器。** 哪天某条判据翻了面、README 没跟着改，这里就会红：
+# 要么是那句话过期了，要么是「两个平台一致」这件事不再成立 —— 两种都该有人看。
+#
+# 这三个数字此前**没有任何东西看着**（`grep` 在 tests/ 里零命中），而它们正是
+# 读者会记住的那一行。
+
+_README_NUMS = (
+    ("run_all", re.compile(r"`run_all`\s*(\d+)\s*/\s*(\d+)")),
+    ("adjudicate", re.compile(
+        r"`adjudicate`\s*(\d+)\s*通过\s*/\s*(\d+)\s*否决\s*/\s*(\d+)\s*不可判定")),
+    ("selfproof", re.compile(r"`selfproof`\s*(\d+)\s*/\s*(\d+)")),
+)
+
+
+def _readme_run_numbers(text: str) -> dict:
+    """从 README 那段里抠出那三组数；抠不到就抛 —— 那是**没测到**，不是「不符」。"""
+    out = {}
+    for name, pat in _README_NUMS:
+        m = pat.search(text)
+        assert m, (f"README 里找不到 `{name}` 那组数了（正则 `{pat.pattern}`）—— "
+                   f"改了写法就把这里的正则一起改；删了的话这一条就失去要核的东西了")
+        out[name] = tuple(int(g) for g in m.groups())
+    return out
+
+
+def _artifact_numbers() -> dict:
+    import json
+
+    adj = json.loads((VERIFICATION / "adjudication_report.json")
+                     .read_text(encoding="utf-8"))
+    sp = json.loads((VERIFICATION / "selfproof_report.json")
+                    .read_text(encoding="utf-8"))
+    run = json.loads((BACKEND / "verification_report.json")
+                     .read_text(encoding="utf-8"))
+    return {
+        "run_all": (run["summary"]["reached_expectation"], run["summary"]["total"]),
+        "adjudicate": (adj["summary"]["by_verdict"]["通过"],
+                       adj["summary"]["by_verdict"]["否决"],
+                       adj["summary"]["by_verdict"]["不可判定"]),
+        "selfproof": (sp["meta"]["cases_ok"], len(sp["cases"])),
+    }
+
+
+#: 这一条要的三份产物。**缺一份就是「没条件判」**，不是「判不过」—— 和
+#: `test_adjudicate.py` 里那条新鲜度测试同一个道理（本装置反复用的那条三态）。
+#:
+#: 这是**实测踩出来的**：README 说「刚 clone 下来第一次跑是 `243 passed /
+#: 1 skipped`」，而把工作区按 `git ls-files` 摊成一份「clone 完的样子」再跑，
+#: 屏幕上是**一红** —— 就是这一条，抛的还是 `FileNotFoundError` 的 traceback。
+#: 读者照 README 做，只会以为自己装错了；而真相是这三份产物本来就不入库，
+#: 这一条**没条件判**。（同一份副本里另一条红是 `.git` 不在 —— 真 clone 里有。）
+_NEEDED_ARTIFACTS = (VERIFICATION / "adjudication_report.json",
+                     VERIFICATION / "selfproof_report.json",
+                     BACKEND / "verification_report.json")
+
+_MISSING_HINT = ("先跑一次 `cd backend && python -m verification.run_all`、"
+                 "`python -m verification.adjudicate`、`python -m verification.selfproof`，"
+                 "三份产物齐了这一条才判得动。")
+
+
+def _missing_artifacts() -> list:
+    return [p.name for p in _NEEDED_ARTIFACTS if not p.is_file()]
+
+
+def test_the_readme_numbers_are_the_numbers_the_artifacts_produced(readme_text):
+    """README 那一行里抄的三个数，和三份**本机产物**对得上。
+
+    那句论断是「第二平台上重跑，判定与本机一致 —— 就是这三个数」。所以这份
+    产物里的数**必须**正是 README 写的数：对不上，要么是 README 过期了，
+    要么是「两个平台一致」不再成立。
+    """
+    missing = _missing_artifacts()
+    if missing:
+        pytest.skip(f"产物不齐（缺 {'、'.join(missing)}），这一条没条件判。{_MISSING_HINT}")
+    said, got = _readme_run_numbers(readme_text), _artifact_numbers()
+    for name in said:
+        assert said[name] == got[name], (
+            f"README 写 `{name}` 是 {said[name]}，本机产物给的是 {got[name]}。\n"
+            f"**先弄清是哪一种**：产物过期了（重跑一次）、还是判定真的变了"
+            f"（那「两个平台一致」这句话就不再成立，得改的是那句话，不是产物）。")
+
+
+def test_the_numbers_comparison_really_compares(monkeypatch, readme_text):
+    """反向对照：前提齐着的时候，数对不上必须**当场红**。
+
+    少了它，一个「不管前提齐不齐都跳过」的实现也能让上面那条全绿 ——
+    而它要拦的，正是「README 上的数烂掉了却没有任何东西会因此变红」这件事。
+
+    这里把**产物读数**换成一望即知不对的一组，并把**前提门**换成「齐的」——
+    于是这条对照不依赖本机有没有跑过 `run_all`：刚开始 clone 下来它照样判得动，
+    不会跟着上面那条一起变成第二个跳过（跳过的那一条已经在上面了，够演示了）。
+    """
+    monkeypatch.setattr(sys.modules[__name__], "_missing_artifacts", lambda: [])
+    monkeypatch.setattr(sys.modules[__name__], "_artifact_numbers",
+                        lambda: {"run_all": (99, 99), "adjudicate": (0, 0, 0),
+                                 "selfproof": (0, 0)})
+    with pytest.raises(AssertionError) as e:
+        test_the_readme_numbers_are_the_numbers_the_artifacts_produced(readme_text)
+    assert "本机产物给的是" in str(e.value), (
+        f"红了，但红在别的地方（{e.value!r}）—— 那这条对照证的就不是「比对照」")
+
+
+def test_that_number_parser_actually_discriminates():
+    """反向对照：那三组数要真的**从文本里读出来**，不是恒返回一组好看的值。
+
+    少了它，一个恒返回 `{'run_all': (3,3), ...}` 的实现也能让上面那条变绿 ——
+    而那正是它要拦的（README 上的数烂掉了却没人知道）。
+    """
+    text = README.read_text(encoding="utf-8")
+    got = _readme_run_numbers(text)
+    assert set(got) == {"run_all", "adjudicate", "selfproof"}
+
+    tweaked = text.replace("`selfproof` 15/15", "`selfproof` 7/9")
+    assert tweaked != text, "README 那句 `selfproof` 的写法变了，先看一眼"
+    assert _readme_run_numbers(tweaked)["selfproof"] == (7, 9), (
+        "改了 README 里的数，读出来却没变 —— 那它不是从那一行读的")
+
+    # 抠不到时必须是**抛**（没测到），不许悄悄退回一个默认值。
+    with pytest.raises(AssertionError):
+        _readme_run_numbers(tweaked.replace("`run_all` 3/3", "`run_all` ?/?"))

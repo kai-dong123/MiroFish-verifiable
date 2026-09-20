@@ -321,41 +321,57 @@ def _can_diff(path: str) -> bool:
 
 
 def test_the_tokenizer_cache_bytes_agree_everywhere(doc_text):
-    """编码表落盘字节数：**三处写的是同一个数**（清单、装置 README、生成的产物）。
+    """编码表落盘字节数：**四处写的是同一个数**（清单两处、装置 README、生成的产物）。
 
-    它是《清单》第二节里最后一个纯手写的数。三处不是「多抄一遍保险」，
-    而是「同一件事写了三遍」—— 一处改了另两处不动，读的人不会知道该信哪个。
+    它是《清单》第二节里最后一个纯手写的数。四处不是「多抄一遍保险」，
+    而是「同一件事写了四遍」—— 一处改了另几处不动，读的人不会知道该信哪个。
     产物那份是 `run_all` 实测落盘、写进环境一节的（`tokenizer_cache_bytes`）。
 
+    ⚠️ **原先号称三处，实际只核住两处。** 这个正则按「落盘 … 字节」这个**形状**
+    定位（不按位数猜 —— 第一版写成「7 位以上的数字+字节」，把《清单》里另一个数
+    `11,343 字节`（随包 LICENSE 的大小）也吞了进来）。而《清单》的任务清单那条写的是
+    「量出编码表落盘字节数（**3,613,922 B**）」：数字后面跟的是 `B）`，不是「字节」，
+    **那个形状匹配不上** —— 于是那一处**一条检查都没有**，而 README 的正文写着
+    「三处被测试互相钉住」。号称几处就得真的几处，所以这里连**落点个数**一起钉：
+    少写一处、多写一处都要来改这条。
+
     **这条不新增跳过**：两份提交进仓库的（清单 + 装置 README）必须对上；
-    生成的那份在盘上就一起核，不在就只核前两处 —— 少一份核对不是「没条件判」。
+    生成的那份在盘上就一起核，不在就只核那几处 —— 少一份核对不是「没条件判」。
     """
     from test_readme_claims import README as DEVICE_README
     device = DEVICE_README.read_text(encoding="utf-8")
 
-    def bytes_claims(text: str) -> set:
-        # 按**上下文**定位（「落盘 … 字节」），不靠位数猜 ——
-        # 第一版写成「7 位以上的数字+字节」，结果把《清单》里另一个数
-        # `11,343 字节`（随包 LICENSE 的大小）连前面那个中文逗号一起吞了进来。
-        return {int(m.replace(",", ""))
-                for m in re.findall(r"落盘[^\d]{0,8}([\d,]+)\s*字节", text)}
+    def bytes_claims(text: str) -> list:
+        # 两种写法都认：`落盘 3,613,922 字节` 与 `落盘字节数（3,613,922 B）`。
+        return re.findall(r"落盘[^\d]{0,8}([\d,]+)\s*(?:字节|B)", text)
 
     in_doc, in_device = bytes_claims(doc_text), bytes_claims(device)
-    assert in_doc, "《清单》里那个「3,613,922 字节」找不到了 —— 改写法就一起改正则。"
-    assert in_device, "装置 README 里那个编码表字节数找不到了 —— 它是这个数的另一处落点。"
-    assert in_doc == in_device, (
-        f"同一个数两处写得不一样：《清单》{sorted(in_doc)}，装置 README {sorted(in_device)}。\n"
+    assert len(in_doc) == 2, (
+        f"《清单》里那个数有 {len(in_doc)} 处。**这个数字是「几处就得有几条检查」的"
+        "落点**：号称三处而其中一处的写法被正则漏掉，正是这条测试当初漏掉过的那个洞。"
+        "要添一处、或改掉其中一处的写法，先来改这条。")
+    assert len(in_device) == 1, (
+        f"装置 README 里那个数有 {len(in_device)} 处 —— 原先是一处（本节开头那行）。")
+    doc_vals = {int(x.replace(",", "")) for x in in_doc}
+    dev_vals = {int(x.replace(",", "")) for x in in_device}
+    assert doc_vals == dev_vals, (
+        f"同一个数两处写得不一样：《清单》{sorted(doc_vals)}，装置 README {sorted(dev_vals)}。\n"
         "两处指的都是 `run_all` 实测落盘的那个字节数 —— 以实测那份为准，"
         "**别顺手改一个**。")
 
-    report = VERIFICATION / "verification_report.json"
+    # 产物落在 `backend/` 下、**不在** `verification/` 里（`run_all.REPORT` 与
+    # `adjudicate.REPORT` 都是 `BACKEND / "verification_report.json"`）。
+    # 这一行原先写的是 `VERIFICATION / ...`，于是 `is_file()` **恒为假** ——
+    # 第三条腿从来没跑过，而它自己的 docstring 说的是「在盘上就一起核」。
+    # 一条永远不执行的检查，等于没有检查：它连「红」都不会。
+    report = VERIFICATION.parent / "verification_report.json"
     if report.is_file():                       # run_all 跑过才有；没有就不核这一份
         import json
         generated = json.loads(report.read_text(encoding="utf-8"))
         env = generated.get("environment", {})
-        assert env.get("tokenizer_cache_bytes") in in_doc, (
+        assert env.get("tokenizer_cache_bytes") in doc_vals, (
             f"生成的产物里记的是 {env.get('tokenizer_cache_bytes')}，"
-            f"而两处正文写的是 {sorted(in_doc)} —— "
+            f"而正文写的是 {sorted(doc_vals)} —— "
             "正文那个数字是从这份产物里引的，引歪了就该按产物改回去。")
 
 

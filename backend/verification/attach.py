@@ -1,7 +1,7 @@
 """把守卫接到上游驱动脚本上的那一小段胶水（三个入口共用一份）。
 
 上游三个 `scripts/run_*_simulation.py` 的入口结构是一样的，所以这一段抽出来，
-**每个入口只多两行**，而不是各抄十行。改动越小越好查：
+**每个入口只多几行**，而不是各抄十几行。改动越小越好查：
 
     from verification.attach import add_guard_argument, install_if_requested
     add_guard_argument(parser)          # 加 --guards 选项
@@ -10,6 +10,12 @@
 
 （三个入口都先把 `backend/` 放进 `sys.path`，见各脚本里的那一行。）
 
+⚠️ **这里原先写的是「每个入口只多两行」** —— 那两个调用点确实是两行，但一个入口
+实际多出来的是五行（两次调用、一行 `import`、两行 `sys.path`）。**带数字的话要能被
+量出来**：确切数字在《开源及第三方资源使用清单》第一节那张表里，那张表有一条检查
+现场 `git diff --numstat --ignore-all-space` 去比对（少列一个改动过的文件也红）。
+要自己量：`git diff --ignore-all-space --numstat <基线> -- backend/scripts/`。
+
 **默认是 `off`：不装，行为与上游逐字一致。** 这一点是刻意的 —— 一个能让你
 对比「装与不装」的装置，默认状态必须是「不装」，否则就没有对比可言。
 """
@@ -17,6 +23,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 #: 四个档位。`both` 是 `slicing` + `timestamp` 的合并。
 CHOICES = ("off", "slicing", "timestamp", "both")
@@ -26,6 +33,18 @@ CHOICES = ("off", "slicing", "timestamp", "both")
 #: （`run_parallel_simulation.py:1015` 与 `:1034`），所以「模型叫 stub」就是它
 #: 唯一需要的信号。不写这个名字，本文件一个字都不参与。
 STUB_MODEL_NAME = "stub"
+
+#: 转录里那行「替身模型已接管」的识别式。**打出去和认回来共用这一个写法**：
+#: 下面 `install_if_requested` 打的正是 `model_type={STUB_MODEL_NAME!r}`，
+#: 这里拿它去认。各写一份的话，改了一边就**静默**认不到了 —— 而认不到这件事
+#: 正是用来发现「模型其实不是替身」的那一格（`adjudicate._stub_provenance`）。
+STUB_BANNER = re.compile(r"model_type\s*=\s*'([^']*)'")
+
+
+def stub_banner_names(texts) -> list[str]:
+    """从若干段转录里把模型名认出来（按 `STUB_BANNER`）。认不到就是空表。"""
+    return [m.group(1) for t in texts if t for m in STUB_BANNER.finditer(t)]
+
 
 #: 让 `random` 可复现。`get_active_agents_for_round` 用 `random` 挑每轮谁说话
 #: （`run_parallel_simulation.py:1063-1080`），不播种的话同一份配置两遍跑出不同

@@ -66,6 +66,7 @@ import os
 import platform
 import subprocess
 import sys
+import threading
 import time
 
 #: (模块名, 一句话说它验证什么, 这一条的性质)
@@ -78,8 +79,56 @@ CASES = (
      "并发次序：核实成因、量灵敏度、明说这一层钉不住", "边界·不修"),
 )
 
-#: 退出码 → 汇总里的记号。`2` 单列，不折进任何一边。
-_MARK = {0: "√ 达到预期", 1: "× 没达到预期", 2: "○ 没测到"}
+#: 退出码 → 措辞。**只写一处。** 打屏那一列（`_MARK`）与产物里那一栏
+#: （`_write_report` 里的 `verdicts`）都从它出来 —— 原先这两张表各写一份，
+#: 同一份语义在本文件里抄了两遍：改一张不会响，打屏与产物就会分叉。形状和
+#: `SELFPROOF.md` 里那次 `KeyError: '已否决'` 是同一个（那次是两张映射表
+#: 分家），只是这次两张都是 `.get(rc, …)`、不会炸，只会悄悄说两种话。
+VERDICTS = {0: "达到预期", 1: "没达到预期", 2: "没测到"}
+
+#: 打屏用，前面带记号。`2` 单列，不折进任何一边。
+_MARK = {rc: f"{mark} {VERDICTS[rc]}"
+         for rc, mark in ((0, "√"), (1, "×"), (2, "○"))}
+
+
+def _what_to_look_at(results: list, where: str = "下面") -> str:
+    """汇总数字后面那句「该去看哪条」。`where` 是正文里相对位置（控制台是「上面」）。
+
+    这句话以前是写死的「先看没通过的那条」—— 整批缺口**全是「没测到」**的时候
+    它照样这么说，等于指着人去查一个不存在的失败。那正是这台装置要对着干的
+    那件事（缺读数被当成结论），只不过发生在汇总层。所以按缺口**是哪一类**
+    分开说：真有 `1` 才叫人去看，只有 `2` 就明说那是没量到。
+    """
+    n_failed = sum(1 for _, _, rc, _ in results if rc == 1)
+    n_unmeasured = sum(1 for _, _, rc, _ in results if rc == 2)
+    if n_failed:
+        tail = f" **先看{where}没通过的那条。**"
+        if n_unmeasured:
+            tail += (f"（另有 {n_unmeasured} 条是「没测到」——"
+                     "那是没量到读数，不是「没通过」。）")
+        return tail
+    if n_unmeasured:
+        return (f" 余下 {n_unmeasured} 条是**「没测到」**：没量到读数，"
+                "不是「没通过」，别照着失败去查。")
+    return ""
+
+
+def _boundary_disclaimer(results: list) -> list:
+    """「边界」那条报「没达到预期」时，补一句「这不是修法没生效」。
+
+    **只在真的发生时才返回东西。** 这句话原先无条件打印，而且是按下标说的
+    「第 3 条」—— 于是那条报「达到预期」（这是**常态**：那一条量的是边界，
+    本来就该达到自己声明的预期）或者报「没测到」的时候，屏幕上照样会替一个
+    **没发生的「没达到预期」**开脱。一句替没发生的事作的解释，和一处假绿
+    是同一类东西，只是矮了一层。它由 `CASES` 里的 `nature` 驱动，不按下标。
+    """
+    for (mod, what, nature), (_m, _w, rc, _b) in zip(CASES, results):
+        if nature.startswith("边界") and rc == 1:
+            return [f"  ↑ {what}",
+                    f"    这一条报「没达到预期」**不适用**：它验的是**边界**"
+                    f"（`{nature}`），不是修法 —— 这一层明说钉不住，见正文。"]
+    return []
+
 
 #: 上游草稿里那两份**自包含最小复现**。它们是另写的紧凑版（为了贴进 issue），
 #: 数字必须和装置本体报的一致 —— 不一致就是有一边错了。
@@ -141,7 +190,12 @@ def _reconcile(transcripts: dict) -> tuple:
             rc = 1
         rows.append([what, got["装置"] or "○ 抽不到", got["草稿"] or "○ 抽不到",
                      verdict])
-    if missing and rc == 0:
+    if missing:
+        # **「没测到」压过「不符」。** 原先写的是 `if missing and rc == 0`：一行抽
+        # 不出来、另一行不一致时，`rc` 已经因为不一致变成了 `1`，这一句就不再升到
+        # `2` —— 而下面正文里唯一会说「有一边抽不出来」的分支是 `elif rc == 2`。
+        # 于是那句话只能从正文里**消失**：读者拿到的是「材料走岔了」，而其中一项
+        # **根本没量到**。缺读数被当成了结论，正是这台装置对着干的那件事。
         rc = 2
 
     w = max(P._w(r[0]) for r in rows)
@@ -152,12 +206,16 @@ def _reconcile(transcripts: dict) -> tuple:
         lines.append("  " + "  ".join([P._pad(r[0], w), P._pad(r[1], 8),
                                        P._pad(r[2], 8), r[3]]).rstrip())
     lines.append("")
-    if rc == 0:
+    # 两句**各自独立**地说：一件事是「没量到」，另一件是「量到了但对不上」。
+    # 原先这里是一个 `if/elif/else`，两者同时成立时只能说出前一句（`elif`），
+    # 后一句那件更硬的事实就跟着消失了。
+    n_bad = sum(1 for r in rows if r[3].startswith("×"))
+    if not missing and not n_bad:
         lines.append("  √ 两份材料报的是同一组数 —— 改过任何一边都要重跑这一步。")
-    elif rc == 2:
+    if missing:
         lines.append(f"  ○ 这几项有一边抽不出来：{'、'.join(missing)} —— "
                      "**这不是「一致」，是没测到**。多半是输出格式改过了。")
-    else:
+    if n_bad:
         lines.append("  × **两份材料对不上** —— 草稿是准备发出去的，先查清哪边对。")
     return rc, lines
 
@@ -228,7 +286,14 @@ def _tokenizer_cache_bytes():
         return None                       # 缓存目录被别人清过／还没下完
 
 
-def _run_one(mod: str, echo: bool = True) -> tuple:
+#: 单条复现的墙钟上限（秒）。与 `e2e_stub` 的 `--timeout` 同量级：本机一条
+#: 复现实测十来秒到一分钟，600 秒是「它已经不像在干活了」而不是「它有点慢」。
+_ROUND_TIMEOUT_S = 600.0
+
+
+def _run_one(mod: str, echo: bool = True,
+             timeout: float = _ROUND_TIMEOUT_S,
+             argv: list | None = None) -> tuple:
     """跑一条，**边跑边显示、同时逐字留下**。返回 `(退出码, 正文)`。
 
     子进程强制 UTF-8：管道读写不该受控制台代码页影响。屏幕那一路仍是原生
@@ -237,27 +302,83 @@ def _run_one(mod: str, echo: bool = True) -> tuple:
     `echo=False` 时**只收不显** —— 对账那一步跑的是两份草稿，它们的正文只用来
     抽几个数，整段铺在屏幕上会把上面三条复现的结论淹掉。**收还是要收全的**，
     只是不显示。
+
+    **卡死要占住 `2`，绝对不能占 `1`。** 原先这里没有上限：一条复现如果永远
+    不返回（并发那条最可能），`run_all` 就一直挂着，报告一个字都不落 ——
+    屏幕上既没有「达到预期」也没有「没测到」，**什么判定都没有**。
+
+    加超时**不能只加 `proc.wait(timeout=…)` 再照返回码翻译**：本机实测，
+    被 `kill()` 之后 `returncode` 是 **`1`** —— 和**合法的「没达到预期」是同一个
+    码**。照码翻译的话，一条**根本没跑完**的复现会被译成「跑完了，只是没达到
+    预期」，正是本装置要挡的那类假读数。所以超时**自己占住 `2`**，并把原因写进
+    正文，让它和真跑完的那两条在报告里长得不一样。
+
+    `argv` 只是给测试留的**注入口**（默认按 `mod` 拼 `-m`）：要验超时，就得有一条
+    **真的会跑很久**的命令被掐掉。树里为此常驻一个只睡觉的模块，等于为了被杀死
+    而交付一段死代码；让调用方递一条进来更省。
     """
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     proc = subprocess.Popen(
-        [sys.executable, "-m", mod],
+        argv if argv is not None else [sys.executable, "-m", mod],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         env=env, cwd=os.getcwd(),
     )
     lines: list = []
-    assert proc.stdout is not None
-    for raw in proc.stdout:
-        text = raw.decode("utf-8", errors="replace").rstrip("\r\n")
-        lines.append(text)
-        if not echo:
-            continue
+    hit: list = []
+
+    def _on_timeout():                  # 到点了：记一笔，然后掐掉它
+        hit.append(True)
         try:
-            print(text)
-        except UnicodeEncodeError:      # 控制台编不出，就降级显示
-            print(text.encode(sys.stdout.encoding or "utf-8",
-                              "replace").decode(sys.stdout.encoding or "utf-8",
-                                                "replace"))
-    return proc.wait(), "\n".join(lines)
+            proc.kill()
+        except OSError:                 # 已经自己退了，那就算了
+            pass
+
+    timer = threading.Timer(timeout, _on_timeout)
+    timer.start()
+    try:
+        assert proc.stdout is not None
+        for raw in proc.stdout:
+            text = raw.decode("utf-8", errors="replace").rstrip("\r\n")
+            lines.append(text)
+            if not echo:
+                continue
+            try:
+                print(text)
+            except UnicodeEncodeError:  # 控制台编不出，就降级显示
+                print(text.encode(sys.stdout.encoding or "utf-8",
+                                  "replace").decode(sys.stdout.encoding or "utf-8",
+                                                    "replace"))
+        rc = proc.wait()
+    finally:
+        timer.cancel()
+    if hit:
+        note = f"○ 没测到：{timeout:.0f} 秒没跑完，已中断"
+        lines.append(note)
+        if echo:
+            print(note)
+        return 2, "\n".join(lines)
+    if rc not in (0, 1, 2):
+        # **三条复现的契约只有 `{0, 1, 2}`；落在外面的退出码 = 这一条没跑完。**
+        # 最常来的是**被信号杀死**：POSIX 上 `wait()` 对死于信号的子进程返回
+        # **负数**（`SIGKILL` -9、`SIGABRT` -6、`SIGSEGV` -11）—— 容器被
+        # `stop`、OOM killer 动手、C 扩展段错误，都从这里进来。
+        #
+        # **不能原样放它过去**：它一旦进了 `main()` 那个 `max(...)`，`0` 比任何
+        # 负数都大，汇总会从这个洞里把「一条都没跑成」读成「3/3 达到预期」，
+        # 进程还退 `0` —— 那正是这台装置对着干的那件事（没量到被当成了结论），
+        # 只不过发生在它自己身上。`mutations.py` 对同一件事写的是
+        # `rc in (0, 1)`（见 `measured = ...`），这里同理。
+        #
+        # ⚠️ **Windows 上还有一半挡不住**：`proc.kill()` 在那边返回 `1`，
+        # 与「跑成了但没达到预期」撞车（`_probe.py` 里已声明过这一条）。
+        # 这一处只负责把**契约外的值**收进 `2`。
+        note = (f"○ 没测到：进程非正常结束（退出码 {rc}）—— 它没有落回 0/1/2 里的"
+                "任何一个，说明这一条**没跑完**，不是「跑成了但没达到预期」。")
+        lines.append(note)
+        if echo:
+            print(note)
+        return 2, "\n".join(lines)
+    return rc, "\n".join(lines)
 
 
 def _write_report(prefix: str, results: list, env: dict,
@@ -268,7 +389,9 @@ def _write_report(prefix: str, results: list, env: dict,
     """
     worst = max([rc for _, _, rc, _ in results] + [recon_rc], default=0)
     n_ok = sum(1 for _, _, rc, _ in results if rc == 0)
-    verdicts = {0: "达到预期", 1: "没达到预期", 2: "没测到"}
+    # 措辞**不再在这里抄第二份** —— 用模块级那一张（见 `VERDICTS` 那里的说明）：
+    # 打屏与产物必须说同一句话，而「同一句话抄两遍」正是它们分叉的唯一原因。
+    verdicts = VERDICTS
 
     md = ["# 可验证性报告", "",
           f"生成时间：{time.strftime('%Y-%m-%d %H:%M:%S')}", "",
@@ -280,7 +403,7 @@ def _write_report(prefix: str, results: list, env: dict,
     for i, (mod, what, rc, _) in enumerate(results, 1):
         md.append(f"| {i} | {what} | {CASES[i - 1][2]} | {verdicts.get(rc, rc)} |")
     md += ["", f"{n_ok}/{len(results)} 条达到预期。"
-           + ("" if n_ok == len(results) else " **先看下面没通过的那条。**"), "",
+           + ("" if n_ok == len(results) else _what_to_look_at(results)), "",
            "### 另：对账（**不并进上面那个 x/3**）", "",
            "> 上面那三条是**三个复现**；对账不是第四个 —— 它管的是另一件事："
            "装置本体报的数字，和准备发出去的**上游草稿**里那份最小复现报的，"
@@ -300,9 +423,25 @@ def _write_report(prefix: str, results: list, env: dict,
                  "tokenizer_cache_bytes": "编码表落盘字节数 (B)",
                  "clock_step_ns": "时钟最小步长 (ns)", "cwd": "工作目录"}[key]
         md.append(f"| {label} | {val if val is not None else '未知'} |")
-    md += ["", "时钟步长是**量出来的**，每次运行会有出入；结论只用到它比 camel 那个",
-           "`1e-6` 的排序偏移大两三个数量级这一点。",
-           "",
+    step_ns = env.get("clock_step_ns")
+    if step_ns:
+        # **比值现场算，不写死。** 原先这里写的是「比 camel 那个 `1e-6` 的排序偏移
+        # 大两三个数量级」—— 那句话只在本机（Windows，一拍几百微秒）成立；换到
+        # Linux（一拍 100 纳秒）方向就反了，而这一句正是**要印进产物**的那一句。
+        # 同一件事在 `README.md` 与 `repro_03_concurrency.py` 里都带着平台限定，
+        # 只有这一份没跟上 —— 又是一份没赶上修订的抄本，这次直接算出来，抄不了。
+        camel_ns = 1e-6 * 1e9                      # camel 的排序偏移，1e-6 秒 = 1000 ns
+        ratio = step_ns / camel_ns
+        rel = (f"比它大 {ratio:,.0f} 倍" if ratio >= 1
+               else f"比它**小** {1 / ratio:,.0f} 倍")
+        md += ["", "时钟步长是**量出来的**，每次运行会有出入。camel 那个 `1e-6` 秒的排序",
+               f"偏移折成 {camel_ns:,.0f} 纳秒；本机这一拍是 **{step_ns:,.0f} 纳秒**，{rel}。",
+               "**这个比值随平台变，不是常数** —— 它在这里只作读数、不进任何判据"
+               "（判据要的是与平台无关的量）。"]
+    else:
+        md += ["", "时钟步长这次没量到（上表记「未知」）—— 它只作读数、不进判据，"
+               "所以不影响三条复现的判定。"]
+    md += ["",
            "分词器那一行不是装饰：切片那一节的数字（270 条 / 5130 token）**是它数出来的**，",
            "换个分词器就不是这些数。它首次使用要下的一份静态数据文件"
            "（一张几 MB 的静态表，之后走缓存；本机实测字节数见下表）——",
@@ -359,6 +498,8 @@ def _write_report(prefix: str, results: list, env: dict,
                            "not_a_fourth_reproduction": True,
                            "transcript": "\n".join(recon_lines)},
         "summary": {"reached_expectation": n_ok, "total": len(results),
+                    "not_reached": sum(1 for _, _, rc, _ in results if rc == 1),
+                    "unmeasured": sum(1 for _, _, rc, _ in results if rc == 2),
                     "worst_returncode": worst},
     }
     md_path, js_path = f"{prefix}.md", f"{prefix}.json"
@@ -369,7 +510,7 @@ def _write_report(prefix: str, results: list, env: dict,
     return md_path, js_path
 
 
-def main() -> int:
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description="跑完三个复现并落一份可验证性报告")
     parser.add_argument("--out", default="verification_report",
@@ -377,7 +518,20 @@ def main() -> int:
                              "（默认 ./verification_report）")
     parser.add_argument("--no-report", action="store_true",
                         help="只在屏幕上打印，不落文件")
-    args = parser.parse_args()
+    parser.add_argument("--timeout", type=float, default=_ROUND_TIMEOUT_S,
+                        help=f"单条复现的墙钟上限（秒，默认 {_ROUND_TIMEOUT_S:.0f}）。"
+                             "到点了报「没测到」（退 2），不报「没达到预期」")
+    args = parser.parse_args(argv)
+
+    # 落点先问一句（`--no-report` 时不必问）。**问在动手之前**：三个复现要跑一分
+    # 来钟，等它们跑完再发现写不出去，等于把已经量到的读数连同退出码一起丢掉，
+    # 而那时按契约只能退 `1` —— 读者会去找一个并不存在的失败。
+    if not args.no_report:
+        from . import _probe as P
+
+        rc = P.refuse_out_path(f"{args.out}.md", f"{args.out}.json")
+        if rc is not None:
+            return rc
 
     print("=" * 66)
     print("装置自检：三个复现，一条命令")
@@ -392,7 +546,7 @@ def main() -> int:
         print("-" * 66)
         print(f"· {what}")
         print("-" * 66)
-        rc, body = _run_one(mod)
+        rc, body = _run_one(mod, timeout=args.timeout)
         results.append((mod, what, rc, body))
         # 正文按**复现号**收着，给下面那步对账用（键要和 `_SHARED_NUMBERS` 对上）
         if mod.endswith("repro_01_slicing"):
@@ -411,7 +565,7 @@ def main() -> int:
     print("  这两份的输入**本来就不一样**（两条不同的探针消息），所以「数字一致」"
           "不是结构保证，是一条要守的断言。")
     for mod, label, key in DRAFTS:
-        rc, body = _run_one(mod, echo=False)
+        rc, body = _run_one(mod, echo=False, timeout=args.timeout)
         transcripts[key] = body
         print(f"  {'√' if rc == 0 else '○'} {label} 跑完"
               + ("" if rc == 0 else f"（退出码 {rc} —— 它自己那条没跑成，"
@@ -429,19 +583,32 @@ def main() -> int:
     n_ok = sum(1 for _, _, rc, _ in results if rc == 0)
     print()
     print(f"  {n_ok}/{len(results)} 条达到预期"
-          + ("" if n_ok == len(results) else " —— **先看上面没通过的那条**"))
+          + ("" if n_ok == len(results) else f" ——{_what_to_look_at(results, '上面')}"))
     print(f"  {_MARK.get(recon_rc, f'? {recon_rc}'):<12} 对账（两份材料报的是不是同一组数）")
     print()
-    print("  第 3 条「没达到预期」不适用：它验的是**边界**，不是修法。")
+    for line in _boundary_disclaimer(results):
+        print(line)
     print("  以上都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。")
-    print("  （首次运行要下一次分词器的编码表 —— 一张几 MB 的静态表；之后走缓存。）")
+    print("  （前提是分词器那份静态编码表拿得到 —— 首次使用要下一次，约几 MB，"
+          "之后走缓存。）")
+    print("  取不到时上面会明确写「没测到」，**不会**把没跑成的记成「没达到预期」"
+          " —— 缺读数不是结论。")
     print("  对账单独列在汇总里，**不并进那个 x/3** —— 它不是第四个复现，")
     print("  它管的是「装置和准备发出去的草稿有没有走岔」。")
 
     if not args.no_report:
         env = _environment()
-        md_path, js_path = _write_report(args.out, results, env,
-                                         recon_rc, recon_lines)
+        try:
+            md_path, js_path = _write_report(args.out, results, env,
+                                             recon_rc, recon_lines)
+        except OSError as exc:
+            # 落点上面那道门已经问过一次（不存在/不可写）。这里接的是**它挡不住
+            # 的那一半**：目录在、但文件建不出来（同名目录、被占用、只读盘）。
+            # 同一条路：说明白、退 `2` —— 判定都算出来了，写不下去，**但绝不
+            # 把这件事退成 `1`**（那是「有真的要看的东西」，会把人指去查复现）。
+            print(f"\n○ 没测到：报告写不下去（{exc.__class__.__name__}: {exc}）—— "
+                  "三条复现的判定都在上面，但**这一份报告没落成**。")
+            return 2
         print()
         print(f"  报告已落盘：{os.path.abspath(md_path)}")
         print(f"              {os.path.abspath(js_path)}")

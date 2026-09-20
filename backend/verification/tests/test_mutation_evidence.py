@@ -135,6 +135,46 @@ def test_every_recorded_mutation_actually_turned_something_red(report):
         "那说明这条变异没让靶子多红，反而盖掉了基线那条红")
 
 
+def test_the_declared_count_of_red_tests_is_what_actually_happened(report):
+    """**声明的条数也要当真** —— 不只是「至少红了一条」。
+
+    变异集里每条都写着一个 `expect_failed`（「这一改，靶子上该红几条」）。
+    `mutations.py` 拿它和实测比、把不符的记进 `summary["mismatches"]`，报告正文里
+    也印一行 ⚠️ —— 可此前**没有任何测试断言过它是空的**：测试只问
+    `failed_in_target >= 1`（在上面 `test_every_recorded_mutation_...` 里）。
+
+    于是带声明条数的那 **16** 条（`V1=16`、`J2=4`、`V2=V3=3`、其余 `=1`，外加
+    阴性对照 `K0=0`）只要漂到任意 ≥1 的数，就**只在正文里印一行 ⚠️、测试全绿**。
+    这和 2026-09-18 那次（底稿 `D-45`）是同一个病：判据加上去了，
+    但**没人测判据本身** —— 报告*过期*它抓得住，「报告里那句与声明不符」抓不住。
+    """
+    s = report["summary"]
+    assert s["mismatches"] == [], (
+        f"这些变异的实测红条数与声明不符：{s['mismatches']}。{_RERUN}\n"
+        "  逐条："
+        + "；".join(f"{m['id']} 声明 {m['expect_failed']} 条、实测 "
+                    f"{m['failed_in_target']} 条"
+                    for m in report["mutations"] if not m["matched"])
+        + "\n  **先看那个论断还成不成立**（多半是源码漂了、或者那条测试失去了"
+          "鉴别力），别急着把 `expect_failed` 改成漂移后的数。")
+
+    for m in report["mutations"]:
+        assert m["matched"] is True, (
+            f"{m['id']}（{m['what']}）：声明靶子上该红 {m['expect_failed']} 条，"
+            f"实测 {m['failed_in_target']} 条 —— 逐条的 `matched` 与汇总的 "
+            f"`mismatches` 对不上。{_RERUN}")
+    assert s["matched"] == s["total"], (
+        f"汇总说 {s['total']} 条里有 {s['matched']} 条相符，这两个数应当是同一个")
+
+    # 反向对照：上面那几条**不是恒真的** —— 前提是「声明条数真的写在了变异集里」。
+    # 若全写成 `None`（只要求「≥1」），`matched` 就退化成一条几乎恒真的下界，
+    # 上面那几条会**一直绿**却什么也没管住。
+    declared = [m for m in report["mutations"] if m["expect_failed"] is not None]
+    assert len(declared) >= 16, (
+        f"只有 {len(declared)} 条变异带着**声明条数**，其余写成 `None`（只要求「≥1」）—— "
+        f"`mismatches` 这一格的鉴别力就跟着缩水了")
+
+
 def test_the_recorded_hashes_still_describe_the_files_on_disk(report):
     """报告不能替一份**已经不在**的代码作证。
 
@@ -170,7 +210,7 @@ def test_the_suite_fingerprint_does_not_depend_on_line_endings(tmp_path):
     **「谁的检出配置」**，不是「测试有没有变」—— 换句话说，它给**每一个用默认
     配置 clone 的人**报了一个**不存在的问题**。
 
-    这与本装置已经踩过两次的毛病同源（`README.md`「产物没过期」那一节、`D-21`）：
+    这与本装置已经踩过两次的毛病同源（`README.md`「产物没过期」那一节就是这么翻的）：
     别去钉一个**本来就会合法地变**的东西，然后说它变了就是有问题。
 
     这一条把「换行符不算改动」钉死：同一份测试内容，两种换行，指纹必须一样。
@@ -188,6 +228,59 @@ def test_the_suite_fingerprint_does_not_depend_on_line_endings(tmp_path):
     assert MU._suite_fingerprint(lf) == MU._suite_fingerprint(crlf), (
         "指纹又按字节算了 —— 它会在**每一个用默认 git 配置 clone 的人**"
         "那里先红一次，而那里根本没有问题")
+
+
+def test_a_round_that_did_not_run_is_not_measured_not_matched():
+    """「这一轮没跑成」→ `None`（**没测到**），既不算相符也不算不符。
+
+    挡的是一个真的假绿：**阴性对照**（`expect_failed == 0`）在「这一轮压根没
+    跑起来」时会报 `in_target == 0`，于是 `0 == 0` → 「相符」。而 `failed` 为 0
+    有两种完全不同的成因 —— 「跑完了，一条都没红」和「收集失败／内部错／超时」。
+    **后者不是发现，更不是通过。**
+    """
+    # 没跑成：无论声明是什么、实测红了几条，一律 `None`
+    assert MU._verdict(False, 0, 0) is None, (
+        "没跑成的一轮，阴性对照被记成了「相符」—— 这正是那条假绿路")
+    assert MU._verdict(False, 5, 1) is None
+    assert MU._verdict(False, 0, 1) is None
+    assert MU._verdict(False, 0, None) is None
+
+    # 跑成了：三态里的另外两态照旧
+    assert MU._verdict(True, 0, 0) is True
+    assert MU._verdict(True, 1, 1) is True
+    assert MU._verdict(True, 3, 1) is False
+    assert MU._verdict(True, 3, None) is True
+    assert MU._verdict(True, 0, None) is False
+
+
+def test_every_verdict_the_checker_can_emit_is_renderable():
+    """闭集：`_verdict` 值域里的每个值，人读的产物都印得出来。
+
+    这条钉的是 `'相符' if r['matched'] else '不符'` 那个写法 —— `None` 是假值，
+    于是**没跑成的轮次在人读的产物里印成了「不符」**（一处不存在的发现）。
+    和 `SELFPROOF.md` 那个 `KeyError: '已否决'` 同一个病。
+    """
+    emitted = {MU._verdict(m, n, e)
+               for m in (True, False) for n in (0, 1, 5) for e in (0, 1, None)}
+    assert emitted == {True, False, None}, (
+        f"`_verdict` 现在会吐 {emitted} —— 值域变了，下面那条闭集检查要跟着改")
+    missing = emitted - set(MU._VERDICT_MARKS)
+    assert not missing, (
+        f"这几个判定值在人读的产物里没有记号：{missing} —— "
+        f"渲染时要么 KeyError、要么被 `else` 兜成「不符」")
+    assert len(set(MU._VERDICT_MARKS.values())) == len(MU._VERDICT_MARKS), (
+        "有两个状态印成了同一句话 —— 三态在人读的那份里也必须是三态")
+
+
+def test_the_negative_control_could_not_have_passed_by_not_running():
+    """反向对照：**真跑成了**的一轮，`measured` 必须为真。
+
+    少了这条，一个恒返回 `None` 的实现也能让上面那条变绿 ——
+    而那会把这份留痕里**唯一一类真发现**（与声明不符）整个藏起来。
+    """
+    assert MU._verdict(True, 0, 0) is True, (
+        "真的跑成、真的一条都没红，却被记成「没测到」—— 那是把结论藏起来")
+    assert MU._verdict(True, 2, 1) is False
 
 
 def test_the_counts_in_this_report_are_counted_not_typed(report):
@@ -317,7 +410,8 @@ def test_the_mutation_count_in_the_readme_is_the_real_one():
     assert int(rounds.group(1)) == len(ids) + 1, (
         f"README 写「连基线 {rounds.group(1)} 轮」，而 `mutations.py` 里 {len(ids)} 条"
         f"变异 —— 加上基线那一轮应当是 {len(ids) + 1} 轮。"
-        "这个数是算得出来的，但**算得出来的数也会漂**：改了一处忘了另一处，就是 D-41。")
+        "这个数是算得出来的，但**算得出来的数也会漂** —— 同一个数写进两份材料，"
+        "改了一处忘了另一处，它们就分家了。")
 
     covered = set(_ID.findall(text))
     for lo, hi in _RANGE.findall(text):

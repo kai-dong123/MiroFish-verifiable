@@ -51,6 +51,21 @@ GUARDS = HERE / "camel_guards.py"
 TIMESTAMP = HERE / "repro_02_timestamp.py"
 CITATIONS = HERE / "tests" / "test_citations.py"
 ADJUDICATE = HERE / "adjudicate.py"
+#: 另外两道入口，加上汇总驱动 —— 「落点」那一组要证明**三道门都不是摆设**。
+#: 它们共用 `_probe.refuse_out_path`，所以只验一处的话，谁把另外两道删掉，
+#: 账上照样一片安静。
+SELFPROOF = HERE / "selfproof.py"
+RUN_ALL = HERE / "run_all.py"
+#: 「没测到·不许折」那一组的靶子。这两份**此前不在任何变异的靶子里** ——
+#: 它们一进名单，`sources` 就多两个（见 `_touched`），材料里那个数要跟着改。
+E2E_STUB = HERE / "e2e_stub.py"
+RECONCILE = HERE / "reconcile_selfcheck.py"
+#: 本文件**自己**也是靶子（`O7`：留痕那道门）。这是唯一一处会改到「正在跑的那个
+#: 文件」的变异：进程里那一份早已 `import` 完，磁盘上被改不影响本轮判定。
+#: ⚠️ 代价要说清 —— **跑到一半被 kill，就会把 `mutations.py` 自己停在改坏的状态**，
+#: 而坏掉的恰恰是那台用来自查的机器，下次连「账目对不上」都说不出口。
+#: 中断过先 `git diff verification/mutations.py` 看一眼再重跑。
+MUTATIONS_SELF = pathlib.Path(__file__).resolve()
 #: 变异的靶子不一定是代码 —— `C7` 改的是这份 README 里那段**逐字贴出来的源码**。
 README_MD = HERE / "README.md"
 #: 另外两个非代码靶子：依赖清单（版本钉）与仓库根那份《开源及第三方资源使用清单》
@@ -139,6 +154,8 @@ G_CITE_VERBATIM = "引文·逐字块"
 G_PINS = "环境·版本钉"
 G_DIFF_TABLE = "清单·改动表"
 G_BASELINE = "上游基线"
+G_OUT = "落点"
+G_UNMEASURED = "没测到·不许折"
 G_CONTROL = "阴性对照"
 
 CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
@@ -280,7 +297,13 @@ MUTATIONS = (
        T_ADJ, [(ADJUDICATE,
                 '            if after[cid]["verdict"] != base[cid]["verdict"]:',
                 '            if True:  # 变异：声明了就算数，不去试它')],
-       expect=1, claim="README「裁决·非空泛」：falsifier 必须实例化，只查在不在当场红"),
+       # 期望值 1 → 2（2026-09-20）：多出来的那条是
+       # `test_a_claim_that_no_single_change_can_flip_is_not_trusted` ——
+       # 「恒真 → 不采信」那条规则落地时新加的。它现造一条**翻不动的**判据，
+       # 断言它必须 `trusted=False`；而这一处变异让「翻得动」变成恒真，
+       # 于是那条断言跟着红。**同一处改坏现在会被两道检查夹住**：
+       # 一道看「报了没报恒真」，一道看「报了恒真之后有没有真的不采信」。
+       expect=2, claim="README「裁决·非空泛」：falsifier 必须实例化，只查在不在当场红"),
 
     _M("J4", G_ADJ_VAC, "**判据恒真也照退 0** —— 这张表开始装绿",
        T_ADJ, [(ADJUDICATE,
@@ -358,6 +381,113 @@ MUTATIONS = (
        expect=1, claim="上游基线：门恒假 → 本仓里那条阴性对照当场红"
                        "（**本仓明明在仓库里，却被判成不是**）"),
 
+    # ---- 落点：七处 --------------------------------------------------------
+    # 这一组补的是一处**已经量到过**的边界：`--out` / `--json` / `--md` 指到一个
+    # 不存在的目录时，落盘那一步抛 `FileNotFoundError`、没人接、进程退 `1`。
+    # 按本装置自己的表，`1` 是「跑成了但没达到预期」—— 而那一刻**一个读数都没
+    # 落下来**。观众会去找一个不存在的失败。
+    #
+    # 修法是**跑之前先问一句落点**。所以这几处要证明的是那两道出口都**不是摆设**：
+    # 门（在动手之前退 `2`）和 `except OSError`（门挡不住的那一半也得退 `2`，
+    # 因为门只问得出「目录在不在、可不可写」，问不出磁盘满、路径太长）。
+    #
+    # **六道入口各验一处**（`O1`–`O4` 三道、加上 `O5`–`O7` 补的三道）—— 它们共用
+    # `_probe.refuse_out_path`，只验一处的话，谁把另外几道门删掉，这张表上什么都
+    # 不会响。原先这里写的是「三道入口」并只验了三道，而当时**有门的也只有那三道**：
+    # 另外三道（端到端、对账、留痕）在坏落点上照样抛 traceback 退 `1`，
+    # 各自的表里 `1` 却是「没达到预期」「不符」「与声明不符」。**六道门是补出来的，
+    # 所以六处都要有靶子** —— 补门那次把别的入口漏掉，就是同一个错的另一遍。
+    _M("O1", G_OUT, "汇总驱动把落点那道门摘了（`--out` 不通也照跑三个复现）",
+       T_VERDICTS, [(RUN_ALL,
+                     '        rc = P.refuse_out_path(f"{args.out}.md", f"{args.out}.json")',
+                     "        rc = None  # 变异：落点这道门形同虚设")],
+       expect=1, claim="落点：门被摘掉 → 「坏落点要在动手之前退」当场红"),
+    _M("O2", G_OUT, "裁决把落点那道门摘了（判定照算，算完才发现写不出去）",
+       T_ADJ, [(ADJUDICATE,
+                "    rc = P.refuse_out_path(args.json, args.md)",
+                "    rc = None  # 变异：落点这道门形同虚设")],
+       expect=1, claim="落点：裁决那道门被摘掉 → 当场红"),
+    _M("O3", G_OUT, "裁决写不下去时报「没达到预期」（`2` 改成 `1`）",
+       T_ADJ, [(ADJUDICATE,
+                '              "表算出来了，但**这一份产物没落成**。")\n'
+                "        return 2",
+                '              "表算出来了，但**这一份产物没落成**。")\n'
+                "        return 1  # 变异：把「没落成」报成「没达到预期」")],
+       expect=1, claim="落点：写不下去时折成 `1` → 当场红（`1` 会把人指去查判据）"),
+    _M("O4", G_OUT, "自证把落点那道门摘了",
+       T_ADJ, [(SELFPROOF,
+                "    rc = P.refuse_out_path(args.json, args.md)",
+                "    rc = None  # 变异：落点这道门形同虚设")],
+       expect=1, claim="落点：自证那道门被摘掉 → 当场红"),
+    _M("O5", G_OUT, "端到端把落点那道门摘了（真去跑那一局，跑完才发现写不出去）",
+       T_VERDICTS, [(E2E_STUB,
+                     "    rc = P.refuse_out_path(args.out,\n"
+                     '                           str(pathlib.Path(args.out).with_suffix(".md")))',
+                     "    rc = None  # 变异：落点这道门形同虚设\n"
+                     "    _ = (args.out, str(pathlib.Path(args.out).with_suffix('.md')))")],
+       expect=1, claim="落点：端到端那道门被摘掉 → 当场红"),
+    _M("O6", G_OUT, "对账把落点那道门摘了",
+       T_VERDICTS, [(RECONCILE,
+                     "    rc = P.refuse_out_path(args.json, args.md)",
+                     "    rc = None  # 变异：落点这道门形同虚设")],
+       expect=1, claim="落点：对账那道门被摘掉 → 当场红"),
+    _M("O7", G_OUT, "留痕把落点那道门摘了（⚠️ 这条改的是本文件自己）",
+       T_VERDICTS, [(MUTATIONS_SELF,
+                     "        rc = P.refuse_out_path(args.json, args.md)\n"
+                     "        if rc is not None:\n"
+                     "            return rc",
+                     "        rc = None  # 变异：落点这道门形同虚设\n"
+                     "        if rc is not None:\n"
+                     "            return rc")],
+       expect=1, claim="落点：留痕那道门被摘掉 → 当场红"),
+
+    # ---- 没测到·不许折：六处 ------------------------------------------------
+    # 这一组是这台装置**自己的立场**在源码里的落点：`0` 达到预期、`1` 跑成了但
+    # 没达到预期、`2` 没测到 —— `2` **不许**折进任何一边。它盯别人的正是这件事，
+    # 而它自己在六处犯了同一个错，两个方向都有：
+    #
+    # * **把「没跑完」记成「跑成了」**（`X1`：契约外的退出码进 `max(...)`，
+    #   `0` 比任何负数都大，于是「一条都没跑成」被读成「全部达到预期」）；
+    # * **把「没跑完」记成「没达到预期」**（`X2`：端到端那一档跑的是**上游脚本**，
+    #   契约里根本没有 `2`，`rc != 0` 排在前面，替一个没跑完的档位宣布了结论）；
+    # * **让「没量到」被「量到了但对不上」顶掉**（`X3`/`X4`：对账的两句话）；
+    # * **同一份语义抄两份表**（`X5`：打屏一列、产物一栏 —— 不炸，只说两种话）；
+    # * **只接住一半的形状错**（`X6`：`JSONDecodeError` 接住了，
+    #   「是 JSON、但结构不对」漏了，后者甩 traceback 退成 `1`）。
+    #
+    # 六处都已经修好，这一组证明的正是**那些修法不是摆设**。
+    _M("X1", G_UNMEASURED, "汇总驱动把契约外的退出码原样放过去（`2` 那道判据形同虚设）",
+       T_VERDICTS, [(RUN_ALL,
+                     "\n    if rc not in (0, 1, 2):\n",
+                     "\n    if False:  # 变异：契约外的退出码放它过去\n")],
+       expect=1, claim="没测到：被信号杀死的复现不许记成「达到预期」→ 当场红"),
+    _M("X2", G_UNMEASURED, "端到端把「没跑完」判成「没达到预期」（`rc != 0` 排到前面）",
+       T_ADJ_E2E, [(E2E_STUB,
+                    '\n    if run["rc"] not in (0, 1):\n',
+                    "\n    if False:  # 变异：契约外的退出码放它过去\n")],
+       expect=1, claim="没测到：负退出码 / argparse 的 `2` 不许判成「没达到预期」→ 当场红"),
+    _M("X3", G_UNMEASURED, "对账时不一致就不再把「抽不出来」升到 `2`",
+       T_VERDICTS, [(RUN_ALL,
+                     "\n        rc = 2\n",
+                     "\n        rc = 2 if not rc else rc  # 变异：不一致时不升 2\n")],
+       expect=1, claim="没测到：有一边抽不出来就必须退 `2`，不许被那处不一致顶掉 → 当场红"),
+    _M("X4", G_UNMEASURED, "对账的收尾退回 `elif`（两件事只能说出前一件）",
+       T_VERDICTS, [(RUN_ALL,
+                     "\n    if n_bad:\n",
+                     "\n    elif n_bad:  # 变异：两件事只能说出前一件\n")],
+       expect=1, claim="没测到：「没量到」和「对不上」必须各自说一遍 → 当场红"),
+    _M("X5", G_UNMEASURED, "产物那一栏又抄了一份 `0/1/2 → 措辞`（打屏与产物分家）",
+       T_VERDICTS, [(RUN_ALL,
+                     "\n    verdicts = VERDICTS\n",
+                     '\n    verdicts = {0: "达到预期", 1: "没达到预期",'
+                     ' 2: "没达到预期"}  # 变异：又抄了一份表\n')],
+       expect=1, claim="没测到：措辞表只许有一份 → 抄第二份当场红"),
+    _M("X6", G_UNMEASURED, "裁决不再查形状（「是 JSON 但结构不对」重新变成 traceback）",
+       T_ADJ, [(ADJUDICATE,
+                "\n    why = _report_shape_problem(rep)\n",
+                "\n    why = None  # 变异：形状不查了\n")],
+       expect=1, claim="没测到：读得成 JSON 不等于结构对 → 当场红"),
+
     # ---- 阴性对照 ----------------------------------------------------------
     _M("K0", G_CONTROL, "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",
        T_GUARDS, [(GUARDS, "STEP = 1e-3", "STEP = 1e-3  # 阴性对照：这行不该有行为差异")],
@@ -380,6 +510,38 @@ _PYTEST_CMD = [sys.executable, "-m", "pytest", SUITE,
 #: 所以「报告过期」这件事由**普通 pytest 运行**去抓（就是那个文件存在的理由），
 #: 不由本模块的基线轮抓 —— 那是个自我指涉的圈，绕不出去。
 _MUTATION_ENV = "MIROFISH_MUTATION_RUN"
+
+
+class MutationPremiseError(RuntimeError):
+    """前提不成立 —— **没测到**（退 `2`），不是「没达到预期」（退 `1`）。
+
+    和装置另外几条线同一个契约。最典型的情形是基线那一轮没跑成：那时每一条
+    变异都要拿它的 `failed` 去做减法，继续跑下去只会产出一份看着完整的废纸。
+    """
+
+
+def _verdict(measured: bool, in_target: int, expect) -> bool | None:
+    """这一处变异实测下来**相符吗** —— 三态：`True` / `False` / **`None`（没测到）**。
+
+    `None` 那一支是后加的，挡的是一个真的假绿：`expect_failed == 0` 的**阴性
+    对照**在「这一轮根本没跑起来」时会报 `in_target == 0`，于是 `0 == 0` →
+    「相符」。而 `failed` 为 0 有两种完全不同的成因 —— 「跑完了，一条都没红」
+    和「压根没跑成」（收集失败、内部错、超时）。**后者不是发现，更不是通过。**
+
+    单拎成函数是为了能被测（见 `tests/test_mutation_evidence.py`）：写死的三元
+    表达式测不出来，这个测得出。
+    """
+    if not measured:
+        return None
+    return (in_target >= 1) if expect is None else (in_target == expect)
+
+
+#: `_verdict` 那三态在人读的产物里怎么印。**键必须盖全** ——
+#: 这里原先写的是 `'相符' if r['matched'] else '不符'`，而 `None` 是假值，
+#: 于是**没跑成的那几轮被印成了「不符」**：一处不存在的发现。
+#: （`SELFPROOF.md` 那个 `KeyError: '已否决'` 是同一个病：同一张表两份副本，
+#: 只改了其中一份。所以这里由测试拿 `_verdict` 的值域去撞它。）
+_VERDICT_MARKS = {True: "相符", False: "**不符**", None: "○ 没测到"}
 
 
 def _sha(text: str) -> str:
@@ -410,28 +572,64 @@ def _suite_fingerprint(root=None) -> str:
     return h.hexdigest()
 
 
+#: 单轮 pytest 的上限。超了就记「没测到」。
+#:
+#: 挂死的后果比慢更糟：这份留痕跑的时候，工作区里那个源码正被改成**坏的**状态，
+#: 卡在半路等于把工作区停在那儿（"留痕跑到一半被 kill 会把某个源码停在改坏状态"）。
+_ROUND_TIMEOUT_S = 900.0
+
+
 def _run_pytest(label: str) -> dict:
     t0 = time.time()
     env = {**os.environ, _MUTATION_ENV: label}
-    proc = subprocess.run(_PYTEST_CMD, cwd=BACKEND, capture_output=True, env=env,
-                          text=True, encoding="utf-8", errors="replace")
-    out = (proc.stdout or "") + (proc.stderr or "")
+    timed_out = False
+    try:
+        proc = subprocess.run(_PYTEST_CMD, cwd=BACKEND, capture_output=True,
+                              env=env, text=True, encoding="utf-8",
+                              errors="replace", timeout=_ROUND_TIMEOUT_S)
+        rc = proc.returncode
+        out = (proc.stdout or "") + (proc.stderr or "")
+    except subprocess.TimeoutExpired as exc:
+        # 超时**不是**「一条都没红」，是「没测到」—— 上层据此把它单列。
+        timed_out = True
+        rc = None
+        out = (exc.stdout or "") + (exc.stderr or "")
+        if isinstance(out, bytes):
+            out = out.decode("utf-8", "replace")
+
     ids = FAILED_RE.findall(out)
     by_file: dict = {}
     for nid in ids:
         head = nid.split("::", 1)[0]
         by_file[head] = by_file.get(head, 0) + 1
 
+    # **只在 pytest 那行汇总上数。** 整段里搜的话，**被测测试自己打印的文字**里
+    # 出现「3 errors」「5 failed」会被当成本次的数字 —— 数出来的东西根本不属于
+    # 这次运行。汇总行是最后一行带计数的；pytest 不印 0 的那些词，所以「找不到」
+    # 就是 0，这是对的。
+    summary_line = next(
+        (ln for ln in reversed(out.strip().splitlines())
+         if re.search(r"\b\d+ (passed|failed|error|errors|skipped)\b", ln)), "")
+
     def _count(word: str) -> int:
-        m = re.search(rf"(\d+) {word}\b", out)
+        m = re.search(rf"(\d+) {word}\b", summary_line)
         return int(m.group(1)) if m else 0
 
+    errors = _count("error") + _count("errors")
+    # **这一轮到底测出来没有。** `rc` 不在 `(0, 1)` 里（收集失败退 2、内部错退 3、
+    # 一条都没收集退 5）或出现 error，说明这一轮**没正常跑完** —— 此时 `failed`
+    # 往往是 0，而 `expect_failed=0` 的阴性对照会因此**假绿**：
+    # 一次收集失败看起来和一次「一条都没红」一模一样。
+    measured = (not timed_out) and rc in (0, 1) and errors == 0
+
     return {
-        "returncode": proc.returncode,
+        "returncode": rc,
+        "timed_out": timed_out,
+        "measured": measured,
         "failed": _count("failed"),
         "passed": _count("passed"),
         "skipped": _count("skipped"),
-        "errors": _count("error") + _count("errors"),
+        "errors": errors,
         "failed_ids": ids,
         "failed_by_file": by_file,
         "seconds": round(time.time() - t0, 2),
@@ -532,6 +730,13 @@ def run(only: set | None = None) -> dict:
     baseline = _run_pytest("baseline")
     print(f"{baseline['passed']} passed / {baseline['failed']} failed "
           f"（{baseline['seconds']}s，退出码 {baseline['returncode']}）")
+    if not baseline["measured"]:
+        # 基线自己都没跑成，下面每一条的减法都是在拿一个不存在的数去减 ——
+        # **没测到**，不是「基线没通过」。继续跑下去只会产出一份看着完整的废纸。
+        print(f"○ 没测到：基线那一轮没跑成（超时={baseline['timed_out']}、"
+              f"退出码 {baseline['returncode']}、{baseline['errors']} 个 error）——"
+              f"下面每一条都要拿它做减法，先把它修好再跑。")
+        raise MutationPremiseError("基线没跑成")
 
     records = []
     for mut in MUTATIONS:
@@ -550,13 +755,19 @@ def run(only: set | None = None) -> dict:
         in_target, whole_delta = _delta(res, baseline, mut["target"])
         raw_in_target = res["failed_by_file"].get(mut["target"], 0)
         base_in_target = baseline["failed_by_file"].get(mut["target"], 0)
-        expect = mut["expect_failed"]
-        matched = (in_target >= 1) if expect is None else (in_target == expect)
+        matched = _verdict(res["measured"], in_target, mut["expect_failed"])
         records.append({**mut, **res, "failed_in_target": in_target,
                         "failed_in_target_raw": raw_in_target,
                         "baseline_in_target": base_in_target,
                         "failed_delta": whole_delta,
                         "matched": matched, "reverted": reverted})
+        if matched is None:
+            why = ("超时" if res["timed_out"]
+                   else f"退出码 {res['returncode']}")
+            print(f"○ **没测到**（{why}"
+                  + (f"；{res['errors']} 个 error" if res["errors"] else "")
+                  + "）—— 这一轮没跑成，不是「一条都没红」")
+            continue
         cut = "" if (raw_in_target == in_target and res["failed"] == whole_delta) else (
             f"（原样 {raw_in_target} / 整轮 {res['failed']}；"
             f"已扣掉基线本来就红的 {base_in_target} / {baseline['failed']} 条）")
@@ -568,7 +779,12 @@ def run(only: set | None = None) -> dict:
                     for p in sorted(sources)}
     all_reverted = source_after == source_before
 
-    mismatches = [r["id"] for r in records if not r["matched"]]
+    mismatches = [r["id"] for r in records if r["matched"] is False]
+    #: 「没跑成」那几条单列 —— **它们既不算相符，也不算与声明不符**。
+    unmeasured = [r["id"] for r in records if r["matched"] is None]
+    if unmeasured:
+        print(f"○ 没测到：{unmeasured} —— 那几轮没跑成，"
+              f"它们的「相符」既不成立也不该被当成不符。")
     return {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "not_a_pass_rate": True,
@@ -591,10 +807,13 @@ def run(only: set | None = None) -> dict:
         "mutations": records,
         "summary": {
             "total": len(records),
-            "matched": sum(1 for r in records if r["matched"]),
+            "matched": sum(1 for r in records if r["matched"] is True),
             "mismatches": mismatches,
+            "unmeasured": unmeasured,
             "all_sources_reverted": all_reverted,
-            "baseline_green": baseline["failed"] == 0 and baseline["returncode"] == 0,
+            "baseline_green": (baseline["measured"]
+                               and baseline["failed"] == 0
+                               and baseline["returncode"] == 0),
         },
     }
 
@@ -662,12 +881,18 @@ def _markdown(rep: dict) -> str:
     for r in rep["mutations"]:
         claim = "至少 1 条" if r["expect_failed"] is None else f"{r['expect_failed']} 条"
         L.append(f"| `{r['id']}` | {r['group']} | {r['what']} | {claim} | "
-                 f"**{r['failed_in_target']} 条** | {'相符' if r['matched'] else '**不符**'} |")
+                 f"**{r['failed_in_target']} 条** | {_VERDICT_MARKS[r['matched']]} |")
     L.append("")
     L.append(f"共 **{s['total']}** 处变异，其中 **{s['matched']}** 处的实测与声明相符。")
     if s["mismatches"]:
         L.append("")
         L.append(f"⚠️ 与声明不符的是：`{'` `'.join(s['mismatches'])}`")
+    if s["unmeasured"]:
+        L.append("")
+        L.append(f"○ **没测到**的是：`{'` `'.join(s['unmeasured'])}` —— "
+                 f"那几轮没跑成（超时、收集失败、或退出码不是 0/1）。"
+                 f"它们**既不算相符也不算不符**：`failed` 在这些情形下往往是 0，"
+                 f"而「0 条红」和「根本没跑起来」长得一模一样。")
     L.append("")
     L.append("## 逐条明细")
     L.append("")
@@ -718,9 +943,22 @@ def _markdown(rep: dict) -> str:
         L.append("")
     L.append("## 结论")
     L.append("")
-    if s["matched"] == s["total"] and s["all_sources_reverted"] and s["baseline_green"]:
-        L.append(f"**{s['total']} 处变异全部按声明变红，基线全绿，源文件逐字节还原。** "
-                 "这份测试集不是恒真的 —— 它有**会被改坏**的地方，而那些地方都被盯着。")
+    if s["unmeasured"]:
+        # **排在「全对上了」前面**：有几轮没跑成时，`matched == total` 也可能是
+        # 凑出来的（没跑的那几轮不参与计数）。先说不完整，再说别的。
+        L.append(f"○ **这一份留痕不完整**：{len(s['unmeasured'])} 处变异那一轮没跑成"
+                 f"（见上面那张表的「○ 没测到」）。"
+                 f"**没测到不是结论** —— 先把它们跑成，再读这份产物。")
+    elif s["matched"] == s["total"] and s["all_sources_reverted"] and s["baseline_green"]:
+        # 「按声明」——**不是**「全部变红」：阴性对照 `K0` 的声明就是「一条都不红」。
+        # 名字从记录里数出来，不写死（写死的名字会在这份产物里变成第二份事实）。
+        quiet = [r["id"] for r in rep["mutations"] if r["expect_failed"] == 0]
+        tail = (f"（其中 {'、'.join(f'`{i}`' for i in quiet)} 是阴性对照："
+                f"按声明**一条都不该红**）" if quiet else "")
+        L.append(f"**{s['total']} 处变异全部按声明对上{tail}，基线全绿，源文件逐字节还原。** "
+                 "这份测试集不是恒真的 —— 它有**会被改坏**的地方，而那些地方都被盯着；"
+                 "反过来，也有地方**被盯着「改了却什么都不该红」**："
+                 "那处证明红是**冲着这个缺陷**红的，而不是改一行字就红。")
     else:
         L.append("**没有全部对上，先别下结论。** 逐条看上面的「判定」列：")
         L.append("")
@@ -744,12 +982,51 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     only = {x.strip() for x in args.only.split(",") if x.strip()} or None
-    rep = run(only)
+    if only:
+        # **编号写错一个字母，原先会静默地跑成「0/0 与声明相符」并退 `0`** ——
+        # 过滤之后一条都不剩，`total` 就是 0，而 `matched == total`（`0 == 0`）
+        # 于是「相符」。一份防假绿的产物不能自己开一条假绿的路：
+        # 一条都没跑 = **没测到**，不是通过。所以这里先认编号，认不出来就退 `2`。
+        known = {m["id"] for m in MUTATIONS}
+        unknown = sorted(only - known)
+        if unknown:
+            print(f"\n○ 没测到：不认识的变异编号 {'、'.join(unknown)} —— 编号抄错了？",
+                  file=sys.stderr)
+            print(f"  本文件里声明的是：{'、'.join(sorted(known))}", file=sys.stderr)
+            return 2
+
+    # 落点先问一句，**问在 `run()` 之前**。这一句在这里比别处更要紧：`run()`
+    # 会把被测源码逐个改成坏的、跑一轮 pytest、再改回来 —— 等这几十轮跑完才
+    # 发现写不出去，等于把已经量到的留痕连同退出码一起丢掉，而那时按本表只能
+    # 退 `1`（「与声明不符」）：**一个读数都没落盘，却报了一次不符。**
+    #
+    # `--only` 时不落产物，那就不必问 —— 问了反而会把一次合法的部分留痕挡掉。
+    if only is None:
+        from . import _probe as P      # 同 `run_all`：延迟导入，模块级别拉重依赖
+
+        rc = P.refuse_out_path(args.json, args.md)
+        if rc is not None:
+            return rc
+
+    try:
+        rep = run(only)
+    except MutationPremiseError as e:
+        print(f"\n○ 没测到：{e}", file=sys.stderr)
+        return 2
 
     if only is None:          # 只跑一部分时产物不完整，不落盘盖掉完整的那份
-        pathlib.Path(args.json).write_text(
-            json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
-        pathlib.Path(args.md).write_text(_markdown(rep), encoding="utf-8")
+        try:
+            pathlib.Path(args.json).write_text(
+                json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+            pathlib.Path(args.md).write_text(_markdown(rep), encoding="utf-8")
+        except OSError as exc:
+            # 上面那道门挡不住的一半（目录在、但文件建不出来）。变异全跑完了、
+            # 源文件也逐字节还原了，**但这一份留痕没落成** —— 按三种结果说清楚，
+            # 不退 `1`。⚠️ 这里**不能**顺手重跑 `run()`：源文件此刻是好的。
+            print(f"\n○ 没测到：留痕写不下去（{exc.__class__.__name__}: {exc}）—— "
+                  "变异跑完了、源文件已还原，但**这一份产物没落成**。",
+                  file=sys.stderr)
+            return 2
         print(f"\n→ {args.json}")
         print(f"→ {args.md}")
 
@@ -757,6 +1034,12 @@ def main(argv=None) -> int:
     print(f"\n{s['matched']}/{s['total']} 与声明相符；"
           f"源文件还原={'是' if s['all_sources_reverted'] else '否'}；"
           f"基线={'绿' if s['baseline_green'] else '红'}")
+    # 「没测到」既不算相符也不算不符 —— 它自己一条出口（`2`）。
+    # **`2` 不许折进 `1`**：那会让一次没跑成的留痕看起来像一处发现。
+    if s["unmeasured"]:
+        print(f"○ 没测到：{s['unmeasured']} —— 那几轮没跑成，"
+              f"这一份留痕不完整，别照它下结论。", file=sys.stderr)
+        return 2
     return 0 if (s["matched"] == s["total"] and s["all_sources_reverted"]
                  and s["baseline_green"]) else 1
 

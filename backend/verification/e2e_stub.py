@@ -1,7 +1,8 @@
 """端到端：拿替身模型把**真入口脚本**跑一整局，把守卫的计数取回来。
 
     cd backend
-    python -m verification.e2e_stub              # 三档臂，约 40 秒
+    python -m verification.e2e_stub              # 三档臂，一两分钟（本机几次实测 74 ~ 82 秒，
+                                                 # 随机器忙闲浮动 —— 别拿它当刻度）
     python -m verification.e2e_stub --keep       # 留下临时目录，方便逐字看现场
 
 ## 它补的是哪一格
@@ -102,6 +103,7 @@ import tempfile
 import time
 
 from . import _probe as P
+from .attach import STUB_MODEL_NAME, stub_banner_names   # 替身那件事只写一份（`attach.py`）
 
 HERE = pathlib.Path(__file__).resolve().parent          # backend/verification
 BACKEND = HERE.parent                                   # backend/
@@ -216,7 +218,7 @@ def _child_env(tmp: pathlib.Path, arm_knobs: dict,
     """
     return {
         **os.environ,
-        "LLM_MODEL_NAME": "stub",
+        "LLM_MODEL_NAME": STUB_MODEL_NAME,
         "LLM_API_KEY": PLACEHOLDER_KEY,
         # `LLM_BASE_URL` 也清掉：上游会把它打出来（`create_model` 那句
         # `base_url={...}`），而这份转录是要入库的 —— 一个私有的接口地址
@@ -418,25 +420,103 @@ def _block_body(payload: dict) -> str:
     ])
 
 
+#: 一档臂的三种状态。**和模块开头那张表逐字对应**（0 / 1 / 2）。
+ARM_OK, ARM_FAILED, ARM_UNMEASURED = 0, 1, 2
+ARM_VERDICT = {ARM_OK: "达到预期", ARM_FAILED: "没达到预期",
+               ARM_UNMEASURED: "没测到"}
+#: 屏幕上那一列的前缀。**三个状态要三个记号** —— 原先只有 `√` / `○` 两个，
+#: 于是一档真失败的臂在屏幕上长得跟「没测到」一样。
+ARM_MARK = {ARM_OK: "√", ARM_FAILED: "×", ARM_UNMEASURED: "○"}
+
+
+def _arm_state(run: dict) -> tuple:
+    """一档臂落在三种状态里的哪一种 —— **只有这一处算这件事**，连理由也一起给。
+
+    这个函数的存在本身就是修一处缺陷：原先「屏幕上那行」「机读件里那格」
+    「进程退出码」**各算各的**，于是同一档臂在三处有三种说法 ——
+
+    * 子进程真失败（`rc != 0`）：屏幕和机读件都说「没测到」，按表应该是「没跑成」；
+    * 超时：前两处说「没测到」（对的），退出码那处却折成 `1`（按表该是 `2`）。
+
+    两边各错一格、方向恰好相反，正因为它们是抄的三份。所以这里只留一份：
+    三处消费者都调它。判据的顺序也就是那张表的顺序 —— **没测到跟没跑成分开**，
+    这正是本装置对别人的全部要求，先得对自己成立。
+
+    返回 `(三态码, 一句为什么)`。**理由也在这里给**，是因为屏幕那一行原先自己
+    又判了一次 `run["rc"] != 0` —— 那是「抄了三份」换了个位置复发：信号结束的
+    一档在机读件里是「没测到」、在屏幕上却打 `×`。一句话只写一处。
+
+    **前提那一档必须排在 `rc` 前面。** 子进程起不来的原因有两类：一类是它跑了、
+    撞上了我们想看的东西；另一类是**前提根本没成立**（最典型的是分词器取不到 ——
+    没网、或者那份编码表的临时缓存被清过），三档臂会在同一个地方齐刷刷倒掉。
+    两类都 `rc != 0`，但只有第一类「真有东西要看」。把第二类记成「没达到预期」，
+    等于**替一个没跑起来的实验宣布结论** —— 守卫的分支走没走到，此刻是一个字都
+    没量到的。所以前提不成立时先把三档按「没测到」压住，`main()` 里那一句
+    「前提不成立」的打印就是这条判据的可见面。
+    """
+    if run.get("precondition_unmet"):
+        return ARM_UNMEASURED, "前提不成立（分词器取不到）"      # 一档都没真跑成
+    if run["timeout"]:
+        return ARM_UNMEASURED, "没跑完（超时，已中断）"          # 模块开头那张表
+    if run["rc"] not in (0, 1):
+        # **这一档跑的子进程不是我们的脚本，是上游原样的入口。** 它的退出码
+        # 契约是 `{0, 1}` —— 契约**外的**值都说明这一档没跑完，不是「跑成了但
+        # 没达到预期」：
+        #
+        # * **负值 = 被信号杀死**（POSIX 上 `wait()` 对死于信号的子进程返回
+        #   `-N`）：OOM killer、容器 `stop`、C 扩展段错误。计数与平台库那时也
+        #   都没落下来，所以下面那格本来该说「没测到」—— 但原先 `rc != 0` 排在
+        #   它前面，先一步把这一档判成 `ARM_FAILED`，**替一个没跑完的档位宣布
+        #   了结论**，读的人被指去查「守卫没被走到」。
+        # * **`2`** 是 argparse 的「参数不对」—— 同样说明压根没跑起来。
+        #
+        # ⚠️ **这一处故意和 `run_all._run_one` 的 `(0, 1, 2)` 不一样**，别去
+        # 「统一」：那三条跑的是**我们自己的**复现脚本，用 `exit_with`，`2` 是
+        # 合法的「没测到」；这里跑的是上游脚本，`2` 不合法。
+        return ARM_UNMEASURED, (
+            f"子进程退出码 {run['rc']} —— 没跑完"
+            "（负值=被信号杀死；`2` 是参数不对）")
+    if run["rc"] != 0:
+        return ARM_FAILED, f"子进程退出码 {run['rc']}"           # 「真有东西要看」
+    if not run["counters"] or run["db_posts"] is None:
+        return ARM_UNMEASURED, "计数或平台库没取到"              # 没取到读数
+    return ARM_OK, f"跑完（{run['seconds']} 秒）"
+
+
+def _arm_code(run: dict) -> int:
+    """只要三态码的那一处（`_arm_state` 的薄包装）。"""
+    return _arm_state(run)[0]
+
+
 def _report(runs: list, digest_note: str, root: pathlib.Path) -> dict:
     """落一份和 `run_all` 报告同形的机读件 —— 于是 `cells_from` 原样能读。"""
     payload = _payload(runs)
     body = _block_body(payload)
-    ok = all(r["rc"] == 0 and not r["timeout"] for r in runs)
+    # 一份机读件只有一格退出码，所以取三档的**最重**那一档 ——
+    # `max` 让「没测到」盖过「没达到预期」，与 `run_all` 的 `worst` 同一套优先级。
+    code = max((_arm_code(r) for r in runs), default=ARM_OK)
     missing = [r["arm"] for r in runs
                if not r["counters"] or r["db_posts"] is None]
-    verdicts = {True: "达到预期", False: "没测到"}
     transcript = "\n\n".join(
         f"===== 臂 {r['arm']}（{r['seconds']} 秒"
         f"{'，超时' if r['timeout'] else ''}，退出码 {r['rc']}）=====\n"
         + _redact(r["body"], root)
         for r in runs) + "\n\n===== 读数 =====\n" + body
 
+    # 「模型是替身」在产物里要**看得到证据**，不只是一个说法（`nature` 是按构造写的
+    # 标签，而这一格是实测的）。识别式取自 `attach.py` —— 打出去和认回来一份写法，
+    # 于是「模型名换了」这件事不会静默地溜过去。
+    banner = stub_banner_names([r["body"] for r in runs])
+    stub_observed = bool(banner) and all(n == STUB_MODEL_NAME for n in banner)
+
     entry = {"n": 1, "module": "verification.e2e_stub",
              "what": "端到端：替身模型驱真入口脚本跑一整局，取守卫的计数",
              "nature": "端到端·模型是替身",
-             "returncode": 0 if ok else 2,
-             "verdict": verdicts[bool(ok)],
+             "model_is_stub_observed": stub_observed,
+             "stub_banner_names": banner,
+             "returncode": code,
+             "verdict": ARM_VERDICT[code],
+             "arm_codes": {r["arm"]: _arm_code(r) for r in runs},
              "arms": [r["arm"] for r in runs],
              "arm_seconds": {r["arm"]: r["seconds"] for r in runs},
              "readings": payload,
@@ -472,7 +552,7 @@ def _report(runs: list, digest_note: str, root: pathlib.Path) -> dict:
         "arms_missing": missing,
         "digest_note": digest_note,
         "summary": {"arms_total": len(runs), "arms_missing": len(missing),
-                    "worst_returncode": 0 if ok else 2},
+                    "worst_returncode": code},
     }
 
 
@@ -549,7 +629,7 @@ def _markdown(report: dict) -> str:
     return "\n".join(md) + "\n"
 
 
-def main() -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="端到端：替身模型驱真入口脚本跑一整局，取守卫的计数")
     ap.add_argument("--keep", action="store_true",
@@ -560,12 +640,26 @@ def main() -> int:
                     help="每档臂的超时秒数（默认 600）")
     ap.add_argument("--out", default=str(REPORT),
                     help="报告落点（默认 verification/e2e_report.json）")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     arms = [a for a in ARMS if args.arm in (None, a[0])]
     if not arms:
         print(f"没有这一档臂：{args.arm!r}；可选 {[a[0] for a in ARMS]}")
         return 2
+
+    # 落点先问一句，**问在三档臂之前**：一档臂要跑好几分钟，等跑完再发现写不
+    # 出去，等于把已经量到的读数连同退出码一起丢掉 —— 而那时按本表只能退 `1`
+    # （「没达到预期」），读者会去找一个并不存在的失败。
+    #
+    # 同 `adjudicate` / `run_all` / `selfproof`。**这一处是补上的**：此前六道
+    # 入口里只有那三道有门，「三道入口各验一处」那句说的是**门本身要各验一处**，
+    # 没说只有三道有门 —— 于是另外三道（本文件、`reconcile_selfcheck`、
+    # `mutations`）在坏落点上照样抛 traceback 退 `1`，而各自的表里 `1` 分别是
+    # 「没达到预期」「不符」「与声明不符」：**一个读数都没落下来，却宣布了发现。**
+    rc = P.refuse_out_path(args.out,
+                           str(pathlib.Path(args.out).with_suffix(".md")))
+    if rc is not None:
+        return rc
 
     print("=" * 66)
     print("端到端：替身模型驱真入口脚本跑一整局")
@@ -578,6 +672,18 @@ def main() -> int:
     root = pathlib.Path(tempfile.mkdtemp(prefix="mirofish_e2e_"))
     print(f"临时目录：{root}")
     print()
+
+    # 前提：分词器取得到吗。**要先问，不能等三档臂各自倒掉再猜原因** ——
+    # 子进程和替身模型都要它，取不到时三档会在同一个地方齐刷刷 `rc != 0`，
+    # 而那看起来就跟「守卫没被走到」一模一样。先问一次，就能把这两件事分开。
+    # （这是本装置对别人的要求，见 `_arm_code` 的 docstring。）
+    pre_ok = P.tokenizer_or_none() is not None
+    if not pre_ok:
+        print("**前提不成立**：分词器取不到 —— 下面三档一律报「没测到」，"
+              "**不报「没达到预期」**。")
+        print("（子进程起不来时，把它记成「守卫没被走到」就是一个假的发现。）")
+        print()
+
     runs = []
     try:
         for stable, label, knobs in arms:
@@ -585,13 +691,19 @@ def main() -> int:
             print(f"· {stable}：{label}")
             print("-" * 66)
             run = _run_arm(stable, knobs, root, args.timeout)
+            run["precondition_unmet"] = not pre_ok
             runs.append(run)
-            if run["timeout"]:
-                print(f"  ○ 没测到：{args.timeout} 秒没跑完，已中断")
-            elif run["rc"] != 0:
-                print(f"  × 子进程退出码 {run['rc']} —— 它的输出在转录里")
-            else:
-                print(f"  √ 跑完（{run['seconds']} 秒）")
+            # 记号、判词、理由**全从 `_arm_state` 来** —— 这一行不再自己判一次
+            # （它原先自己判 `run["rc"] != 0`，于是信号结束的一档在机读件里是
+            # 「没测到」、在屏幕上却打 `×`）。
+            code, why = _arm_state(run)
+            print(f"  {ARM_MARK[code]} {ARM_VERDICT[code]}：{why}")
+            if run["precondition_unmet"]:
+                print("    （前提不成立 —— 这不是「守卫没被走到」）")
+            elif run["timeout"]:
+                print(f"    （上限 {args.timeout} 秒）")
+            elif code == ARM_FAILED:
+                print("    （它的输出在转录里）")
             c = run["counters"]
             if c is None:
                 print("  ○ 计数没落下来（`$GUARD_COUNTERS_OUT` 是空的）"
@@ -607,11 +719,18 @@ def main() -> int:
 
         report = _report(runs, "", root)
         out = pathlib.Path(args.out)
-        out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n",
-                       encoding="utf-8", newline="\n")
         md_path = out.with_suffix(".md")
         md_text = _markdown(report)
-        md_path.write_text(md_text, encoding="utf-8", newline="\n")
+        try:
+            out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+                           encoding="utf-8", newline="\n")
+            md_path.write_text(md_text, encoding="utf-8", newline="\n")
+        except OSError as exc:
+            # 上面那道门挡不住的一半（目录在、但文件建不出来）。三档臂的判定
+            # 都算出来了，**但这一份没落成** —— 按三种结果说清楚，不退 `1`。
+            print(f"\n○ 没测到：端到端报告写不下去（{exc.__class__.__name__}: {exc}）"
+                  " —— 三档的判定都在上面，但**这一份产物没落成**。")
+            return 2
 
         # 读数块里的字符必须 GBK 编得出：中文 Windows 的 cmd 下编不出的会被
         # `__init__._harden_streams()` 降级成 `?`，那是**无声的数据损坏**。
@@ -625,9 +744,8 @@ def main() -> int:
         print("汇总")
         print("=" * 66)
         for r in runs:
-            got = r["counters"] and r["db_posts"] is not None
-            print(f"  {'√ 达到预期' if got and r['rc'] == 0 else '○ 没测到':<12}"
-                  f"{r['arm']}")
+            code = _arm_code(r)
+            print(f"  {ARM_MARK[code]} {ARM_VERDICT[code]:<10}{r['arm']}")
         print()
         print("  这不是通过率，也没有分母：三档臂装的是**同一套守卫**，")
         print("  差别只在两个受控旋钮上。它回答的是「守卫的分支有没有被走到」。")
@@ -635,13 +753,11 @@ def main() -> int:
         print()
         print(f"  报告已落盘：{out.resolve()}")
         print(f"              {md_path.resolve()}")
-        rc = 0
-        for r in runs:
-            if r["timeout"] or r["rc"] != 0:
-                rc = max(rc, 1)
-            elif r["counters"] is None or r["db_posts"] is None:
-                rc = max(rc, 2)
-        return rc
+        # 退出码取三档里**最重**的那一档（`max`），与 `run_all` 的 `worst` 同一套
+        # 优先级：先看有没有「没测到」，再看有没有「没跑成」。逐档的状态上面
+        # 每行都打了，所以一档真失败不会被另一档的「没测到」从屏幕上盖掉 ——
+        # 被盖掉的只是那一个数字，不是那条信息。
+        return max((_arm_code(r) for r in runs), default=ARM_OK)
     finally:
         if args.keep:
             print(f"\n  临时目录保留：{root}")

@@ -144,3 +144,85 @@ def test_the_recorded_hashes_still_describe_the_files_on_disk(report):
         now = RC._sha((BACKEND / key).read_text(encoding="utf-8"))
         assert now == want, (
             f"{key} 的 sha256 与报告里记的对不上 —— 报告已经过期。{_RERUN}")
+
+
+# ---------------------------------------------------------------------------
+# 那份「声明」必须是**从 README 现场读出来的**，不是本文件里的另一份副本
+# ---------------------------------------------------------------------------
+
+def test_the_claim_really_comes_from_the_readme_text():
+    """**声明是从 README 现读的** —— 换一份文本，读出来的数就得跟着变。
+
+    这一条是补的，因为这里踩过一次真的：常量原先叫 `claim_from_readme`、
+    产物上印着「README 声明的数对得上 ✅」，而它比的是 `reconcile_selfcheck.py`
+    里那份**写死的副本**，**从头到尾没有打开过 README**。两份副本只钉了一份，
+    README 那一份改掉任意一个数字都照样全绿 —— 而那句话正是这份产物存在的理由。
+
+    ⚠️ 这里**故意不去写死**「README 现在写的应该是 270→264」：那等于又造一份
+    手抄副本出来。钉住「它读的是那段文本」就够了 —— 声明**内不内**对，
+    是产物里「声明 vs 实测」那张表的事（上面 `test_the_readme_claim_...`）。
+    """
+    readme = (VERIFICATION / "README.md").read_text(encoding="utf-8")
+    got = RC.claim_from_readme(readme)
+
+    assert set(got) == {"① 新增记录数", "① 实增 token", "② 同拍违反数"}, (
+        f"读出来的共有数字是 {sorted(got)} —— 三行的名字和 `_SHARED_NUMBERS` 对不上了")
+    assert all(isinstance(v, tuple) and len(v) == 2
+               and all(x.isdigit() for x in v) for v in got.values()), (
+        f"读出来的形状不对：{got} —— 每项应当是 `(装置侧, 草稿侧)` 两个数字串")
+
+    # **活着**：改掉 README 里的一个数，读出来就得跟着变。
+    tweaked = readme.replace("270 → 264", "270 → 999")
+    assert tweaked != readme, "README 里那句话的写法变了（`270 → 264` 找不到了），先看一眼"
+    assert RC.claim_from_readme(tweaked)["① 新增记录数"] == ("270", "999"), (
+        "改了 README 里的数字，读出来却没变 —— 那它读的**不是** README")
+
+
+def test_a_readme_that_lost_the_sentence_is_not_measured_not_failed():
+    """声明读不出来 = **没测到**（抛 `PremiseError`），**不是「不符」**。
+
+    和装置其它三条线同一个契约。混了的话，「有人改写了那句话」会被报成
+    「对账不一致」—— 而这两件事要去看的地方完全不同。
+    """
+    readme = (VERIFICATION / "README.md").read_text(encoding="utf-8")
+    for cut in ("270 → 264", "② 同拍违反数"):
+        assert cut in readme, f"README 里找不到 {cut!r}，这条测试的前提没了"
+        with pytest.raises(RC.PremiseError):
+            RC.claim_from_readme(readme.replace(cut, "○○○"))
+
+
+def test_the_exit_code_is_three_state():
+    """退出码三态：`0` 相符 / `1` 不符 / `2` 没测到。**`2` 不许折进 `1`。**
+
+    这份产物一直**印着**这三态（A/B 两轮标题那行），此前却只有两个出口
+    （`return 0 if s["all_ok"] else 1`）。后果不是措辞问题：子进程真退 2 时
+    （最典型是分词器取不到），核对项全 ❌、退 **1**、屏幕上打「0/7 项相符」——
+    **一次「一个数都没量到」被报成了「自检没通过」**，正是这套装置专门抓别人的那件事。
+    """
+    def rep(*states):
+        return {"checks": [RC._check(f"c{i}", s == "相符", "",
+                                     measured=s != "没测到")
+                           for i, s in enumerate(states)],
+                "summary": {"all_ok": all(s == "相符" for s in states)}}
+
+    assert RC._exit_code(rep("相符", "相符")) == 0
+    assert RC._exit_code(rep("相符", "不符")) == 1
+    assert RC._exit_code(rep("相符", "没测到")) == 2
+    assert RC._exit_code(rep("没测到", "不符")) == 2, (
+        "既有「没测到」又有「不符」时报 `2` —— 有一条根本没量到，整个结论就不成立，"
+        "不该挑一条「不符」出来当结论")
+
+
+def test_a_check_that_could_not_be_measured_is_not_reported_as_failed():
+    """反向对照：`measured=False` 的核对项，`state` 必须是「没测到」，**不是「不符」**。
+
+    没有这一条，上面那三态完全可能是靠 `ok` 硬凑出来的。
+    """
+    ok = RC._check("c", True, "", measured=True)
+    bad = RC._check("c", False, "", measured=True)
+    non = RC._check("c", True, "", measured=False)
+    assert (ok["state"], bad["state"], non["state"]) == ("相符", "不符", "没测到")
+    assert bad["ok"] is False and non["ok"] is False, (
+        "「没测到」的 `ok` 也必须是 False（它没通过），"
+        "但它的 `state` 得说得出是**哪一种**没通过")
+    assert non["state"] != "不符", "「没测到」不许被折进「不符」"

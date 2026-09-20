@@ -33,14 +33,22 @@
 
 ## 症状
 
-`camel/agents/chat_agent.py` 的 `_record_tool_calling`（2739~2751 行）**只读一次时钟**，
-再用 `+1e-6` 把回执排在请求之后。源码注释写着「纳秒精度，避免碰撞」：
+`camel/agents/chat_agent.py` 的 `_record_tool_calling`（方法在 **2691** 行起；下面贴的这段
+读钟是 **2739~2751**）**只读一次时钟**，再用 `+1e-6` 把回执排在请求之后。源码注释写着
+「纳秒精度，避免碰撞」：
 
 ```python
-2739  current_time_ns = time.time_ns()
-2740  base_timestamp  = current_time_ns / 1_000_000_000   # Convert to seconds
-2742  self.update_memory(assist_msg, ASSISTANT, timestamp=base_timestamp)
-2747  self.update_memory(func_msg,   FUNCTION,  timestamp=base_timestamp + 1e-6)
+# 逐字引自 camel.agents.chat_agent
+current_time_ns = time.time_ns()                                       # 2739
+base_timestamp = current_time_ns / 1_000_000_000  # Convert to seconds  # 2740
+self.update_memory(                                                    # 2742
+    assist_msg, OpenAIBackendRole.ASSISTANT, timestamp=base_timestamp   # 2743
+)                                                                      # 2744
+self.update_memory(                                                    # 2747
+    func_msg,                                                          # 2748
+    OpenAIBackendRole.FUNCTION,                                        # 2749
+    timestamp=base_timestamp + 1e-6,                                   # 2750
+)                                                                      # 2751
 ```
 
 **那个 `1e-6` 在两种机器上都靠不住**：本机（Windows）时钟一拍零点几毫秒，
@@ -72,9 +80,10 @@ message` 拒掉。
 `perform_action_by_llm`：
 
 ```python
-153      except Exception as e:
-154          agent_log.error(f"Agent {self.social_agent_id} error: {e}")
-155          return e
+# 逐字引自 oasis.social_agent.agent
+except Exception as e:                                             # 153
+    agent_log.error(f"Agent {self.social_agent_id} error: {e}")    # 154
+    return e                                                       # 155
 ```
 
 只记一行日志，然后**把异常对象当结果返回**。于是日志里一行
@@ -211,9 +220,10 @@ finally:
 中间**没有 I/O** —— 两次读钟之间只隔着几次 Python 调用。
 所以「同拍」不是小概率事件，是**常态**。
 
-一个实测佐证：在**记忆已经灌满**的前提下量（这是最不利的一种情形 —— 每次写入还得
-连带做一轮驱逐），7 次运行里有 5 次两次调用之间的真实间隔量出来是 **0.00 ms**
-（低于时钟分辨率），即落在**同一拍**；另外 2 次跨到十来拍（0.80 / 3.35 / 3.80 ms）。
+一个实测佐证（**本机上手记的读数，不是下面产物里那一份**）：在**记忆已经灌满**的
+前提下量（这是最不利的一种情形 —— 每次写入还得连带做一轮驱逐），7 次运行里有 5 次
+两次调用之间的真实间隔量出来是 **0.00 ms**（低于本机时钟分辨率），即落在**同一拍**；
+另有几次跨拍，量到的间隔落在 **0.80 / 3.35 / 3.80 ms**（按本机时钟约 2 ~ 10 拍）。
 换句话说：**同拍是多数情形，不是保证** —— 时钟分辨率有多细、这一拍恰好有多宽，
 本来就随调度变。我们没把这句写成「必然」，因为它不是。
 

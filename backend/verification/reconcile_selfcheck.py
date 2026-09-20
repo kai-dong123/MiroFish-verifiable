@@ -18,7 +18,7 @@
 | 轮 | 改了什么 | 跑什么 | 期望 |
 |---|---|---|---|
 | **A** | 什么都不改 | 装置①、装置②、草稿①、草稿② | 对账退出码 **0**，三行都「一致」 |
-| **B** | 草稿①的探针消息 **90 条 → 88 条** | 只重跑草稿①（装置侧沿用 A 轮正文） | 对账退出码 **1**，①②两行「不一致」，②那行仍「一致」 |
+| **B** | 草稿①的探针消息 **90 条 → 88 条** | 只重跑草稿①（装置侧沿用 A 轮正文） | 对账退出码 **1**，① 那两行「不一致」，② 那行仍「一致」 |
 
 产物落盘：`RECONCILE_SELFCHECK.md`（人读）与 `reconcile_selfcheck_report.json`（机读）。
 
@@ -51,6 +51,8 @@ import time
 
 from verification import run_all as R
 
+from . import _probe as P
+
 HERE = pathlib.Path(__file__).resolve().parent          # backend/verification
 BACKEND = HERE.parent                                   # backend/
 
@@ -68,10 +70,73 @@ DRAFTS = (("verification.upstream.repro_min_01_slicing", "草稿①", DRAFT1),
 PLANT_OLD = "range(90)"
 PLANT_NEW = "range(88)"
 
-#: README 那句话里声明的两组数：`(装置侧, 草稿侧)`。实测拿它们逐项比。
-CLAIM = {"① 新增记录数": ("270", "264"),
-         "① 实增 token": ("5130", "5016"),
-         "② 同拍违反数": ("1", "1")}
+class PremiseError(RuntimeError):
+    """这一轮的**前提不成立** —— 该报「没测到」（退出码 `2`），不是「不符」（`1`）。
+
+    和装置其它三条线同一个契约：一个数都没量到、或者声明的原文读不出来了，
+    就没有资格判「不符」。把这两种折在一起，等于**把「没测到」报成「没通过」**。
+    """
+
+
+#: README 里那几处声明的**原文形状**。解析失败就报「没测到」（退出码 2），
+#: **绝不退回一份写死的副本** —— 那正是这份产物上一版干的事：常量叫
+#: `claim_from_readme`、产物上印着「README 声明的数对得上 ✅」，而它比的是
+#: 本文件里的字面量，**从头到尾没有打开过 README**。两份副本只钉了一份，
+#: README 那一份改掉任意一个数字都照样全绿。
+_CLAIM_IN_PROSE = re.compile(r"（(\d+) → (\d+)、(\d+) → (\d+) 两行都标")
+_CLAIM_IN_TABLE = re.compile(r"^\s*② 同拍违反数\s+(\d+)\s+(\d+)\s", re.M)
+
+
+def claim_from_readme(text: str) -> dict:
+    """从 `README.md` **现场读**出那三行声明的数：`{共有数字: (装置侧, 草稿侧)}`。
+
+    三行数分在两处，都得读出来：
+
+    * ① 那两行在「也验过它会红」那句话里 —— `（270 → 264、5130 → 5016 两行都标 ×）`
+    * ② 那一行在 A 轮那张小表里 —— `② 同拍违反数  1         1         √ 一致`
+
+    读不到就抛 `PremiseError`：**声明被改写过了，这一轮没资格判任何东西**。
+    """
+    prose = _CLAIM_IN_PROSE.search(text)
+    table = _CLAIM_IN_TABLE.search(text)
+    missing = [name for name, m in (("「也验过它会红」那句话（① 两行）", prose),
+                                    ("A 轮那张表（② 那一行）", table)) if not m]
+    if missing:
+        raise PremiseError(
+            "README 里读不到声明的数：" + "、".join(missing)
+            + "。**这不是「不符」** —— 是这一轮的前提没了。"
+              "先看那句论断是不是被改写过了，再决定改哪一边。")
+    return {"① 新增记录数": (prose.group(1), prose.group(2)),
+            "① 实增 token": (prose.group(3), prose.group(4)),
+            "② 同拍违反数": (table.group(1), table.group(2))}
+
+
+#: 核对项的三种状态 —— 和 A/B 两轮标题上印的、以及退出码是同一套口径。
+_STATES = ("相符", "不符", "没测到")
+_STATE_MARKS = {"相符": "✅", "不符": "❌ **不符**", "没测到": "○ 没测到"}
+
+
+def _check(name: str, ok: bool, detail: str, *, measured: bool = True) -> dict:
+    """一条核对。`state` 是三态的，`ok` 只是它的便利读法。
+
+    `measured=False` 说的是**这件事这一轮没量到**（读数抽不出来、子进程压根没跑成），
+    那就不许判「不符」—— 见 `PremiseError` 的注释。
+    """
+    state = "没测到" if not measured else ("相符" if ok else "不符")
+    return {"name": name, "ok": state == "相符", "state": state, "detail": detail}
+
+
+def _exit_code(rep: dict) -> int:
+    """三态退出码：`0` 相符 / `1` 不符 / `2` 没测到。
+
+    这份产物一直**印着**这三态（A/B 两轮标题那行），此前却只有两个退出码：
+    `return 0 if s["all_ok"] else 1`。于是子进程真退 2 时（最典型是分词器取不到，
+    见 D-52），7 项核对全 ❌、退 **1**、屏幕上打「0/7 项相符」——
+    **一次「一个数都没量到」被报成了「自检没通过」**，正是这套装置专门抓别人的那件事。
+    """
+    if any(c["state"] == "没测到" for c in rep["checks"]):
+        return 2
+    return 0 if rep["summary"]["all_ok"] else 1
 EXPECT_RED = ("① 新增记录数", "① 实增 token")
 EXPECT_GREEN = ("② 同拍违反数",)
 
@@ -148,6 +213,10 @@ def run() -> dict:
     os.chdir(BACKEND)                      # `_run_one` 用 cwd 起子进程
     t0 = time.time()
 
+    # **先把声明读了，读不到就当场停** —— 别白跑一分钟才发现这一轮没资格判任何东西。
+    readme_text = (HERE / "README.md").read_text(encoding="utf-8")
+    claim = claim_from_readme(readme_text)
+
     print("A 轮（什么都不改）")
     a_dev = {}
     for mod, key in DEVICES:
@@ -185,42 +254,51 @@ def run() -> dict:
     def _row(rows, what):
         return next(r for r in rows if r["what"] == what)
 
-    checks = [{"name": "A 轮对账一致（退出码 0）", "ok": a_rc == 0,
-               "detail": f"实测退出码 {a_rc}"},
-              {"name": "A 轮三行都「一致」",
-               "ok": all(r["verdict"] == "一致" for r in a_rows),
-               "detail": "、".join(f"{r['what']}={r['verdict']}" for r in a_rows)},
-              {"name": "B 轮对账报不一致（退出码 1）", "ok": b_rc == 1,
-               "detail": f"实测退出码 {b_rc}"},
-              {"name": "植入后**该红的**两行红了",
-               "ok": all(_row(b_rows, w)["verdict"] == "不一致" for w in EXPECT_RED),
-               "detail": "、".join(f"{w}={_row(b_rows, w)['verdict']}"
-                                   for w in EXPECT_RED)},
-              {"name": "植入后**不该动的**那行没动",
-               "ok": all(_row(b_rows, w)["verdict"] == "一致" for w in EXPECT_GREEN),
-               "detail": "、".join(f"{w}={_row(b_rows, w)['verdict']}"
-                                   for w in EXPECT_GREEN)},
-              {"name": "草稿①改回去了（逐字节）", "ok": reverted,
-               "detail": f"sha256 {_sha(draft1_before)[:12]} 与还原后"
-                         + ("相同" if reverted else "**不同**")}]
+    def _all_measured(rows, whats) -> bool:
+        """这几行**两边都抽到了数**吗 —— 有一行抽不出来就算没测到。"""
+        return all(_row(rows, w)["verdict"] != "没测到" for w in whats)
 
-    for what, (claim_dev, claim_draft) in CLAIM.items():
+    _every = [w for w, _, _, _, _ in R._SHARED_NUMBERS]
+    checks = [
+        _check("A 轮对账一致（退出码 0）", a_rc == 0,
+               f"实测退出码 {a_rc}", measured=a_rc != 2),
+        _check("A 轮三行都「一致」",
+               all(r["verdict"] == "一致" for r in a_rows),
+               "、".join(f"{r['what']}={r['verdict']}" for r in a_rows),
+               measured=_all_measured(a_rows, _every)),
+        _check("B 轮对账报不一致（退出码 1）", b_rc == 1,
+               f"实测退出码 {b_rc}", measured=b_rc != 2),
+        _check("植入后**该红的**两行红了",
+               all(_row(b_rows, w)["verdict"] == "不一致" for w in EXPECT_RED),
+               "、".join(f"{w}={_row(b_rows, w)['verdict']}" for w in EXPECT_RED),
+               measured=_all_measured(b_rows, EXPECT_RED)),
+        _check("植入后**不该动的**那行没动",
+               all(_row(b_rows, w)["verdict"] == "一致" for w in EXPECT_GREEN),
+               "、".join(f"{w}={_row(b_rows, w)['verdict']}" for w in EXPECT_GREEN),
+               measured=_all_measured(b_rows, EXPECT_GREEN)),
+        _check("草稿①改回去了（逐字节）", reverted,
+               f"sha256 {_sha(draft1_before)[:12]} 与还原后"
+               + ("相同" if reverted else "**不同**")),
+    ]
+
+    for what, (claim_dev, claim_draft) in claim.items():
         got_dev = _row(b_rows, what)["device"]
         got_draft = _row(b_rows, what)["draft"]
-        checks.append({
-            "name": f"README 声明的数对得上：{what}",
-            "ok": (got_dev, got_draft) == (claim_dev, claim_draft),
-            "detail": f"声明 装置{claim_dev}→草稿{claim_draft}；"
-                      f"实测 装置{got_dev}→草稿{got_draft}"})
+        checks.append(_check(
+            f"README 声明的数对得上：{what}",
+            (got_dev, got_draft) == (claim_dev, claim_draft),
+            f"声明 装置{claim_dev}→草稿{claim_draft}；"
+            f"实测 装置{got_dev or '○抽不到'}→草稿{got_draft or '○抽不到'}",
+            measured=bool(got_dev and got_draft)))
 
     reads = _repros_do_not_read_the_draft()
-    checks.append({
-        "name": "三条复现都不读草稿（「B 轮不用重跑装置侧」的依据）",
-        "ok": all(not v for v in reads.values()),
-        "detail": "、".join(f"{k}:{'命中' + str(v) if v else '无'}"
-                            for k, v in reads.items())})
+    checks.append(_check(
+        "三条复现都不读草稿（「B 轮不用重跑装置侧」的依据）",
+        all(not v for v in reads.values()),
+        "、".join(f"{k}:{'命中' + str(v) if v else '无'}" for k, v in reads.items())))
 
     all_ok = all(c["ok"] for c in checks)
+    not_measured = [c["name"] for c in checks if c["state"] == "没测到"]
 
     return {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -245,12 +323,19 @@ def run() -> dict:
                   "reconcile_lines": [ln.rstrip() for ln in b_lines],
                   "transcripts": b_transcripts},
         },
-        "claim_from_readme": CLAIM,
+        "claim_from_readme": claim,
+        "claim_source": {
+            "path": "verification/README.md",
+            "sha256": _sha(readme_text),
+            "where": "① 那两行读自「也验过它会红」那句话；"
+                     "② 那一行读自 A 轮那张小表 —— **现场读的，不是抄的**"},
         "checks": checks,
         "reverted": reverted,
         "seconds": round(time.time() - t0, 2),
         "summary": {"checks_total": len(checks),
                     "checks_ok": sum(1 for c in checks if c["ok"]),
+                    "checks_not_measured": len(not_measured),
+                    "not_measured_which": not_measured,
                     "all_ok": all_ok},
     }
 
@@ -276,8 +361,15 @@ def _markdown(rep: dict) -> str:
     L += ["## 逐项核对（声明 vs 实测）", "",
           "| 核对项 | 结果 | 明细 |", "|---|---|---|"]
     for c in rep["checks"]:
-        L.append(f"| {c['name']} | {'✅' if c['ok'] else '❌ **不符**'} | {c['detail']} |")
-    L += ["", f"**{s['checks_ok']}/{s['checks_total']} 项相符。**", ""]
+        L.append(f"| {c['name']} | {_STATE_MARKS[c['state']]} | {c['detail']} |")
+    L.append("")
+    if s["checks_not_measured"]:
+        L += [f"**{s['checks_ok']}/{s['checks_total']} 项相符；"
+              f"{s['checks_not_measured']} 项没测到** —— "
+              f"没测到的是：" + "、".join(s["not_measured_which"])
+              + "。**「没测到」没有资格说「不符」**（退出码 `2`）。", ""]
+    else:
+        L += [f"**{s['checks_ok']}/{s['checks_total']} 项相符。**", ""]
     L += ["## 为什么 B 轮不重跑装置那两条", "",
           "植入只动了**草稿那一个文件**，而三条复现**都不读草稿** —— 上面那条静态核对"
           "（`repro_0*.py` 里不出现 `upstream` / `repro_min`）就是依据。所以装置侧的正文"
@@ -287,6 +379,11 @@ def _markdown(rep: dict) -> str:
     if s["all_ok"]:
         L += ["**两轮都按预期走，改回也逐字节还原了。** 对账那一步不是恒过的：",
               "把准备发出去的材料改坏一个数字，它会**当场响**，而三条复现不受影响。"]
+    elif s["checks_not_measured"]:
+        L += ["**没测到，先别下结论。** 上面那张表里带 ○ 的那几项，这一轮根本没量到 ——",
+              "先看它们**为什么**量不到（多半是分词器取不到、或者子进程压根没跑成），",
+              "把前提补上再来。**这不是「不符」**：一个数都没量到的时候，",
+              "说「没通过」和说「通过」一样没有依据。"]
     else:
         L += ["**没有全部对上，先别下结论。** 逐项看上面那张表 ——",
               "「不符」时先看**那句论断还成不成立**，再决定是改材料里的数字、",
@@ -301,22 +398,45 @@ def main(argv=None) -> int:
     ap.add_argument("--md", default=str(HERE / "RECONCILE_SELFCHECK.md"))
     args = ap.parse_args(argv)
 
-    rep = run()
-    pathlib.Path(args.json).write_text(
-        json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
-    pathlib.Path(args.md).write_text(_markdown(rep), encoding="utf-8")
+    # 落点先问一句，**问在 `run()` 之前**（同 `adjudicate` / `run_all` /
+    # `selfproof`）。否则坏落点抛的 `FileNotFoundError` 没人接、进程退 `1` ——
+    # 而本表把 `1` 读成「**不符**」：一个读数都没落下来，却报了一次对账失败。
+    rc = P.refuse_out_path(args.json, args.md)
+    if rc is not None:
+        return rc
+
+    try:
+        rep = run()
+    except PremiseError as e:
+        # 前提不成立 = **没测到**（退出码 `2`），不是「不符」（`1`）。
+        # 也不落产物：一份「没量到」的产物长得像一份「量到了」的。
+        print(f"\n没测到：{e}")
+        return 2
+
+    try:
+        pathlib.Path(args.json).write_text(
+            json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+        pathlib.Path(args.md).write_text(_markdown(rep), encoding="utf-8")
+    except OSError as exc:
+        # 上面那道门挡不住的一半（目录在、但文件建不出来）。两轮对账都算完了，
+        # **但这一份没落成** —— 按三种结果说清楚，不退 `1`（那是「不符」）。
+        print(f"\n○ 没测到：对账留痕写不下去（{exc.__class__.__name__}: {exc}）—— "
+              "两轮都跑完了，但**这一份产物没落成**。")
+        return 2
     print(f"\n→ {args.json}")
     print(f"→ {args.md}")
 
     s = rep["summary"]
-    print(f"\n{s['checks_ok']}/{s['checks_total']} 项相符；"
-          f"A 轮退出码 {rep['rounds']['A']['reconcile_rc']}；"
+    print(f"\n{s['checks_ok']}/{s['checks_total']} 项相符"
+          + (f"（其中 {s['checks_not_measured']} 项**没测到**）"
+             if s["checks_not_measured"] else "")
+          + f"；A 轮退出码 {rep['rounds']['A']['reconcile_rc']}；"
           f"B 轮退出码 {rep['rounds']['B']['reconcile_rc']}；"
           f"草稿还原={'是' if rep['reverted'] else '否'}")
     for c in rep["checks"]:
         if not c["ok"]:
-            print(f"  ❌ {c['name']}：{c['detail']}")
-    return 0 if s["all_ok"] else 1
+            print(f"  {_STATE_MARKS[c['state']]} {c['name']}：{c['detail']}")
+    return _exit_code(rep)
 
 
 if __name__ == "__main__":

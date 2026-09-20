@@ -13,11 +13,15 @@
 `0.2.5` 的源码里这四行是关键（行号对 `camel-oasis==0.2.5`）：
 
 ```python
- 55   semaphore: int = 128
- 70   self.llm_semaphore = asyncio.Semaphore(semaphore)
-127   async with self.llm_semaphore:            # _perform_llm_action
-193   await asyncio.gather(*tasks)              # 所有 agent 的动作并发执行
+# 逐字引自 oasis.environment.env
+semaphore: int = 128,                                  # 55
+self.llm_semaphore = asyncio.Semaphore(semaphore)      # 70
+async with self.llm_semaphore:                         # 127
+await asyncio.gather(*tasks)                           # 193
 ```
+
+（127 行是 `_perform_llm_action` 里那句 `async with`；193 行把一轮里所有 agent
+的动作一起发出去。）
 
 （顺带：MiroFish 的驱动脚本把这个并发数设成 **30**，不是模块默认的 128 ——
 这一条是从驱动脚本里读出来的。）
@@ -51,6 +55,14 @@
 
 1 微秒的扰动就能翻掉次序，而两次真实 LLM 调用的耗时差是**毫秒到秒**量级。
 两者差着三到六个数量级 —— **根本没有安全余量可言。**
+
+> **按语（2026-09-19）：这一节给的是量级，不是一个常数。** 「1 微秒」说的是扰动
+> 本身有多细，而**时钟能分辨的最细一格随机器变** —— 本机（Windows 11）是零点几
+> 毫秒，Linux 上实测 100 纳秒。拍宽比扰动粗的时候，那个扰动**落不到盘上**（两次
+> 读钟读到同一个值），要粗过一拍才看得见；拍宽比扰动细的时候（Linux），它当场
+> 就分得开。所以这一节要论证的是**机制**，而机制与平台无关：**两次真实 LLM 调用的
+> 耗时差是毫秒到秒量级，粗过任何常见时钟的一拍**，于是乱序必然发生 ——
+> 「没有安全余量」是这个意思。具体一拍有多宽，请在你自己的机器上量。
 
 ## 4. 为什么不能靠「排个序」修掉
 

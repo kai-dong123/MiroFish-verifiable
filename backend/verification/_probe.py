@@ -65,6 +65,11 @@ def pieces():
               " —— **这不是「通过」，是没测到**。")
         return None
 
+    # 分词器**也得在这儿一并逼出来**，理由见 `tokenizer_or_none`：它是懒加载的，
+    # 于是躲得过上面那个 `except`，而漏出去的样子是「缺读数被报成否决」。
+    if tokenizer_or_none() is None:
+        return None
+
     return SimpleNamespace(
         ChatAgent=ChatAgent,
         ChatHistoryMemory=ChatHistoryMemory,
@@ -76,6 +81,36 @@ def pieces():
         BaseMessage=BaseMessage,
         FunctionCallingMessage=FunctionCallingMessage,
     )
+
+
+def tokenizer_or_none():
+    """把分词器**逼出来**（首次使用要下一份静态编码表）；取不到返回 `None`。
+
+    **为什么它需要一个专门的函数。** 分词器是**懒加载**的：camel 的
+    `OpenAITokenCounter` 在 `encode()` 那一刻才去取编码表，而那份表首次使用要从
+    网上下一次（约 3.6 MB，落在临时目录里）。所以它躲得过 `pieces()` 里那个
+    `except` —— 而它取不到时的样子是**抛穿整个脚本**：调用方拿到退出码 `1`，
+    按装置那张表，「1」就是「没达到预期」。于是装置会去**断言上游那两个缺陷
+    还在**，而实际上一个读数都没取到。
+
+    **缺读数被报成否决**，恰恰是本装置立身要反对的那件事（对别人如此，对自己
+    更得如此）。所以它必须和「camel 取不到」一样，在同一个地方被拦成「没测到」。
+
+    这里**故意先 `encode` 一次**，把那次下载从「第一次真正使用的地方」提前到
+    `try` 里面来 —— 拦得住的前提是它发生在这个函数里。
+    """
+    try:
+        from camel.types import UnifiedModelType
+        from camel.utils import OpenAITokenCounter
+
+        OpenAITokenCounter(UnifiedModelType("gpt-4o-mini")).encode("x")
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ○ 分词器取不到（{exc.__class__.__name__}: {exc}）"
+              " —— **这不是「通过」，是没测到**。")
+        print("    它首次使用要下一份几 MB 的静态编码表：没网、或者临时缓存"
+              "被清过（默认就落在临时目录）时就会取不到。")
+        return None
+    return True
 
 
 def bare_agent(token_limit: int):
@@ -115,11 +150,16 @@ def raw_memory_tokens(agent, creator) -> int:
     )
 
 
-def residual_budget(agent, creator) -> int:
+def residual_budget(agent, creator) -> int | None:
     """**截断之后**上下文还剩多少额度 —— 就是 camel 884 行拿去做判断的那个数。
 
     这个数是理解切片缺陷的关键：截断把上下文填到贴着上限，所以残余额度按构造
     远小于待写的消息。把**实测值**打出来，读者不必相信我们的推测。
+
+    量不到时返回 `None`，**不返回 `-1`**：`token_limit - ctx_tokens` 真的能为负
+    （上下文被灌过上限正是那个缺陷本身），所以 `-1` 这个哨兵值和一次**合法测量**
+    撞车 —— 读到 `-1` 的人分不出「没量到」和「量到了，是 −1」。
+    本装置别处「缺读数记 `None`、不记 `""`」是同一条规矩。
     """
     import warnings as _w
 
@@ -128,7 +168,7 @@ def residual_budget(agent, creator) -> int:
             _w.simplefilter("ignore")
             _, ctx_tokens = agent.memory.get_context()
     except Exception:  # noqa: BLE001
-        return -1
+        return None
     return creator.token_limit - ctx_tokens
 
 
@@ -490,3 +530,51 @@ def exit_with(verdict: bool | None) -> None:
     if verdict is False:
         raise SystemExit(1)
     raise SystemExit(2)
+
+
+# --------------------------------------------------------------------------
+# 6. 落点：**写不写得出来，要在动手之前问**
+# --------------------------------------------------------------------------
+
+def out_path_problem(path) -> str | None:
+    """这个落点写得了吗？写得了返回 `None`，写不了返回一句人话。
+
+    **为什么一定要在动手之前问**：三个入口都是「先把活干完、最后才落盘」。落点
+    不存在时，那一步抛的是 `FileNotFoundError` —— 没人接，进程退 **`1`**，而按本
+    装置自己的表，`1` 是「**没达到预期**」。于是屏幕上写着「上游那两个缺陷还在」，
+    而其实**一条读数都没量到**、报告一个字都没落 —— 又一次「一个坏掉的世界恰好
+    长成了另一个合法值的模样」（这已经是第四次了：`e2e_stub` 的超时、分词器缓存、
+    `kill()` 的返回码，见 README 那条边界）。
+
+    先问一句，结论就变成「一条都没测到」（退 `2`）—— **那才是真话**，而且一行活
+    都不用白干。真去写的那一步**仍然另接一层 `OSError`**：目录在、但文件建不出来
+    （同名目录、占用、只读）也走同一条路，不靠这次探测兜住。
+    """
+    import os
+
+    target = os.path.abspath(str(path))
+    parent = os.path.dirname(target) or os.curdir
+    if not os.path.isdir(parent):
+        return f"落点所在的目录不存在：{parent}"
+    if os.path.isdir(target):
+        return f"落点是个目录，写不进文件：{target}"
+    if not os.access(parent, os.W_OK):
+        return f"落点所在的目录不可写：{parent}"
+    return None
+
+
+def refuse_out_path(*paths) -> int | None:
+    """落点写不了就说明白并返回退出码 `2`；写得了返回 `None`。
+
+    退出码取 `2`（**没测到**）而不是 `1`：落点不通时我们**什么都没量**，说「没达到
+    预期」会指着一个不存在的失败让人去查。也不抛 traceback —— 装置连自己写不出
+    报告这件事都要按三种结果说清楚。
+    """
+    for p in paths:
+        why = out_path_problem(p)
+        if why is not None:
+            print(f"○ 没测到：{why}")
+            print("  这是**落点**的问题，不是读数的问题 —— 一条都没量到，"
+                  "所以退 `2`（没测到），不退回「没达到预期」。")
+            return 2
+    return None

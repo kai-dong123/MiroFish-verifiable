@@ -127,20 +127,22 @@ chunk_body_limit            1
 
 ## 根因
 
-`camel/agents/chat_agent.py` 的 `update_memory`（行号对 `0.2.78`）：
+`camel/agents/chat_agent.py` 的 `update_memory`（方法在 **818** 行起；下面几行的行号对 `0.2.78`）：
 
 ```python
-884  remaining_budget = max(0, token_limit - ctx_tokens)   # ctx_tokens 是**截断后**的
-886  if current_tokens <= remaining_budget:
-887      _write_single_record(message, role, base_ts)
-888      return
-...
-933  base_chunk_size  = max(1, remaining_budget) // 10
-942  sample_prefix    = "[chunk 1/1000 of a long message]\n"
-943  prefix_token_len = len(token_counter.encode(sample_prefix))
-948  chunk_body_limit = max(1, base_chunk_size - prefix_token_len)
-951  num_chunks       = math.ceil(len(all_token_ids) / chunk_body_limit)
+# 逐字引自 camel.agents.chat_agent
+remaining_budget = max(0, token_limit - ctx_tokens)            # 884
+if current_tokens <= remaining_budget:                         # 886
+    _write_single_record(message, role, base_ts)               # 887
+    return                                                     # 888
+base_chunk_size = max(1, remaining_budget) // 10               # 933
+sample_prefix = "[chunk 1/1000 of a long message]\n"           # 942
+prefix_token_len = len(token_counter.encode(sample_prefix))    # 943
+chunk_body_limit = max(1, base_chunk_size - prefix_token_len)  # 948
+num_chunks = math.ceil(len(all_token_ids) / chunk_body_limit)  # 951
 ```
+
+（884 行的 `ctx_tokens` 是**截断后**的；888 与 933 之间略去的部分与本论断无关。）
 
 `ctx_tokens` 来自 `self.memory.get_context()`，而截断干的事就是**把上下文填到贴着上限**
 （上面日志里 `before=6907, after=3867, limit=4000`）。所以走到 933 行时

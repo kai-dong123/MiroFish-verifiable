@@ -233,3 +233,64 @@ def test_tiktoken_is_pinned_even_though_it_arrives_transitively():
     assert stated == actual, (
         f"`tiktoken`：锁的是 **{stated}**，现场装的是 **{actual}** —— "
         "先把切片那一节重核一遍，别直接改这个数字。")
+
+
+#: 《清单》里引的「随包文件」：一个反引号里的 `*.dist-info/...` 路径，
+#: 后面**可以**跟一句「N 字节」（`camel-ai` 那一行就是这么写的）。
+#:
+#: 路径和字节数都是**手抄**的 —— 而手抄的路径**没有任何东西会去读它**，
+#: 所以写错了也不会响：读的人不会去盘上核，机器更不会。
+_BUNDLED_FILE = re.compile(r"`([^`]*dist-info/[^`]*)`"
+                           r"(?:\s*[，,]\s*([\d,]+)\s*字节)?")
+
+
+def _resolve_bundled(rel: str) -> pathlib.Path | None:
+    """把一个 `xxx.dist-info/licenses/LICENSE` 形式的相对路径解到盘上。
+
+    第一段（`xxx.dist-info`）是个**目录名**，它在哪个 `site-packages` 下要看
+    这台机器怎么装的 —— 所以逐个 `sys.path` 去找，找不到返回 `None`
+    （**找不到**正是手抄路径写错时的样子，别拿「可能没装」搪塞过去：
+    这套装置本来就要求那些包装着，见本文件开头那两件事）。
+    """
+    head, *rest = rel.split("/")
+    for base in map(pathlib.Path, sys.path):
+        cand = base / head
+        if cand.is_dir():
+            return cand.joinpath(*rest)
+    return None
+
+
+def test_the_bundled_files_the_list_cites_are_really_on_disk():
+    """《清单》里「实读随包的某某文件」那一栏：**逐条去盘上核一次**。
+
+    这一栏此前是纯手抄的，而手抄的路径有个特点：**写错了不会响。** 没有代码会去
+    读它，读的人也多半不会去 `ls` 一下，于是它就那样躺在材料里 —— 直到有人真的
+    照着它去找那份许可证。实测就抓到一处：目录名写成了 `camel-ai-0.2.78.dist-info`，
+    而盘上那个叫 `camel_ai-0.2.78.dist-info`（**连字符 vs 下划线**：发行名是
+    `camel-ai`，规范化的目录名是 `camel_ai`）。同一个错在 `uv.lock` 里也是下划线写法。
+
+    两样都核：路径**在不在**、引的字节数**对不对得上**。第二种错更隐蔽 ——
+    路径对了、文件对了，数字是上一版的大小。
+    """
+    text = DOC.read_text(encoding="utf-8")
+    cited = _BUNDLED_FILE.findall(text)
+    assert cited, (
+        "《清单》里一条「随包文件」的引用都抠不出来了 —— 改写法就一起改正则，"
+        "别把这条检查悄悄变成恒真的")
+
+    wrong = []
+    for rel, size in cited:
+        path = _resolve_bundled(rel)
+        if path is None or not path.is_file():
+            wrong.append(f"  `{rel}`：盘上没有这个文件")
+            continue
+        if not size:
+            continue
+        stated = int(size.replace(",", ""))
+        actual = path.stat().st_size
+        if stated != actual:
+            wrong.append(f"  `{rel}`：《清单》写 {stated:,} 字节，盘上是 {actual:,} 字节")
+    assert not wrong, (
+        "《清单》引的随包文件对不上盘：\n" + "\n".join(wrong) +
+        "\n**别照着《清单》去改盘** —— 路径与大小都按盘上的写，"
+        "核准之后再顺手看一眼 `NOTICE` 那张表里有没有同一个笔误。")
