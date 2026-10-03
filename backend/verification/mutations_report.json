@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-03 14:18:17",
+  "generated_at": "2026-10-03 15:35:14",
   "not_a_pass_rate": true,
   "what_this_is": "逐条改坏被测代码、看测试红不红的对照表。**红色是期望的结果**；这不是通过率、不是覆盖率、不是得分。",
   "environment": {
@@ -25,7 +25,7 @@
     "verification/selfproof.py": "9a5ad33f0f3333bbd02a4e4316540bb3fa1638b4ad98f3bbbb5dc57f820f29e1",
     "verification/tests/test_citations.py": "42d0e03592760e51b5a5692d7185fd90857dc78c80f00717a3e29482a0efff65",
     "verification/tests/test_upstream_baseline.py": "1ed3bb5de9f270a400109e6a7221454880d1fcd1098b353e26bbb801d4d7a2d7",
-    "../docs/开源及第三方资源使用清单.md": "023882b5c848c1dd2452ca6dc6fddb14192c729c51f0f8172684a660fde516f4"
+    "../docs/开源及第三方资源使用清单.md": "988bae36844f12f66b159967d25714104f829a2b03f4312a99e2b1ddf0b808d1"
   },
   "sources_after": {
     "requirements.txt": "fd78362935bc4e7c9117e9b70e6a3a0c3ea8c6a5eeb6af47d7c8aa9e7e2f4bee",
@@ -40,7 +40,7 @@
     "verification/selfproof.py": "9a5ad33f0f3333bbd02a4e4316540bb3fa1638b4ad98f3bbbb5dc57f820f29e1",
     "verification/tests/test_citations.py": "42d0e03592760e51b5a5692d7185fd90857dc78c80f00717a3e29482a0efff65",
     "verification/tests/test_upstream_baseline.py": "1ed3bb5de9f270a400109e6a7221454880d1fcd1098b353e26bbb801d4d7a2d7",
-    "../docs/开源及第三方资源使用清单.md": "023882b5c848c1dd2452ca6dc6fddb14192c729c51f0f8172684a660fde516f4"
+    "../docs/开源及第三方资源使用清单.md": "988bae36844f12f66b159967d25714104f829a2b03f4312a99e2b1ddf0b808d1"
   },
   "source_count": 13,
   "selfcheck_tests": 15,
@@ -55,8 +55,8 @@
     "errors": 0,
     "failed_ids": [],
     "failed_by_file": {},
-    "seconds": 19.94,
-    "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n........................................................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n207 passed, 47 skipped in 17.53s"
+    "seconds": 12.3,
+    "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n........................................................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n207 passed, 47 skipped in 11.08s"
   },
   "mutations": [
     {
@@ -86,8 +86,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 21.11,
-      "raw_tail": "..........s.........sssssss...sssss..........F.......................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 198 passed, 55 skipped in 18.68s",
+      "seconds": 11.87,
+      "raw_tail": "..........s.........sssssss...sssss..........F.......................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n1 failed, 198 passed, 55 skipped in 10.69s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -131,8 +131,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 10
       },
-      "seconds": 20.12,
-      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 189 passed, 55 skipped in 17.99s",
+      "seconds": 12.16,
+      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\nFAILED verification/tests/test_camel_guards.py::test_uninstall_restores_original_and_clears_counters\nFAILED verification/tests/test_camel_guards.py::test_whole_write_when_message_fits\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\nFAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n10 failed, 189 passed, 55 skipped in 10.94s",
       "failed_in_target": 10,
       "failed_in_target_raw": 10,
       "baseline_in_target": 0,
@@ -168,8 +168,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 2
       },
-      "seconds": 20.42,
-      "raw_tail": "..........s.........sssssss...sssss.........FF.......................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 197 passed, 55 skipped in 18.00s",
+      "seconds": 12.45,
+      "raw_tail": "..........s.........sssssss...sssss.........FF.......................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal\n2 failed, 197 passed, 55 skipped in 11.22s",
       "failed_in_target": 2,
       "failed_in_target_raw": 2,
       "baseline_in_target": 0,
@@ -204,8 +204,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 17.74,
-      "raw_tail": "..........s.........sssssss...sssss....................F................ [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 198 passed, 55 skipped in 16.44s",
+      "seconds": 13.03,
+      "raw_tail": "..........s.........sssssss...sssss....................F................ [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset\n1 failed, 198 passed, 55 skipped in 11.77s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -243,8 +243,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 4
       },
-      "seconds": 17.24,
-      "raw_tail": "..........s.........sssssss...sssss..............F..FFF................. [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 195 passed, 55 skipped in 15.19s",
+      "seconds": 12.41,
+      "raw_tail": "..........s.........sssssss...sssss..............F..FFF................. [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads\n4 failed, 195 passed, 55 skipped in 11.16s",
       "failed_in_target": 4,
       "failed_in_target_raw": 4,
       "baseline_in_target": 0,
@@ -279,8 +279,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 21.15,
-      "raw_tail": "..........s.........sssssss...sssss...........F......................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 198 passed, 55 skipped in 18.79s",
+      "seconds": 12.3,
+      "raw_tail": "..........s.........sssssss...sssss...........F......................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted\n1 failed, 198 passed, 55 skipped in 11.05s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -315,8 +315,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 21.42,
-      "raw_tail": "..........s.........sssssss...sssss...F................................. [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 198 passed, 55 skipped in 19.14s",
+      "seconds": 12.26,
+      "raw_tail": "..........s.........sssssss...sssss...F................................. [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - ...\n1 failed, 198 passed, 55 skipped in 11.03s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -366,8 +366,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 16
       },
-      "seconds": 20.72,
-      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 183 passed, 55 skipped in 18.33s",
+      "seconds": 12.4,
+      "raw_tail": "FAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00101-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.00335-0.000302]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0038-0.00034100000000000005]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0001-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00039000000000000005-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001]\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n16 failed, 183 passed, 55 skipped in 11.14s",
       "failed_in_target": 16,
       "failed_in_target_raw": 16,
       "baseline_in_target": 0,
@@ -404,8 +404,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 20.63,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss....F............F.............F..... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 196 passed, 55 skipped in 18.15s",
+      "seconds": 12.33,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss....F............F.............F..... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004]\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed\n3 failed, 196 passed, 55 skipped in 11.08s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -442,8 +442,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 20.56,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss...........................FF...F.... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 196 passed, 55 skipped in 18.05s",
+      "seconds": 12.37,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss...........................FF...F.... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode\n3 failed, 196 passed, 55 skipped in 11.13s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -478,8 +478,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 21.08,
-      "raw_tail": "..........s.........sssssss...sssss...............................F..... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 198 passed, 55 skipped in 18.62s",
+      "seconds": 12.44,
+      "raw_tail": "..........s.........sssssss...sssss...............................F..... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 198 passed, 55 skipped in 11.19s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -514,8 +514,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 19.73,
-      "raw_tail": "..........s.........sssssss...sssss.............................F....... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 198 passed, 55 skipped in 17.44s",
+      "seconds": 12.47,
+      "raw_tail": "..........s.........sssssss...sssss.............................F....... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens]\n1 failed, 198 passed, 55 skipped in 11.22s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -550,8 +550,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 19.79,
-      "raw_tail": "..........s.........sssssss...sssss...............................F..... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 198 passed, 55 skipped in 17.37s",
+      "seconds": 12.51,
+      "raw_tail": "..........s.........sssssss...sssss...............................F..... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200]\n1 failed, 198 passed, 55 skipped in 11.22s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -586,8 +586,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 18.82,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.....s...........F..............ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 197 passed, 56 skipped in 16.53s",
+      "seconds": 12.31,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.....s...........F..............ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable\n1 failed, 197 passed, 56 skipped in 11.07s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -627,8 +627,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 17.81,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n..................F.............ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 198 passed, 55 skipped in 15.69s",
+      "seconds": 12.38,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n..................F.............ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - As...\n1 failed, 198 passed, 55 skipped in 11.15s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -663,8 +663,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 18.04,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.....................F..........ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 198 passed, 55 skipped in 15.78s",
+      "seconds": 12.41,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.....................F..........ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12]\n1 failed, 198 passed, 55 skipped in 11.16s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -699,8 +699,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 18.04,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.......................F........ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_verbatim_blocks_match_upstream_line_for_line[-camel.agents.chat_agent-0]\n1 failed, 198 passed, 55 skipped in 15.69s",
+      "seconds": 12.4,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.......................F........ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_verbatim_blocks_match_upstream_line_for_line[-camel.agents.chat_agent-0]\n1 failed, 198 passed, 55 skipped in 11.17s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -735,8 +735,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 18.99,
-      "raw_tail": ".F........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets\n1 failed, 198 passed, 55 skipped in 16.68s",
+      "seconds": 12.5,
+      "raw_tail": ".F........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets\n1 failed, 198 passed, 55 skipped in 11.23s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -776,8 +776,8 @@
         "verification/tests/test_adjudicate.py": 4,
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 18.75,
-      "raw_tail": "F...F....FsF........sssssss...sssss..................................... [ 28%]\n................................ssssssss.......................F........ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous\nFAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed\nFAILED verification/tests/test_adjudicate.py::test_every_falsifier_result_the_checker_can_emit_is_renderable\nFAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided\n5 failed, 194 passed, 55 skipped in 16.41s",
+      "seconds": 12.67,
+      "raw_tail": "F...F....FsF........sssssss...sssss..................................... [ 28%]\n................................ssssssss.......................F........ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_the_first_real_assertion_is_not_vacuous\nFAILED verification/tests/test_adjudicate.py::test_a_reading_that_is_not_there_is_undecided_not_failed\nFAILED verification/tests/test_adjudicate.py::test_every_falsifier_result_the_checker_can_emit_is_renderable\nFAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided\n5 failed, 194 passed, 55 skipped in 11.44s",
       "failed_in_target": 4,
       "failed_in_target_raw": 4,
       "baseline_in_target": 0,
@@ -813,8 +813,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 2
       },
-      "seconds": 18.93,
-      "raw_tail": "..F....F..s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_claim_that_no_single_change_can_flip_is_not_trusted\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous\n2 failed, 197 passed, 55 skipped in 16.92s",
+      "seconds": 12.21,
+      "raw_tail": "..F....F..s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_claim_that_no_single_change_can_flip_is_not_trusted\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous\n2 failed, 197 passed, 55 skipped in 10.97s",
       "failed_in_target": 2,
       "failed_in_target_raw": 2,
       "baseline_in_target": 0,
@@ -849,8 +849,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 18.52,
-      "raw_tail": "..........s........Fsssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green\n1 failed, 198 passed, 55 skipped in 16.33s",
+      "seconds": 12.2,
+      "raw_tail": "..........s........Fsssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green\n1 failed, 198 passed, 55 skipped in 10.95s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -885,8 +885,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 17.85,
-      "raw_tail": "..........s......F..sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback\n1 failed, 198 passed, 55 skipped in 15.52s",
+      "seconds": 12.38,
+      "raw_tail": "..........s......F..sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback\n1 failed, 198 passed, 55 skipped in 11.13s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -921,8 +921,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 18.26,
-      "raw_tail": "..........s.........sssssss...sssss......................F.............. [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit\n1 failed, 198 passed, 55 skipped in 16.02s",
+      "seconds": 12.38,
+      "raw_tail": "..........s.........sssssss...sssss......................F.............. [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_arranges_to_dump_counters_at_exit\n1 failed, 198 passed, 55 skipped in 11.11s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -957,8 +957,8 @@
       "failed_by_file": {
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 18.47,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss......................F......... [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception\n1 failed, 198 passed, 55 skipped in 16.19s",
+      "seconds": 12.43,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss......................F......... [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception\n1 failed, 198 passed, 55 skipped in 11.20s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -993,8 +993,8 @@
       "failed_by_file": {
         "verification/tests/test_environment_pins.py": 1
       },
-      "seconds": 19.51,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n........................................................................ [ 56%]\nF.sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_environment_pins.py::test_tiktoken_is_pinned_even_though_it_arrives_transitively\n1 failed, 206 passed, 47 skipped in 17.31s",
+      "seconds": 12.8,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n........................................................................ [ 56%]\nF.sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_environment_pins.py::test_tiktoken_is_pinned_even_though_it_arrives_transitively\n1 failed, 206 passed, 47 skipped in 11.55s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1031,8 +1031,8 @@
         "verification/tests/test_docs_claims.py": 1,
         "verification/tests/test_upstream_baseline.py": 1
       },
-      "seconds": 19.6,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.....................................F.................................. [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s............F..                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_docs_claims.py::test_the_diff_numbers_match_a_live_diff\nFAILED verification/tests/test_upstream_baseline.py::test_notice_states_the_same_numbers_as_the_inventory\n2 failed, 205 passed, 47 skipped in 17.39s",
+      "seconds": 12.71,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n.....................................F.................................. [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s............F..                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_docs_claims.py::test_the_diff_numbers_match_a_live_diff\nFAILED verification/tests/test_upstream_baseline.py::test_notice_states_the_same_numbers_as_the_inventory\n2 failed, 205 passed, 47 skipped in 11.46s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1067,8 +1067,8 @@
       "failed_by_file": {
         "verification/tests/test_upstream_baseline.py": 1
       },
-      "seconds": 18.06,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s........ssF..ss                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_upstream_baseline.py::test_the_repo_check_is_not_vacuous\n1 failed, 194 passed, 59 skipped in 15.79s",
+      "seconds": 11.91,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s........ssF..ss                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_upstream_baseline.py::test_the_repo_check_is_not_vacuous\n1 failed, 194 passed, 59 skipped in 10.66s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1103,8 +1103,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 49.15,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s..F............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_run_all_refuses_a_bad_out_place_before_running_the_repros\n1 failed, 198 passed, 55 skipped in 46.78s",
+      "seconds": 33.57,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s..F............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_run_all_refuses_a_bad_out_place_before_running_the_repros\n1 failed, 198 passed, 55 skipped in 32.32s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1139,8 +1139,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 19.32,
-      "raw_tail": "..........s.........sssssss...sssssF.................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute\n1 failed, 198 passed, 55 skipped in 16.87s",
+      "seconds": 12.36,
+      "raw_tail": "..........s.........sssssss...sssssF.................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute\n1 failed, 198 passed, 55 skipped in 11.13s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1175,8 +1175,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 18.72,
-      "raw_tail": "..........s.........sssssss...sssss.F................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_write_that_fails_anyway_is_still_not_measured\n1 failed, 198 passed, 55 skipped in 16.29s",
+      "seconds": 12.32,
+      "raw_tail": "..........s.........sssssss...sssss.F................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_write_that_fails_anyway_is_still_not_measured\n1 failed, 198 passed, 55 skipped in 11.08s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1211,8 +1211,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 19.5,
-      "raw_tail": "..........s.........sssssss...sssssF.................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute\n1 failed, 198 passed, 55 skipped in 17.31s",
+      "seconds": 12.36,
+      "raw_tail": "..........s.........sssssss...sssssF.................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute\n1 failed, 198 passed, 55 skipped in 11.12s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1247,8 +1247,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 20.38,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...F...........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too\n1 failed, 198 passed, 55 skipped in 17.89s",
+      "seconds": 12.42,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...F...........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too\n1 failed, 198 passed, 55 skipped in 11.13s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1283,8 +1283,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 20.93,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...F...........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too\n1 failed, 198 passed, 55 skipped in 18.52s",
+      "seconds": 12.35,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...F...........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too\n1 failed, 198 passed, 55 skipped in 11.10s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1319,8 +1319,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 21.12,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...F...........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too\n1 failed, 198 passed, 55 skipped in 18.41s",
+      "seconds": 12.22,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...F...........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too\n1 failed, 198 passed, 55 skipped in 10.99s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1355,8 +1355,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 20.16,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n.....................Fs...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_an_out_of_contract_exit_code_is_not_measured\n1 failed, 198 passed, 55 skipped in 17.65s",
+      "seconds": 12.22,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n.....................Fs...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_an_out_of_contract_exit_code_is_not_measured\n1 failed, 198 passed, 55 skipped in 10.99s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1391,8 +1391,8 @@
       "failed_by_file": {
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 20.52,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss...........F.................... [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_an_arm_that_never_finished_is_undecided_not_failed\n1 failed, 198 passed, 55 skipped in 18.10s",
+      "seconds": 12.32,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss...........F.................... [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_an_arm_that_never_finished_is_undecided_not_failed\n1 failed, 198 passed, 55 skipped in 11.08s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1427,8 +1427,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 19.65,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s.....F.........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch\n1 failed, 198 passed, 55 skipped in 17.24s",
+      "seconds": 12.45,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s.....F.........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch\n1 failed, 198 passed, 55 skipped in 11.20s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1463,8 +1463,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 20.31,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s.....F.........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch\n1 failed, 198 passed, 55 skipped in 17.59s",
+      "seconds": 12.36,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s.....F.........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch\n1 failed, 198 passed, 55 skipped in 11.12s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1499,8 +1499,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 19.38,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s......F........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_verdict_wording_lives_in_exactly_one_table\n1 failed, 198 passed, 55 skipped in 17.18s",
+      "seconds": 12.38,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s......F........                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_verdict_wording_lives_in_exactly_one_table\n1 failed, 198 passed, 55 skipped in 11.14s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1535,8 +1535,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 19.3,
-      "raw_tail": "..........s.......F.sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused\n1 failed, 198 passed, 55 skipped in 16.90s",
+      "seconds": 12.41,
+      "raw_tail": "..........s.......F.sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused\n1 failed, 198 passed, 55 skipped in 11.18s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1567,8 +1567,8 @@
       "errors": 0,
       "failed_ids": [],
       "failed_by_file": {},
-      "seconds": 19.42,
-      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n199 passed, 55 skipped in 16.95s",
+      "seconds": 12.39,
+      "raw_tail": "..........s.........sssssss...sssss..................................... [ 28%]\n................................ssssssss................................ [ 56%]\n..sssssssssssssssssssssssssssssssss..................................... [ 85%]\n......................s...............                                   [100%]\n199 passed, 55 skipped in 11.16s",
       "failed_in_target": 0,
       "failed_in_target_raw": 0,
       "baseline_in_target": 0,
