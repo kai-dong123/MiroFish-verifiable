@@ -31,8 +31,16 @@ from verification import stub_model as S
 # --------------------------------------------------------------------------
 # 替身模型：形状、无状态、真分词器
 # --------------------------------------------------------------------------
+#
+# 这一节的五条都**要一个真分词器**（`ToolStubModel` 构造时就建
+# `OpenAITokenCounter`，它还得数出「一条消息到底多少 token」）。而那份编码表
+# **首次使用要联网下一次**（约 3.6 MB，落在临时目录里）—— 没网、或者临时缓存
+# 被清过时取不到。取不到就记「没测到」：理由见 `conftest.py` 里
+# `requires_a_real_tokenizer`，以及 `_probe.tokenizer_or_none` 文档里那次翻车
+# （缺读数被折成「没达到预期」）。
 
 
+@pytest.mark.usefixtures("requires_a_real_tokenizer")
 def test_the_stub_answers_with_a_well_formed_tool_call():
     """吐出来的东西必须**逐字**长成 `chat_agent.py` 读的那个样子。
 
@@ -50,6 +58,7 @@ def test_the_stub_answers_with_a_well_formed_tool_call():
     assert json.loads(calls[0].function.arguments) == {"content": "x" * 7}
 
 
+@pytest.mark.usefixtures("requires_a_real_tokenizer")
 def test_the_stub_is_stateless_under_concurrency():
     """**同一个后端实例被所有 agent 共用**（每个 agent 一个 `ModelManager`，
     但包的是同一个后端）。所以行为只能由构造参数决定 —— 谁在里头放一个
@@ -66,6 +75,7 @@ def test_the_stub_is_stateless_under_concurrency():
     assert set(got) == {first}, "并发 24 次返回了不止一种结果 —— 替身有状态"
 
 
+@pytest.mark.usefixtures("requires_a_real_tokenizer")
 def test_the_stub_counts_tokens_with_a_real_tokenizer():
     """`token_counter` **不能**是 camel 那个 `StubTokenCounter`（恒返 10）。
 
@@ -88,6 +98,7 @@ def test_the_stub_counts_tokens_with_a_real_tokenizer():
     assert long > short * 5, "越长反而没越多 —— 计数器和内容无关"
 
 
+@pytest.mark.usefixtures("requires_a_real_tokenizer")
 def test_the_stub_reads_its_knobs_from_the_environment(monkeypatch):
     """端到端那条命令靠环境变量把三档臂喂进来（替身活在子进程里，
     没法用函数参数传）。"""
@@ -101,6 +112,7 @@ def test_the_stub_reads_its_knobs_from_the_environment(monkeypatch):
     assert m._run([]).choices[0].message.content == "y" * 456
 
 
+@pytest.mark.usefixtures("requires_a_real_tokenizer")
 def test_an_unreadable_knob_falls_back_instead_of_crashing(monkeypatch):
     """旋钮读不出数就用默认值 —— **崩在一个环境变量上不该是这一层的行为**。"""
     monkeypatch.setenv(S.ENV_N_CALLS, "两")

@@ -357,11 +357,28 @@ def test_a_missing_tokenizer_makes_the_probe_give_up_instead_of_raising(monkeypa
 
 
 def test_the_tokenizer_probe_is_not_vacuously_none(monkeypatch):
-    """反向对照：分词器**拿得到**时必须返回部件，否则上面那条测试是空话。"""
+    """反向对照：`pieces()` 不是恒真的 `None`，真实探针取得到时也该给出部件。
+
+    **①和②分开写，为的是这一格不再取决于本机的网络。** 原先它开口就断言
+    「本机取得到分词器」—— 于是**没网、或临时缓存被清过**的机器上它是红的，
+    而红的时候报的是「失败」不是「没测到」：与本节开头钉的那次翻车同一个病，
+    只是这回犯在测试自己身上。
+
+    * ① **任何机器上都有条件判**：把探针钉成「拿得到」，`pieces()` 必须真的
+      给出部件 —— 这条才是「上面那条测试不是空话」的正面对照；
+    * ② 是本机的**真实读数**：取不到就记「没测到」（跳过），不记失败
+      —— 与 `e2e_stub` / `run_all` 那一侧同样的口径。
+    """
     from verification import _probe as P
 
-    assert P.tokenizer_or_none() is not None, (
-        "本机连分词器都取不到 —— 这条前置不成立时，上面那条测试证明不了任何东西")
+    monkeypatch.setattr(P, "tokenizer_or_none", lambda: True)
+    assert P.pieces() is not None, (
+        "探针说拿得到，`pieces()` 却是 None —— 那第一条测试是恒真的")
+
+    monkeypatch.undo()
+    if P.tokenizer_or_none() is None:
+        pytest.skip("本机取不到分词器（编码表没下过 / 临时缓存被清过）"
+                    " —— 这一格没测到，不是没达到预期")
     assert P.pieces() is not None, (
         "分词器拿得到，`pieces()` 却是 None —— 那第一条测试是恒真的")
 

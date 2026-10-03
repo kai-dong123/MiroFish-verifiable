@@ -31,3 +31,29 @@ def _no_guard_leaks():
     G.uninstall()
     yield
     G.uninstall()
+
+
+@pytest.fixture
+def requires_a_real_tokenizer():
+    """本机取不到分词器时，把这格记成**没测到**（跳过），不记成失败。
+
+    需要它的测试有一个共同前提：得有一个**真分词器**（`ToolStubModel` 构造时
+    就建 `OpenAITokenCounter`；它还负责数出「一条消息到底多少 token」）。
+    而那份编码表**首次使用要联网下一次**（约 3.6 MB，落在临时目录里）——
+    没网、或者临时缓存被清过时取不到。
+
+    取不到时**没有条件判**，与「判了为假」是两件事。这两件事混起来，正是本装置
+    立身要反对的那一格（`_probe.tokenizer_or_none` 的文档里记着那次翻车：
+    缺读数被折成「没达到预期」）。所以在这一层也要分清 —— 报「没测到」。
+
+    **为什么是运行时部件而不是 `skipif`。** `tokenizer_or_none()` 在取不到时
+    会打一行中文解释；`skipif` 是在**收集期**求值的，那行字会打在任何测试的
+    捕获之外（GBK 控制台上正是会崩的那种场合）。放在夹具里就和别的测试一样，
+    发生在 pytest 的捕获之内。
+    """
+    from verification import _probe as P
+
+    if P.tokenizer_or_none() is None:
+        pytest.skip("本机取不到分词器（编码表没下过 / 临时缓存被清过）"
+                    " —— 这一格没测到，不是没达到预期")
+    yield
