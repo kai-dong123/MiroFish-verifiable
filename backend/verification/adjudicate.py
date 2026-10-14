@@ -156,32 +156,32 @@ def _c(cid, layer, what, check, operands, holds, *, thresholds=(),
 #: 缺了就直接抛、不生成表 —— 这句话不能由检查器代说。
 CLAIM_SET = {
     "what_this_is": (
-        "一套**跨复现的**判据：把三条复现各自的读数摆到一张桌上判。"
-        "每条都自带 falsifier，所以「它有没有鉴别力」是可机检的。"),
+        "一套**跨复现的**判据：把三条复现各自的读数放在同一张表上判定。"
+        "每条判据都自带 falsifier，因此「它是否具备鉴别力」可以由机器核对。"),
     "what_this_is_NOT": (
-        "不是分数，不是通过率，不是质量评价。判不了的那几条**根本没被判定**，"
-        "不算「未通过」—— 所以这张表**不许被聚合成任何比率**。"),
+        "不是分数，不是通过率，不是质量评价。判不了的条目**并未被判定**，"
+        "不属于「未通过」—— 因此这张表**不得被聚合成任何比率**。"),
     "what_it_does_NOT_prove": (
         "它证明的是「**这套判据对这批读数有鉴别力**」，"
-        "**不是**「装置是对的」。判据是我们写的，读数是我们量的 —— "
-        "这张表能排除的是「判据恒真／被贴界蒙混」，排除不了「两边一起错」。"
-        "**还有一件照实说**：判据是**读到读数之后**才写下来的，不是先验的。"
-        "所以「对这批读数有鉴别力」不等于「对任何别的读数也有」—— 换一批读数，"
-        "这套判据必须重写、重跑自证，不能搬过去当结论用。"
-        "**这里一句条数都不写**：判不了几条、哪几条不采信，都随「端到端那一跑在不在」"
-        "而变，写死的数会变成一句**听着像事实的过期话**。要看数就看 `summary` —— "
+        "**不是**「装置是对的」。判据由我们编写，读数由我们采集 —— "
+        "这张表能排除的是「判据恒真／被贴界蒙混」，排除不了「两边一起出错」。"
+        "另需说明：本套判据是在**读到读数之后**写下的，并非先验设定。"
+        "因此「对这批读数有鉴别力」不等于「对任何别的读数也有」—— 换一批读数，"
+        "这套判据必须重写并重跑自证，不能移作结论使用。"
+        "**此处不写任何条目数**：判不了几条、哪几条不采信，都随「端到端那一跑在不在」"
+        "而变，写死的数字会变成一句**看似事实的过期陈述**。需要看数字时请看 `summary` —— "
         "那两个数（`by_verdict`、`not_trusted`）是**当场数出来的**，不是写在这里的。"
-        "它没被写成一张更好看的表，靠的不是我们自觉，是下面三件事："
-        "**判不了的不计进任何一边**（缺读数就如实判不了）、"
-        "**贴界一票降级**（成立但不结实）、"
-        "**给不出 falsifier 的判据自己判自己恒真**。"),
+        "本表没有把自己写成一张更好看的表，依据的不是作者的自觉，而是以下三条约束："
+        "**判不了的条目不计入任何一边**（缺读数即如实判不了）、"
+        "**贴界一票降级**（成立但不扎实）、"
+        "**给不出 falsifier 的判据判自己恒真**。"),
     "not_solid": (
-        "**通过但不采信**的那些，逐条理由在每行的 `no_trust_because` 里。这里举三类："
-        "① **分母卡在本量的最小值上** —— B1 守卫开那格是 1，而 1 是这个量的最小可能值；"
-        "② **比较基准退化** —— B10 比的是「耗时全相同」这个情形；"
-        "③ **计数在那一支上按构造加不动** —— 端到端里「回落支那档的 "
+        "**通过但不采信**的条目，逐条理由见每行的 `no_trust_because`。此处列出三类："
+        "① **分母卡在本量的最小值上** —— B1 守卫开启那一格是 1，而 1 是该量的最小可能值；"
+        "② **比较基准退化** —— B10 比较的是「耗时全相同」这一情形；"
+        "③ **计数在该支上按构造不增加** —— 端到端里「回落支那档的 "
         "`timestamp_pushed`」恒为 0（计数只加在快路径上）。"
-        "三类都成立，但都**分不出差别**，所以都不足以论证「守卫好」。"),
+        "三类都成立，但都**区分不出差别**，因此都不足以论证「守卫好」。"),
 }
 #: 判据表**必须**自己交代的四件事。缺一件就抛 —— 这句话不能由检查器代说。
 REQUIRED_DECLARATIONS = ("what_this_is", "what_this_is_NOT",
@@ -210,16 +210,16 @@ require_declarations(CLAIM_SET)
 CLAIMS = (
     # ---- 复现一（切片）----------------------------------------------------
     _c("B1", "复现一",
-       "守卫关把一条消息切成几百条记录，守卫开只切一条 —— 至少差两个数量级",
+       "守卫关闭时把一条消息拆成数百条记录，守卫开启时只拆一条 —— 相差至少两个数量级",
        "`guard_off_1.records_added` > `guard_on.records_added` × 100",
        (("guard_off_1", "records_added"), ("guard_on", "records_added")),
        lambda v, t: v[0] > v[1] * t[0],
        thresholds=((r"×\s*([\d.]+)", "倍数下界"),),
        falsifier={("guard_on", "records_added"): 5},
-       why_not_solid="分母卡在本量的最小值上，这一格分不出「更好」"),
+       why_not_solid="分母卡在本量的最小值上，这一格区分不出「更好」"),
 
     _c("B2", "复现一",
-       "守卫关那两遍在同一份前提下逐位相同 —— 这是确定性的复现，不是碰巧",
+       "守卫关闭时的两遍在同一份前提下逐位相同 —— 这是确定性的复现，不是巧合",
        "`guard_off_1.records_added` == `guard_off_2.records_added` 且 "
        "`guard_off_1.tokens_added` == `guard_off_2.tokens_added`",
        (("guard_off_1", "records_added"), ("guard_off_2", "records_added"),
@@ -228,14 +228,14 @@ CLAIMS = (
        falsifier={("guard_off_2", "records_added"): 269}),
 
     _c("B3", "复现一",
-       "原文在守卫关下已经找不回连续片段，在守卫开下完整可寻回",
+       "原文在守卫关闭时已无法寻回连续片段，在守卫开启时完整可寻回",
        "`guard_on.head_intact` == True 且 `guard_off_1.head_intact` == False",
        (("guard_on", "head_intact"), ("guard_off_1", "head_intact")),
        lambda v, t: v[0] is True and v[1] is False,
        falsifier={("guard_off_1", "head_intact"): True}),
 
     _c("B4", "复现一",
-       "切片把这一次写入放大了至少一个数量级",
+       "切片使这一次写入放大至少一个数量级",
        "`guard_off_1.expansion` ≥ 10",
        (("guard_off_1", "expansion"),),
        lambda v, t: v[0] >= t[0],
@@ -244,8 +244,8 @@ CLAIMS = (
 
     # ---- 复现二（同拍）----------------------------------------------------
     _c("B6", "复现二",
-       "违反的分界是**两次落点相差小于 camel 那个 1 微秒偏移**，不是「同一拍」——"
-       "相差半个偏移（跨了拍）照样违反，相差两倍偏移就不违反",
+       "违反的分界是**两次落点相差小于 camel 那个 1 微秒偏移**，而不是「同一拍」——"
+       "相差半个偏移（跨拍）仍然违反，相差两倍偏移则不违反",
        "`guard_off_same.violations` ≥ 1 且 `guard_off_sub_bump.violations` ≥ 1 "
        "且 `guard_off_above_bump.violations` == 0",
        (("guard_off_same", "violations"), ("guard_off_sub_bump", "violations"),
@@ -255,7 +255,7 @@ CLAIMS = (
        falsifier={("guard_off_above_bump", "violations"): 2}),
 
     _c("B7", "复现二",
-       "守卫开着时**同样是同拍**（碰撞还在），但违反为零 —— 破坏不了了",
+       "守卫开启时**同样是同拍**（碰撞仍在），但违反为零 —— 已无法造成破坏",
        "`guard_on_same.violations` == 0 且 `guard_on_same.gap_ns` == 0",
        (("guard_on_same", "violations"), ("guard_on_same", "gap_ns")),
        lambda v, t: v[0] == 0 and v[1] == 0,
@@ -270,7 +270,7 @@ CLAIMS = (
     # 照样打出来，但**不给它否决权**（同第二节那句「物理时钟量出来的东西
     # 不该有否决权」）。
     _c("B9", "复现三",
-       "把 0 号 agent 拖慢 0.1 毫秒，落库次序就变样 —— 而这个次序决定 `post_id`",
+       "把 0 号 agent 拖慢 0.1 毫秒，落库次序即改变 —— 而该次序决定 `post_id`",
        "`probe_1.flipped` == True 且 `probe_1.probe_s` ≤ 0.001 秒",
        (("probe_1", "flipped"), ("probe_1", "probe_s")),
        lambda v, t: v[0] is True and v[1] <= t[0],
@@ -278,17 +278,18 @@ CLAIMS = (
        falsifier={("probe_1", "flipped"): False}),
 
     _c("B10", "复现三",
-       "耗时全相同时，两遍次序逐位相同 —— 这一层是确定的，乱的是喂给它的耗时",
+       "耗时完全相同时，两遍次序逐位相同 —— 这一层本身是确定的，"
+       "不确定的是输入给它的耗时",
        "`orders.deterministic` == True",
        (("orders", "deterministic"),),
        lambda v, t: v[0] is True,
        falsifier={("orders", "deterministic"): False},
-       why_not_solid="比较基准是「耗时全相同」这个退化情形，不是「按提交顺序」"),
+       why_not_solid="比较基准是「耗时全相同」这一退化情形，不是「按提交顺序」"),
 
     # ---- 不可判定 ---------------------------------------------------------
     _c("B5", "复现三",
        "两次真实 LLM 调用之间的耗时差是毫秒到秒量级 —— "
-       "所以「0.1 毫秒就能让次序变样」（B9 那个阈值）**根本没有安全余量**",
+       "因此「0.1 毫秒就能让次序改变」（B9 那个阈值）**根本没有安全余量**",
        "`real_llm_call.gap_s` ≥ 0.001",
        (("real_llm_call", "gap_s"),),
        lambda v, t: v[0] >= t[0],
@@ -320,7 +321,7 @@ CLAIMS = (
     # 平台库。它**不主张「守卫修好了什么」** —— 那是复现一／复现二的活：
     # 那两条量的是「装上前后差多少」，这一层量的是「装上了、并且被走到了」。
     _c("E1", "端到端",
-       "快路径写入被真实流量走到 —— 守卫装上了，而且那支真的在干活",
+       "快路径写入已被真实流量走到 —— 守卫已启用，而且该分支确实在运行",
        "`roomy_e2e.written_whole` > 0",
        (("roomy_e2e", "written_whole"),),
        lambda v, t: v[0] > t[0],
@@ -331,8 +332,8 @@ CLAIMS = (
        to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
 
     _c("E2", "端到端",
-       "超限回落支被真实流量走到 —— 把助手文本加到 20000 字，"
-       "「自己就超上限」那一支才动；不加它一次都不动",
+       "超限回落支已被真实流量走到 —— 把助手文本加到 20000 字后，"
+       "「自身即超出上限」这一分支才开始动作；不增加则始终不动",
        "`bigtext_e2e.still_sliced` > `roomy_e2e.still_sliced`",
        (("bigtext_e2e", "still_sliced"), ("roomy_e2e", "still_sliced")),
        lambda v, t: v[0] > v[1],
@@ -342,8 +343,8 @@ CLAIMS = (
        to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
 
     _c("E3", "端到端",
-       "一次响应里并排两个动作时，写入时间戳真被推开了 —— "
-       "同拍那一路在端到端上也被走到",
+       "一次响应里并排两个动作时，写入时间戳确实被推开了 —— "
+       "同拍这一路径在端到端上也已被走到",
        "`two_e2e.timestamp_pushed` > 0",
        (("two_e2e", "timestamp_pushed"),),
        lambda v, t: v[0] > t[0],
@@ -354,15 +355,15 @@ CLAIMS = (
        to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
 
     _c("E4", "端到端",
-       "同一次响应里的**第二个动作没有被吞掉** —— 它一路走到了平台库"
-       "（两个动作的库里行数是单动作那档的两倍）",
+       "同一次响应里的**第二个动作没有被吞掉** —— 它一路写入了平台库"
+       "（两个动作的库里行数是单动作那一档的两倍）",
        "`two_e2e.db_posts` > `roomy_e2e.db_posts`",
        (("two_e2e", "db_posts"), ("roomy_e2e", "db_posts")),
        lambda v, t: v[0] > v[1],
        falsifier={("two_e2e", "db_posts"): 2},
-       why_not_solid="两档臂的 agent 数相同、每个 agent 恰恰一轮 —— "
-                     "所以这个比较**有分母**，比值本身不额外说明什么；"
-                     "它说的是「第二个动作没被吞」，不是「吞吐更高」",
+       why_not_solid="两档臂的 agent 数相同、每个 agent 恰好一轮 —— "
+                     "因此这个比较**存在分母**，比值本身不额外说明问题；"
+                     "它说明的是「第二个动作没有被吞掉」，而不是「吞吐更高」",
        undecidable="本轮没跑 `python -m verification.e2e_stub` —— "
                    "端到端那份报告不在，这几格读不到",
        to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`"),
@@ -377,10 +378,11 @@ CLAIMS = (
                    "端到端那份报告不在，这几格读不到",
        to_fix="在 backend/ 下跑一次 `python -m verification.e2e_stub`",
        why_not_solid="**这一格按构造恒为 0**：`timestamp_pushed` 只在快路径写入"
-                     "那一支累加，而这一档走的正是回落支 —— 它分不出「有没有碰撞」。"
-                     "这条「通过」因此**不采信**（见 `no_trust_because`）。"
-                     "它留在这里是有用的：它把「我们想主张、但这格撑不住」"
-                     "这件事摆到台面上，而不是把它藏起来。"),
+                     "那一支累加，而这一档走的正是回落支 —— 因此它区分不出"
+                     "「是否发生碰撞」。这条「通过」因此**不采信**"
+                     "（见 `no_trust_because`）。保留它的意义在于：把"
+                     "「我们试图主张、但这一格支撑不住」这一点如实列出，"
+                     "而不是隐藏它。"),
 )
 
 
@@ -616,22 +618,22 @@ def falsifier_report(claims=CLAIMS, cells=None, railed=None, unmeasured=None,
         # 再看它的 falsifier 有没有活干。反过来会把一条已经红的判据说成恒真。
         if base[cid]["verdict"] == UNDECIDED:
             kind, detail = "不可判定", (
-                "缺读数，翻不动的原因是缺读数 —— **不是恒真**；"
-                "该怎么补见 `to_make_decidable`")
+                "缺读数 —— 它翻不动的原因是**缺读数而不是判据恒真**；"
+                "补法见 `to_make_decidable`")
         elif base[cid]["verdict"] == FAIL_:
             kind, detail = "已否决", (
                 "这条判据本来就判「否决」—— "
-                "**已经红了的判据不需要再证明它错得出来**")
+                "**已判为否决的判据，无需再证明它能够被判错**")
         elif not f:
             kind, detail = "恒真", (
                 "这条判据**没有声明 falsifier** —— "
-                "给不出「怎么才能证明它错」，它的通过就不说明什么")
+                "给不出「怎样才能证明它错」，因此它的「通过」不说明任何问题")
         else:
             after = {r["id"]: r for r in
                      evaluate(claims, cells, railed, unmeasured, override=f)}
             if after[cid]["verdict"] != base[cid]["verdict"]:
                 kind, detail = "可翻面", (
-                    f"把 {probe} → {base[cid]['verdict']} 变 "
+                    f"把 {probe} → 由 {base[cid]['verdict']} 变为 "
                     f"{after[cid]['verdict']}")
             else:
                 kind, detail = "恒真", (
@@ -701,7 +703,7 @@ def summarize(rows, fals) -> dict:
         "falsifiable": sum(1 for f in fals if f["kind"] == "可翻面"),
         "vacuous": [f["id"] for f in fals if f["kind"] == "恒真"],
         "not_a_rate": True,
-        "note": "判不了的既不算通过也不算否决，所以这里没有分母。",
+        "note": "判不了的条目既不计入通过、也不计入否决，因此这里没有分母。",
     }
 
 
@@ -714,18 +716,18 @@ def _show(v) -> str:
 
 
 def render_markdown(rep: dict) -> str:
-    L = ["# 裁决留痕（自动生成，别手改）", "",
+    L = ["# 裁决留痕（自动生成，请勿手改）", "",
          f"> 生成时间 **{rep['generated_at']}** · Python {rep['environment']['python']} · "
          f"`cd backend && python -m verification.adjudicate`（{rep['seconds']}s）", "",
          f"> 判的是 **`verification_report.json`** 里那一次运行的读数"
          f"（那份报告生成于 {rep['report']['generated_at']}，"
          f"读数指纹 `{rep['report']['readings_sha256'][:12]}…`）—— **不重跑**。"
-         f"**钉的是读数不是文件**：报告重写一遍、数没变，这份产物就没过期。", "",
+         f"**钉的是读数而不是文件**：报告重写一遍、数没变，这份产物就没有过期。", "",
          "## 这份产物是什么、不是什么", "",
          f"**是**：{rep['what_this_is']}", "",
          f"**不是**：{rep['what_this_is_NOT']}", "",
          f"**它也不证明**：{rep['what_it_does_NOT_prove']}", "",
-         f"**哪几条不结实**：{rep['not_solid']}", "",
+         f"**哪几条不够扎实**：{rep['not_solid']}", "",
          "## 逐条", "",
          "| 判据 | 层 | 结果 | 采信 | 读到的读数 |", "|---|---|---|---|---|"]
     for r in rep["rows"]:
@@ -737,7 +739,7 @@ def render_markdown(rep: dict) -> str:
         vals = "、".join(f"{k}={_show(v)}" for k, v in r["values"].items())
         L.append(f"| `{r['id']}` | {r['layer']} | {verdict} | {trust} | {vals} |")
 
-    L += ["", "## 每条判据到底在说什么", ""]
+    L += ["", "## 各条判据的完整说明", ""]
     for r in rep["rows"]:
         L.append(f"### `{r['id']}` · {r['layer']} —— {r['what']}")
         L.append("")
@@ -750,15 +752,15 @@ def render_markdown(rep: dict) -> str:
             L.append(f"- 不采信的原因：{'、'.join(r['no_trust_because'])}")
             L.append(f"- 具体是哪些格子贴界：{'、'.join(r['tainted_by_railing']) or '（无）'}")
         if r["why_not_solid"]:
-            L.append(f"- 这条本身不结实在哪：{r['why_not_solid']}")
+            L.append(f"- 这条判据不够扎实之处：{r['why_not_solid']}")
         L.append("")
 
-    L += ["## 判据非空泛性（逐条拿单点扰动试）", "",
+    L += ["## 判据的鉴别力（逐条以单点扰动检验）", "",
           "每条判据都声明了一个 `falsifier`：**一处具名的单点读数改动**。"
-          "它必须真的能把这条判据翻面 —— 翻不动的就是**判据恒真**，"
-          "它判出来的「通过」什么也不说明。"
-          "（本来就判「否决」的那几条不适用 —— 它已经红了。）", "",
-          "| 判据 | 试的结果 | 明细 |", "|---|---|---|"]
+          "它必须真的能把这条判据翻面 —— 翻不动的即为**判据恒真**，"
+          "它判出的「通过」不说明任何问题。"
+          "（本来就判「否决」的条目不适用 —— 它已经判红了。）", "",
+          "| 判据 | 检验结果 | 明细 |", "|---|---|---|"]
     for f in rep["falsifiers"]:
         L.append(f"| `{f['id']}` | {FALSIFIER_MARKS[f['kind']]} | {f['detail']} |")
 
@@ -773,8 +775,8 @@ def render_markdown(rep: dict) -> str:
           "",
           f"> **{s['note']}** 「{s['by_verdict'][PASS_]} 条通过」不是 "
           f"「{s['by_verdict'][PASS_]}/{s['total']} 的通过率」—— "
-          f"判不了的那 {s['by_verdict'][UNDECIDED]} 条**根本没被判定**，"
-          f"不是「没通过」。", ""]
+          f"判不了的那 {s['by_verdict'][UNDECIDED]} 条**并未被判定**，"
+          f"不属于「没通过」。", ""]
     return "\n".join(L)
 
 
@@ -956,12 +958,12 @@ def main(argv=None) -> int:
     bad = [f for f in rep["falsifiers"] if f["kind"] == "恒真"]
     if bad:
         print(f"  × 判据恒真（任何单点扰动都翻不动）：{[f['id'] for f in bad]}")
-    print("\n**这不是分数**：判不了的既不算通过也不算否决，所以没有分母。")
+    print("\n**这不是分数**：判不了的条目既不计入通过、也不计入否决，因此没有分母。")
     # **有判据恒真就不许退出 0。** 那几条「通过」是恒真的，等于这张表里有一格
     # 是白写的 —— 是发现，得让人看一眼。不发 0 是这张表**自己**不愿意被当成绿的。
     if bad:
-        print(f"\n× 有 {len(bad)} 条判据恒真 —— 这套判据里有一部分对这批读数没有"
-              f"鉴别力，不按「表是好的」退出。")
+        print(f"\n× 有 {len(bad)} 条判据恒真 —— 这套判据里有一部分对这批读数"
+              f"不具备鉴别力，因此不按「一切正常」退出。")
         return 1
     return 0
 

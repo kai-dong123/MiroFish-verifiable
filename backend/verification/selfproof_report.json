@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-09-20 23:57:47",
+  "generated_at": "2026-10-13 23:24:26",
   "not_a_pass_rate": true,
-  "what_this_is": "对**真读数**做单点受控扰动，逐条检验这套判据有没有鉴别力。",
-  "what_this_is_NOT": "不是「判据对不对」的证明 —— 它证明的是「一处改动会让它动」，证明不了「判据和读数不会一起错」。真锚在对照臂上。",
+  "what_this_is": "对**真实读数**施加单点受控扰动，逐条检验这套判据是否具备鉴别力。",
+  "what_this_is_NOT": "不是「判据是否正确」的证明 —— 它证明的是「一处改动会使它发生变化」，证明不了「判据与读数不会同时出错」。真正的锚点在对照臂上。",
   "environment": {
     "python": "3.11.9",
-    "platform": "Windows-10-10.0.26200-SP0",
+    "platform": "Windows-10-10.0.26300-SP0",
     "cwd": "backend/"
   },
   "script": {
     "path": "verification/selfproof.py",
-    "sha256": "9a5ad33f0f3333bbd02a4e4316540bb3fa1638b4ad98f3bbbb5dc57f820f29e1"
+    "sha256": "db05e90e376fb32dddde970aea17487e13ba97b84587e4c9a6330a77a07a0e66"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-09-20T23:57:44",
-    "readings_sha256": "112d814450897a23ac0ae4ded6bd723702eebe55f9f7511b1c58b60d1cca24e9"
+    "generated_at": "2026-10-03T16:36:58",
+    "readings_sha256": "2e6896b5d792465b85dd1cc34dbe8e6b5d7d8b0dce09f20f84a68678146b72ed"
   },
   "claims": {
     "count": 15,
@@ -44,7 +44,7 @@
       "verdict": "通过",
       "trusted": false,
       "grid": "通过·不采信",
-      "why": "分母卡在本量的最小值上，这一格分不出「更好」"
+      "why": "分母卡在本量的最小值上，这一格区分不出「更好」"
     },
     {
       "id": "B2",
@@ -93,7 +93,7 @@
       "verdict": "通过",
       "trusted": false,
       "grid": "通过·不采信",
-      "why": "比较基准是「耗时全相同」这个退化情形，不是「按提交顺序」"
+      "why": "比较基准是「耗时全相同」这一退化情形，不是「按提交顺序」"
     },
     {
       "id": "B5",
@@ -135,21 +135,21 @@
       "verdict": "通过",
       "trusted": true,
       "grid": "通过·采信",
-      "why": "两档臂的 agent 数相同、每个 agent 恰恰一轮 —— 所以这个比较**有分母**，比值本身不额外说明什么；它说的是「第二个动作没被吞」，不是「吞吐更高」"
+      "why": "两档臂的 agent 数相同、每个 agent 恰好一轮 —— 因此这个比较**存在分母**，比值本身不额外说明问题；它说明的是「第二个动作没有被吞掉」，而不是「吞吐更高」"
     },
     {
       "id": "E5",
       "verdict": "通过",
       "trusted": false,
       "grid": "通过·不采信",
-      "why": "**这一格按构造恒为 0**：`timestamp_pushed` 只在快路径写入那一支累加，而这一档走的正是回落支 —— 它分不出「有没有碰撞」。这条「通过」因此**不采信**（见 `no_trust_because`）。它留在这里是有用的：它把「我们想主张、但这格撑不住」这件事摆到台面上，而不是把它藏起来。"
+      "why": "**这一格按构造恒为 0**：`timestamp_pushed` 只在快路径写入那一支累加，而这一档走的正是回落支 —— 因此它区分不出「是否发生碰撞」。这条「通过」因此**不采信**（见 `no_trust_because`）。保留它的意义在于：把「我们试图主张、但这一格支撑不住」这一点如实列出，而不是隐藏它。"
     }
   ],
   "cases": [
     {
       "id": "P1",
       "layer": "读数",
-      "why": "把守卫开那格从 1 抬到 5 —— 两个数量级那句话就不成立了，而且这一格**不再贴界**（值不再卡在最小值上）",
+      "why": "把守卫开启那一格从 1 抬到 5 —— 「相差两个数量级」这一说法即不成立，且该格**不再贴界**（数值不再卡在最小值上）",
       "edit": {
         "guard_on.records_added": 5
       },
@@ -184,7 +184,7 @@
     {
       "id": "P2",
       "layer": "读数",
-      "why": "把守卫关那格从 270 压到 1 —— 两边一样了。这一格**没被扰动**，所以「守卫开贴界」这条声明仍然挂着：判成否决，**且不采信**",
+      "why": "把守卫关闭那一格从 270 压到 1 —— 两边相等。被扰动的不是贴界的那一格，因此「守卫开启贴界」这条声明仍然有效：判为否决，**且不采信**",
       "edit": {
         "guard_off_1.records_added": 1
       },
@@ -220,7 +220,7 @@
     {
       "id": "P3",
       "layer": "读数",
-      "why": "把守卫关第 2 遍的 token 数改掉一个 —— 「逐位相同」就不成立了",
+      "why": "把守卫关闭时第 2 遍的 token 数改动一个 —— 「逐位相同」即不成立",
       "edit": {
         "guard_off_2.tokens_added": 5016
       },
@@ -255,7 +255,7 @@
     {
       "id": "P4",
       "layer": "读数",
-      "why": "把守卫关下的原文改成完整可寻回 —— 「被撕碎」是这条判据的全部内容",
+      "why": "把守卫关闭时的原文改成完整可寻回 —— 「被撕碎」就是这条判据的全部内容",
       "edit": {
         "guard_off_1.head_intact": true
       },
@@ -290,7 +290,7 @@
     {
       "id": "P5",
       "layer": "读数",
-      "why": "把膨胀从 18.5 倍压到 1.5 倍 —— 越过 ≥10 那条线",
+      "why": "把膨胀从 18.5 倍压到 1.5 倍 —— 越过 ≥10 这一界线",
       "edit": {
         "guard_off_1.expansion": 1.5
       },
@@ -325,7 +325,7 @@
     {
       "id": "P6",
       "layer": "读数",
-      "why": "让「相差大过那个偏移」那一臂也出现违反 —— 那样「分界是那个偏移」这个因果说法就垮了",
+      "why": "让「相差大于该偏移」那一臂也出现违反 —— 这样「分界是该偏移」这一因果说法即不成立",
       "edit": {
         "guard_off_above_bump.violations": 2
       },
@@ -360,7 +360,7 @@
     {
       "id": "P7",
       "layer": "读数",
-      "why": "让守卫开着时也出现违反 —— 这一条正是「守卫有用」的那一半，它必须会被弄红，否则它是装饰",
+      "why": "让守卫开启时也出现违反 —— 这一条正是「守卫有效」的那一半，它必须能够被判红，否则它形同虚设",
       "edit": {
         "guard_on_same.violations": 1
       },
@@ -395,7 +395,7 @@
     {
       "id": "P8",
       "layer": "读数",
-      "why": "把 0.1 毫秒那一格改成「没变样」—— 灵敏度那句话就不成立了",
+      "why": "把 0.1 毫秒那一格改成「次序未改变」—— 灵敏度那句话即不成立",
       "edit": {
         "probe_1.flipped": false
       },
@@ -430,7 +430,7 @@
     {
       "id": "P9",
       "layer": "读数",
-      "why": "把「耗时全相同时两遍相同」改成 False —— 连「次序是耗时的确定函数」都垮了",
+      "why": "把「耗时全相同时两遍次序相同」改成 False —— 连「次序是耗时的确定函数」这一点也随之不成立",
       "edit": {
         "orders.deterministic": false
       },
@@ -465,7 +465,7 @@
     {
       "id": "P10",
       "layer": "边界",
-      "why": "**把「守卫开那格贴界」这条声明撤掉**（读数一个字不动）——B1 仍然通过，但**变成采信**。这证明那条降级是声明在起作用，不是因为数值凑巧",
+      "why": "**撤掉「守卫开启那一格贴界」这条声明**（读数完全不动）——B1 仍然通过，但**变为采信**。这证明该降级由声明触发，而不是数值上的巧合",
       "edit": {},
       "unrail": [
         "guard_on.records_added"
@@ -500,7 +500,7 @@
     {
       "id": "P11",
       "layer": "边界",
-      "why": "**把守卫开那格改标成「未测量」**（仍然是同一套读数）——B1 立刻变成**不可判定**。同源的两条规则走的是两条路：贴界是「量到了但分不出」，未测量是「根本没量到」",
+      "why": "**把守卫开启那一格改标为「未测量」**（读数不变）——B1 立即变为**不可判定**。同源的两条规则走的是两条路：贴界是「量到了但区分不出」，未测量是「根本没有量到」",
       "edit": {},
       "unrail": [],
       "unmeasured": {
@@ -535,7 +535,7 @@
     {
       "id": "P12",
       "layer": "断言",
-      "why": "**只改判据原文里的阈值**（≥10 → ≥1000），代码一个字不动 ——B4 判成否决。这证明那个阈值是**从判据原文里抠出来的**，不是代码里另抄的一份",
+      "why": "**只改动判据原文里的阈值**（≥10 → ≥1000），代码完全不动 ——B4 判为否决。这证明该阈值是**从判据原文中提取的**，而不是代码里另抄的一份",
       "edit": {},
       "unrail": [],
       "unmeasured": {},
@@ -570,7 +570,7 @@
     {
       "id": "P13",
       "layer": "断言",
-      "why": "**把 B4 声明的 falsifier 抽掉** —— 它照样判「通过」，但检查器应当**自己**把它标成恒真，并按「恒真 → 不采信」这一条规则把它从「通过·采信」降成「通过·不采信」。这一例证明的是：「这条判据没有鉴别力」是**机器**判出来的，而且判出来之后**真的不给它采信** —— 不是只在报告里写一句了事",
+      "why": "**去掉 B4 声明的 falsifier** —— 它仍然判「通过」，但检查器应当**自行**将其标为恒真，并按「恒真 → 不采信」这一条规则把它从「通过·采信」降为「通过·不采信」。这一例所证明的是：「这条判据没有鉴别力」由**机器**判定，而且判定之后**确实不予采信** —— 而不是只在报告里写一句了事",
       "edit": {},
       "unrail": [],
       "unmeasured": {},
@@ -607,7 +607,7 @@
     {
       "id": "P14",
       "layer": "读数",
-      "why": "**把端到端那条关系断言的两边扳平**（回落支那档的 `still_sliced` 改成 0，和基线一样）—— 「加长助手文本才逼出回落支」这句话就不成立了。这一例证明端到端那一路的读数是**真的**在判据里起作用，不是摆在产物里好看的",
+      "why": "**把端到端那条关系型断言的两边拉平**（回落支那一档的 `still_sliced` 改为 0，与基线相同）—— 「加长助手文本才会逼出回落支」这句话即不成立。这一例证明端到端那一路的读数**确实**在判据中起作用，而不是摆在那里作装饰",
       "edit": {
         "bigtext_e2e.still_sliced": 0
       },
@@ -642,7 +642,7 @@
     {
       "id": "P15",
       "layer": "边界",
-      "why": "**把「回落支那格恒为 0」这条贴界声明撤掉**（读数一个字不动）——E5 仍然通过，但**变成采信**。这一例和 P10 是一个意思，只是这次那格长在端到端那一路：**贴界降级是声明在起作用**",
+      "why": "**撤掉「回落支那一格恒为 0」这条贴界声明**（读数完全不动）——E5 仍然通过，但**变为采信**。这一例与 P10 同理，只是该格位于端到端那一路：**贴界降级由声明触发**",
       "edit": {},
       "unrail": [
         "bigtext_e2e.timestamp_pushed"
@@ -680,91 +680,91 @@
       "id": "B1",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_on.records_added 改成 5 → 通过 变 否决"
+      "detail": "把 guard_on.records_added 改成 5 → 由 通过 变为 否决"
     },
     {
       "id": "B2",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_off_2.records_added 改成 269 → 通过 变 否决"
+      "detail": "把 guard_off_2.records_added 改成 269 → 由 通过 变为 否决"
     },
     {
       "id": "B3",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_off_1.head_intact 改成 True → 通过 变 否决"
+      "detail": "把 guard_off_1.head_intact 改成 True → 由 通过 变为 否决"
     },
     {
       "id": "B4",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_off_1.expansion 改成 1.5 → 通过 变 否决"
+      "detail": "把 guard_off_1.expansion 改成 1.5 → 由 通过 变为 否决"
     },
     {
       "id": "B6",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_off_above_bump.violations 改成 2 → 通过 变 否决"
+      "detail": "把 guard_off_above_bump.violations 改成 2 → 由 通过 变为 否决"
     },
     {
       "id": "B7",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 guard_on_same.violations 改成 1 → 通过 变 否决"
+      "detail": "把 guard_on_same.violations 改成 1 → 由 通过 变为 否决"
     },
     {
       "id": "B9",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 probe_1.flipped 改成 False → 通过 变 否决"
+      "detail": "把 probe_1.flipped 改成 False → 由 通过 变为 否决"
     },
     {
       "id": "B10",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 orders.deterministic 改成 False → 通过 变 否决"
+      "detail": "把 orders.deterministic 改成 False → 由 通过 变为 否决"
     },
     {
       "id": "B5",
       "kind": "不可判定",
       "flipped": null,
-      "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+      "detail": "缺读数 —— 它翻不动的原因是**缺读数而不是判据恒真**；补法见 `to_make_decidable`"
     },
     {
       "id": "B8",
       "kind": "不可判定",
       "flipped": null,
-      "detail": "缺读数，翻不动的原因是缺读数 —— **不是恒真**；该怎么补见 `to_make_decidable`"
+      "detail": "缺读数 —— 它翻不动的原因是**缺读数而不是判据恒真**；补法见 `to_make_decidable`"
     },
     {
       "id": "E1",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 roomy_e2e.written_whole 改成 0 → 通过 变 否决"
+      "detail": "把 roomy_e2e.written_whole 改成 0 → 由 通过 变为 否决"
     },
     {
       "id": "E2",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 bigtext_e2e.still_sliced 改成 0 → 通过 变 否决"
+      "detail": "把 bigtext_e2e.still_sliced 改成 0 → 由 通过 变为 否决"
     },
     {
       "id": "E3",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 two_e2e.timestamp_pushed 改成 0 → 通过 变 否决"
+      "detail": "把 two_e2e.timestamp_pushed 改成 0 → 由 通过 变为 否决"
     },
     {
       "id": "E4",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 two_e2e.db_posts 改成 2 → 通过 变 否决"
+      "detail": "把 two_e2e.db_posts 改成 2 → 由 通过 变为 否决"
     },
     {
       "id": "E5",
       "kind": "可翻面",
       "flipped": true,
-      "detail": "把 bigtext_e2e.timestamp_pushed 改成 1 → 通过 变 否决"
+      "detail": "把 bigtext_e2e.timestamp_pushed 改成 1 → 由 通过 变为 否决"
     }
   ],
   "meta": {
@@ -807,5 +807,5 @@
     "all_ok": true
   },
   "problems": [],
-  "seconds": 0.07
+  "seconds": 0.08
 }

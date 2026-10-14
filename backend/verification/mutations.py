@@ -51,6 +51,12 @@ GUARDS = HERE / "camel_guards.py"
 TIMESTAMP = HERE / "repro_02_timestamp.py"
 CITATIONS = HERE / "tests" / "test_citations.py"
 ADJUDICATE = HERE / "adjudicate.py"
+#: 展示层（`viewer.py`）的靶子 —— `W1` 捅的是它。
+#: 这一类坏法**不会崩**：把「不可判定」印成「否决」，页面照样渲得出来、看着更整齐，
+#: 只是把一个**没量到**的东西说成了一个**量到了、不成立**的东西。
+#: 装置盯着别人的那一族缺陷（`e2e_stub` 的超时、分词器缓存、`kill()` 的返回码）
+#: 全是这个形状 —— 所以它自己身上也得有一个人去捅。
+VIEWER = HERE / "viewer.py"
 #: 另外两道入口，加上汇总驱动 —— 「落点」那一组要证明**三道门都不是摆设**。
 #: 它们共用 `_probe.refuse_out_path`，所以只验一处的话，谁把另外两道删掉，
 #: 账上照样一片安静。
@@ -82,6 +88,7 @@ T_ADJ_E2E = "verification/tests/test_e2e_stub.py"
 T_ENV_PINS = "verification/tests/test_environment_pins.py"
 T_DOC_CLAIMS = "verification/tests/test_docs_claims.py"
 T_BASELINE = "verification/tests/test_upstream_baseline.py"
+T_VIEWER = "verification/tests/test_viewer.py"
 
 #: 下半那条变异要植回去的**错引写法**。
 #:
@@ -156,6 +163,7 @@ G_DIFF_TABLE = "清单·改动表"
 G_BASELINE = "上游基线"
 G_OUT = "落点"
 G_UNMEASURED = "没测到·不许折"
+G_VIEW = "展示层"
 G_CONTROL = "阴性对照"
 
 CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
@@ -487,6 +495,89 @@ MUTATIONS = (
                 "\n    why = _report_shape_problem(rep)\n",
                 "\n    why = None  # 变异：形状不查了\n")],
        expect=1, claim="没测到：读得成 JSON 不等于结构对 → 当场红"),
+
+    # ---- 展示层：一处 ------------------------------------------------------
+    # 这一组只有一条，且它捅的**不是判据**，是「判据怎么被印出来」。
+    # 装置的立论是「三态不许互相折合」，而这个坏法正是**在最后一米**把三态折成两态：
+    # 算得好好的，只在渲染时不声不响地少一种。它不抛异常、不留痕迹，
+    # 页面上那个「否决」看着和其他「否决」一模一样 —— 又一个
+    # 「坏掉的世界恰好长成了另一个合法值的模样」。
+    _M("W1", G_VIEW, "展示层把「不可判定」印成「否决」（三态在最后一米被折成两态）",
+       T_VIEWER, [(VIEWER,
+                   '    vshow = r["verdict"]\n',
+                   '    vshow = (A.FAIL_ if r["verdict"] == A.UNDECIDED\n'
+                   '             else r["verdict"])  # 变异：没测到说成不成立\n')],
+       expect=2, claim="展示层：把「不可判定」印成「否决」→ 当场红 2 条"),
+
+    # ---- 展示层：形状不对就**不许走到渲染那一步** ---------------------------
+    # 这一组补的是一处**真的踩到过**的边界：闸（`check_shape`）只核到它当时想到的
+    # 那几格，而渲染器**下标读**的格子更多（`what` / `check` / `kind` / `moved`）。
+    # 缺了那一格，异常冒到顶就是退出码 `1` —— 而 `1` 在本模块里的定义是
+    # 「渲染完成了，而且展示层**发现了一件事**」：**「没测到」被报成了「发现了一处
+    # 折合」**。这是本装置盯着别人的那一族的**同一个形状**（`X6` 也是只接住一半的
+    # 形状错），只不过这次长在装置自己的展示层上。
+    #
+    # 每一条摘掉闸上的一格，摘完必须**当场红** —— 证明那一格真的在拦人，而不是一行
+    # 装饰。⚠️ 红的都是**闸那一条**（`pytest.raises(ViewerError)`），不是退出码：
+    # 闸外面还有一张网兜底，摘掉一格之后进程照样退 `2`，退出码那一问**分不出**
+    # 「闸拦住了」和「没拦住、网接住了」—— 这正是那几条测试要两问的原因。
+    _M("W2", G_VIEW, "展示层的闸不认 falsifier 的 `kind`（表外的种类到渲染那一刻就是 `KeyError`）",
+       T_VIEWER, [(VIEWER,
+                   '        _require("kind" in f, f"falsifier {f[\'id\']!r} 里没有 `kind`")\n',
+                   '        # 变异：`kind` 那两道核对摘掉\n'),
+                  (VIEWER,
+                   '        _require(f["kind"] in A.FALSIFIER_MARKS,\n'
+                   '                 f"falsifier {f[\'id\']!r} 的种类 {f[\'kind\']!r} 不在 "\n'
+                   '                 "`adjudicate.FALSIFIER_MARKS` 那张表里")\n',
+                   '')],
+       expect=1, claim="展示层：闸不核 falsifier 的种类 → 当场红 1 条"),
+
+    _M("W3", G_VIEW, "展示层的闸不核用例的 `moved`（落不到任何一格的用例会从页面上静默消失）",
+       T_VIEWER, [(VIEWER,
+                   '        _require(c["moved"], f"用例 {c[\'id\']} 的 `moved` 是空的 —— '
+                   '它会从页面上静默消失")\n'
+                   '        for v in c["moved"].values():\n'
+                   '            _require(v in S.GRIDS,\n'
+                   '                     f"用例 {c[\'id\']} 说它落到了 {v!r}，而五格是 '
+                   '{list(S.GRIDS)}")\n',
+                   "        # 变异：这一例落没落在某一格上，不核了\n")],
+       expect=1, claim="展示层：闸不核用例落在哪一格 → 静默少一块却退 0，当场红 1 条"),
+
+    _M("W4", G_VIEW, "展示层的闸退回原样（判据行的 `what` / `check` 又不核了）",
+       T_VIEWER, [(VIEWER,
+                   '        for key in ("id", "layer", "verdict", "trusted", "values", '
+                   '"what", "check"):\n',
+                   '        for key in ("id", "layer", "verdict", "trusted", "values"):\n')],
+       expect=1, claim="展示层：闸不核渲染器要读的那两格 → 当场红 1 条"),
+
+    _M("W5", G_VIEW, "展示层把渲染中途撞上的形状错又甩成 traceback（退 `1` —— 看着像「发现了一处折合」）",
+       T_VIEWER, [(VIEWER,
+                   '    except (KeyError, TypeError, IndexError, AttributeError) as e:\n'
+                   '        # 上面那道闸兜不住的一半：产物长成了**还没想到的**那种样子，渲染当场撞上。\n'
+                   '        # 这不许按「发现了一处折合」退 `1` 走出去 —— 页面上**一个字都没有**，\n'
+                   '        # 一句「展示层发现了 1 处折合」会是凭空报出来的发现（口径同 `run_all`：\n'
+                   '        # 「没测到」既不是通过，也不是失败）。闸已经按「读什么就核什么」补齐，\n'
+                   '        # 这一条是给闸外面剩下的那点余地留的。\n'
+                   '        print(f"\\n○ 没测到：渲染到一半撞上 {e.__class__.__name__}: {e} —— "\n'
+                   '              "页面上一个字都没有，既不是「通过」，也不是「发现了一处折合」。")\n'
+                   '        return 2\n',
+                   '')],
+       expect=1, claim="展示层：闸外那点余地上的形状错不许折成「发现」→ 当场红 1 条"),
+
+    _M("W6", G_VIEW, "展示层只说一个数（一例落两格时，页面上不再交代条目数与例数是两个数）",
+       T_VIEWER, [(VIEWER,
+                   '    if shown != total:\n'
+                   '        multi = "、".join(c["id"] for c in sp["cases"]\n'
+                   '                          if len([g for g in S.GRIDS '
+                   'if g in c["moved"].values()]) > 1)\n'
+                   '        saying += (f"；下面<strong>按格陈列</strong>共 '
+                   '<strong>{shown}</strong> 条 —— "\n'
+                   '                   f"比上面多出的 {shown - total} 条，是'
+                   '<strong>一例同时落了两格</strong>"\n'
+                   '                   f"（{_esc(multi)} 同时动了两个断言）。"\n'
+                   '                   "<strong>条目数与例数是两个数，不是一回事</strong>")\n',
+                   '    # 变异：只报例数，条目数不提了\n')],
+       expect=1, claim="展示层：一例落两格却不交代 → 一个数被当成另一个数，当场红 1 条"),
 
     # ---- 阴性对照 ----------------------------------------------------------
     _M("K0", G_CONTROL, "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",

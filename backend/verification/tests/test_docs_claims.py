@@ -98,8 +98,15 @@ def _strip_or_die(text: str, pattern: str, why: str) -> re.Match:
 
 
 def test_every_per_file_line_count_matches_wc_l(doc_text):
-    """每个 `（N 行）` 都是真的数出来的那个 N。"""
-    hits = re.findall(r"`([^`]+\.py)`（(\d+) 行）", doc_text)
+    """每个 `（N 行）` 都是真的数出来的那个 N。
+
+    数字**带千位分隔**的那几行也要查：原先这里的正则写的是 `(\\d+)`，于是
+    `（1,150 行）` 这种写法**匹配不上** —— 那一格行数从写下的那天起就没有任何东西
+    核它（当时没人发现，直到同一张表里另一个数真的漂了，回头一看才发现这一格
+    一直是漏的）。**一号格式的漏网之鱼，比一个错数字更坏**：错数字会显得可疑，
+    漏网的那一格看上去和别的格子一模一样。
+    """
+    hits = re.findall(r"`([^`]+\.py)`（([\d,]+) 行）", doc_text)
     assert len(hits) >= 12, (
         f"只找到 {len(hits)} 个带行数的文件 —— 这张表要么被改写了、要么被拆散了。"
         "这一条检查的就是这些行数，找不到就等于没查。")
@@ -108,7 +115,7 @@ def test_every_per_file_line_count_matches_wc_l(doc_text):
         p = _resolve(name)
         assert p.is_file(), f"清单点了名，文件却不在：{p}"
         actual = _lines(p)
-        if actual != int(stated):
+        if actual != _num(stated):
             wrong.append(f"  {name}：清单写 {stated} 行，现场 {actual} 行")
     assert not wrong, (
         "清单里的行数对不上了：\n" + "\n".join(wrong) +
