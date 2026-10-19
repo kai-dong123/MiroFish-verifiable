@@ -240,76 +240,157 @@ def findings(adj: dict, sp: dict) -> list[str]:
 #: 结果 → 字形。**键是 `adjudicate` 的三个常量**，改一个名字这里就当场 KeyError。
 _GLYPH = {A.PASS_: "√", A.FAIL_: "×", A.UNDECIDED: "○"}
 
-_CSS = """
-:root{--fg:#17191d;--dim:#666c76;--bg:#f4f4f0;--card:#fff;--line:#e3e3dc;--line2:#cbcbc1;
-  --ink:#12141a;--pass:#1f6b3a;--fail:#a12a2a;--undec:#6a707a;--rail:#8a5a00}
+_CSS = """:root{
+  --paper:#f2efe7;--card:#fffdf8;--card2:#faf7ef;
+  --ink:#10151d;--ink2:#1a2230;--fg:#1b2028;--dim:#626a76;--mute:#8b919b;
+  --line:#ded8c9;--line2:#c9c1b0;
+  --pass:#1f6b3a;--fail:#a12a2a;--undec:#6a707a;--rail:#8a5a00;
+  --dark:#0d1320;--dark2:#151d2b;--darkline:#2a3445;--darkdim:#9ba7b8;
+  --shadow:0 1px 2px rgba(16,21,29,.05),0 10px 28px rgba(16,21,29,.06);
+  --shadow-lg:0 24px 60px rgba(13,19,32,.18);
+}
 *{box-sizing:border-box}
-body{margin:0 auto;padding:2.3rem 1.6rem 5rem;max-width:76rem;
-  font:15.5px/1.68 -apple-system,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
-  color:var(--fg);background:var(--bg)}
-h1{font-size:1.95rem;line-height:1.3;margin:0 0 .5rem;letter-spacing:-.015em}
-h2{font-size:1.08rem;margin:2.9rem 0 .9rem;padding-bottom:.34rem;border-bottom:2px solid var(--ink)}
-h3{font-size:.88rem;font-weight:600;margin:1.1rem 0 .2rem;color:var(--fg)}
-p{margin:.45rem 0}
-code{background:#ecebe4;border:1px solid #e0dfd6;border-radius:4px;padding:.02em .32em;
-  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.88em;word-break:break-word}
+html{scroll-behavior:smooth}
+body{
+  margin:0 auto;padding:0 2rem 6rem;max-width:82rem;counter-reset:sec;
+  font:16px/1.72 -apple-system,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--fg);background:var(--paper);
+  font-feature-settings:"kern","liga","tnum";
+  line-break:strict;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;left:0;right:0;top:0;height:6px;z-index:99;
+  background:linear-gradient(90deg,var(--pass),var(--rail),var(--fail));
+}
+::selection{background:#dbe7d8;color:var(--ink)}
+h1{font-size:clamp(1.95rem,3.4vw,3rem);line-height:1.16;margin:.55rem 0 .85rem;
+  letter-spacing:-.028em;font-weight:750;color:var(--ink)}
+h2{counter-increment:sec;display:flex;align-items:baseline;gap:.8rem;
+  font-size:1.24rem;line-height:1.4;margin:3.6rem 0 1.1rem;padding-bottom:.6rem;
+  border-bottom:1px solid var(--line2);letter-spacing:-.012em;color:var(--ink)}
+h2::before{content:"0" counter(sec);font:600 .76rem/1 ui-monospace,SFMono-Regular,Consolas,monospace;
+  color:var(--rail);letter-spacing:.1em}
+h3{font-size:.9rem;font-weight:650;margin:1.15rem 0 .2rem;color:var(--fg)}
+p{margin:.5rem 0}
+code{background:#efeadc;border:1px solid #e1dac9;border-radius:5px;padding:.02em .34em;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.87em;word-break:break-word}
 strong{font-weight:650}
 .dim{color:var(--dim)}
-.chip{font-size:.78rem;border:1px solid var(--line2);border-radius:999px;padding:0 .4rem;
-  color:var(--dim);white-space:nowrap}
+.chip{display:inline-block;font-size:.76rem;border:1px solid var(--line2);border-radius:999px;
+  padding:.04rem .48rem;color:var(--dim);white-space:nowrap;vertical-align:.08em}
 
-/* --- 首屏之上：这一页在讲什么（上游是谁、装置解决了什么） --- */
-.anchor{background:var(--card);border:1px solid var(--line);border-radius:14px;
-  padding:1.4rem 1.7rem 1.2rem;margin:0 0 1.1rem}
-.anchor p{margin:.5rem 0}
-.anchor .kicker{font-size:.8rem;letter-spacing:.08em;color:var(--dim);margin:0}
-.issues{display:grid;grid-template-columns:1fr;gap:.55rem;margin:.85rem 0 .5rem}
-.issue{border:1px solid var(--line);border-radius:10px;padding:.6rem .85rem;background:var(--bg)}
-.issue p{margin:.22rem 0}
-.issue .bad{font-weight:600}
-.issue .fix{margin-top:.42rem;padding:.32rem .6rem;background:var(--card);
-  border-left:3px solid var(--ink);border-radius:0 6px 6px 0}
-.issue .lay{font-size:.83rem;color:var(--dim);margin-top:.34rem}
-.issue .src{font-size:.83rem;color:var(--dim);margin-top:.2rem;border-top:1px dashed var(--line);padding-top:.28rem}
+/* --- 首屏之上：深色封面，把上游是谁、装置做了什么一次讲清 --- */
+.anchor{
+  position:relative;overflow:hidden;color:#eef2f8;
+  background:radial-gradient(62rem 42rem at right top,#1c2b3e,var(--dark));
+  border:1px solid #263043;border-radius:22px;
+  padding:2.4rem 2.6rem 2.1rem;margin:2.4rem 0 1.5rem;box-shadow:var(--shadow-lg);
+}
+.anchor::after{
+  content:"";position:absolute;right:-7rem;top:-7rem;width:24rem;height:24rem;border-radius:999px;
+  background:radial-gradient(circle at center,rgba(63,185,80,.15),rgba(63,185,80,0));
+  pointer-events:none;
+}
+.anchor p{color:#d7e0ec;margin:.6rem 0;max-width:66rem}
+.anchor strong{color:#fff}
+.anchor .kicker{
+  display:inline-flex;align-items:center;gap:.55rem;margin:0 0 1rem;
+  font:600 .74rem/1 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.16em;text-transform:uppercase;color:#a5b6ce;
+  background:#182130;border:1px solid #2b374b;border-radius:999px;padding:.46rem .78rem;
+}
+.anchor .kicker::before{content:"";width:.5rem;height:.5rem;border-radius:999px;
+  background:#3fb950;box-shadow:0 0 0 .22rem rgba(63,185,80,.16)}
+.anchor>.dim{color:var(--darkdim)}
 
-/* --- 首屏：先给结论 --- */
-.hero{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.5rem 1.7rem 1.15rem}
-.kicker{font-size:.8rem;letter-spacing:.08em;color:var(--dim);margin:0}
-.lede{font-size:1.06rem;line-height:1.6;margin:.6rem 0 0;max-width:58rem}
-.hint{font-size:.95rem;margin:.75rem 0 0;background:#fbf7ec;border:1px solid #e8dfc6;
-  border-radius:9px;padding:.5rem .75rem}
-.src{font-size:.83rem;color:var(--dim);margin:1rem 0 0;padding-top:.7rem;
+/* --- 三个问题：三列并排，缺陷与处置成对出现 --- */
+.issues{display:grid;grid-template-columns:repeat(3,1fr);gap:.95rem;margin:1.5rem 0 1.25rem;
+  position:relative;z-index:1}
+.issue{position:relative;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#182231,#131a27);
+  border:1px solid #2b3648;border-radius:15px;padding:1.15rem 1.1rem 1rem;
+  box-shadow:0 10px 24px rgba(5,10,18,.18)}
+.issue::before{content:"";position:absolute;left:1.1rem;right:1.1rem;top:0;height:3px;
+  border-radius:0 0 3px 3px;background:var(--pass)}
+.issue:nth-child(3)::before{background:var(--rail)}
+.issue p{margin:.3rem 0}
+.issue .bad{font-weight:600;color:#f2f6fc;font-size:.97rem;line-height:1.58;margin:.15rem 0 .5rem}
+.issue .bad .tag{display:inline-block;margin-right:.45rem;padding:.24rem .5rem;
+  font:600 .71rem/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.1em;
+  color:#a7b8ce;background:#232e40;border:1px solid #354258;border-radius:999px;
+  vertical-align:.12em;white-space:nowrap}
+.issue .bad strong{font-weight:700;color:#fff}
+.issue .fix{margin:.25rem 0 .55rem;padding:.55rem .72rem;font-size:.92rem;line-height:1.62;
+  color:#dce4ee;background:#0e1520;border-left:3px solid var(--pass);border-radius:0 8px 8px 0}
+.issue:nth-child(3) .fix{border-left-color:var(--rail)}
+.issue .lay,.issue .src{font-size:.79rem;line-height:1.58;color:#93a2b6}
+.issue .lay{margin-top:.2rem}
+.issue .src{margin-top:auto;padding-top:.5rem;border-top:1px dashed #2d384a}
+.issue code{background:#232d3d;border-color:#364358;color:#dfe7f2}
+.issue .chip{color:#9fb0c4;border-color:#3a475c;background:#1a2331}
+
+/* --- 结论卡：浅色、大字，和上面的深色封面形成一次换气 --- */
+.hero{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);
+  border-radius:22px;padding:2.2rem 2.6rem 1.8rem;box-shadow:var(--shadow)}
+.hero::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.36rem;
+  background:linear-gradient(180deg,var(--pass),var(--rail),var(--fail))}
+.kicker{font-size:.78rem;letter-spacing:.12em;color:var(--dim);margin:0}
+.hero .kicker{display:inline-block;padding:.34rem .7rem;border:1px solid var(--line2);
+  border-radius:999px;background:var(--card2);letter-spacing:.08em}
+.hero h1{margin-top:.85rem}
+.lede{font-size:1.09rem;line-height:1.7;margin:.7rem 0 0;max-width:62rem;color:#2a3038}
+.hint{font-size:.95rem;line-height:1.66;margin:1.05rem 0 0;background:#fbf4e1;
+  border:1px solid #e8d8ae;border-left:4px solid var(--rail);border-radius:10px;
+  padding:.78rem 1rem;color:#3b3526}
+.src{font-size:.82rem;line-height:1.65;color:var(--dim);margin:1.15rem 0 0;padding-top:.8rem;
   border-top:1px dashed var(--line2)}
 
-/* --- 三张等重的卡：同一个模板，只有字形／名字／计数／那句话不同 --- */
-.states{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin:1.1rem 0 .9rem}
-.state{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--ink);
-  border-radius:12px;padding:1rem 1rem .95rem;text-align:center}
-.states .state:nth-child(1){border-top-color:var(--pass)}
-.states .state:nth-child(2){border-top-color:var(--fail)}
-.states .state:nth-child(3){border-top-color:var(--undec)}
-.state .g{font-size:1.05rem;color:var(--dim);margin-right:.25rem}
-.state .t{font-size:1.05rem;font-weight:600}
-.state .n{display:block;font-size:2.6rem;line-height:1.05;font-weight:700;
-  font-variant-numeric:tabular-nums;margin:.1rem 0 .25rem}
+/* --- 三张等重的卡：同一模板，只有字形／名字／计数／那句话不同 --- */
+.states{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.25rem 0 1rem}
+.state{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:1.35rem 1rem 1.15rem;text-align:center;box-shadow:var(--shadow)}
+.state::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--ink)}
+.states .state:nth-child(1)::before{background:var(--pass)}
+.states .state:nth-child(2)::before{background:var(--fail)}
+.states .state:nth-child(3)::before{background:var(--undec)}
+.state .g{display:inline-flex;align-items:center;justify-content:center;width:2.15rem;height:2.15rem;
+  border-radius:999px;font-size:1.05rem;font-weight:700;margin-right:.35rem;vertical-align:middle;
+  background:#eef3ee;color:var(--pass)}
+.states .state:nth-child(2) .g{background:#f8ecec;color:var(--fail)}
+.states .state:nth-child(3) .g{background:#eff1f3;color:var(--undec)}
+.state .t{font-size:1.08rem;font-weight:650;vertical-align:middle}
+.state .n{display:block;font-size:4.1rem;line-height:1;font-weight:750;letter-spacing:-.045em;
+  font-variant-numeric:tabular-nums;margin:.75rem 0 .45rem}
 .states .state:nth-child(1) .n{color:var(--pass)}
 .states .state:nth-child(2) .n{color:var(--fail)}
 .states .state:nth-child(3) .n{color:var(--undec)}
-.state .sub{display:block;font-size:.84rem;color:var(--dim)}
+.state .sub{display:block;font-size:.83rem;color:var(--dim);margin-top:.15rem;
+  padding-top:.6rem;border-top:1px dashed var(--line)}
 
-/* --- 口径带：产物自己的那句话 + 这批读数的三个总量 --- */
-.callout{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ink);
-  border-radius:10px;padding:.9rem 1.15rem;margin:.2rem 0 .3rem}
-.callout p{margin:.32rem 0}
-.callout .big{font-size:1.04rem;font-weight:600}
+/* --- 口径带：整页最重的一句话，深色收口 --- */
+.callout{position:relative;background:var(--ink);color:#e9eef6;border:1px solid #232c3a;
+  border-radius:18px;padding:1.4rem 1.7rem 1.3rem;margin:.85rem 0 1.2rem;
+  box-shadow:0 16px 40px rgba(13,19,32,.14)}
+.callout p{color:#acb8c9;margin:.42rem 0}
+.callout strong{color:#fff}
+.callout .big{position:relative;padding-left:1.55rem;font-size:1.16rem;line-height:1.62;
+  font-weight:650;color:#fff}
+.callout .big::before{content:"“";position:absolute;left:0;top:-.18rem;
+  font:700 2.3rem/1 Georgia,"Times New Roman",serif;color:var(--rail)}
+.callout code{background:#232d3d;border-color:#364358;color:#dfe7f2}
 
-/* --- 筛选：全 CSS，无 JS --- */
-.filters{display:flex;flex-wrap:wrap;gap:.45rem 1.5rem;align-items:center;margin:.6rem 0 .25rem}
-.fgroup{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
-.flabel{font-size:.85rem;color:var(--dim);margin-right:.2rem}
+/* --- 筛选：全 CSS，无 JS；滚动时留在顶上 --- */
+.filters{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;
+  align-items:center;margin:.5rem 0 .2rem;padding:.72rem 0 .62rem;background:var(--paper);
+  border-bottom:1px solid var(--line)}
+.fgroup{display:flex;flex-wrap:wrap;gap:.38rem;align-items:center}
+.flabel{font-size:.82rem;color:var(--dim);margin-right:.18rem;letter-spacing:.04em}
 .filters input{position:absolute;left:-9999px;width:0;height:0}
-.filters label{border:1px solid var(--line2);border-radius:999px;padding:.12rem .62rem;
-  cursor:pointer;font-size:.87rem;background:var(--card);user-select:none}
+.filters label{border:1px solid var(--line2);border-radius:999px;padding:.18rem .66rem;
+  cursor:pointer;font-size:.86rem;background:var(--card);user-select:none;
+  transition:background .15s,border-color .15s,color .15s}
+.filters label:hover{border-color:var(--ink);color:var(--ink)}
 .filters input:checked + label{background:var(--ink);color:#fff;border-color:var(--ink)}
 .filters input:focus-visible + label{outline:2px solid #2a6;outline-offset:1px}
 body:has(#vf-1:checked) .claim:not([data-verdict="__V1__"]){display:none}
@@ -317,57 +398,100 @@ body:has(#vf-2:checked) .claim:not([data-verdict="__V2__"]){display:none}
 body:has(#vf-3:checked) .claim:not([data-verdict="__V3__"]){display:none}
 __LAYER_RULES__
 
-/* --- 逐条判据：按层分组，一组一抬头 --- */
-.group{margin:.2rem 0 1rem}
-.ghead{font-size:.9rem;font-weight:650;color:var(--fg);margin:.95rem 0 .35rem}
-.ghead .gt{font-weight:400;color:var(--dim);border-left:1px solid var(--line2);
-  margin-left:.55rem;padding-left:.55rem}
-.gempty{font-size:.88rem;color:var(--dim);margin:.15rem 0 .4rem}
-.claim{border:1px solid var(--line);border-left-width:4px;border-left-color:var(--line2);
-  border-radius:9px;background:var(--card);margin:.28rem 0}
+/* --- 逐条判据：按层分组，一行一条 --- */
+.group{margin:0 0 1.2rem}
+.ghead{position:relative;display:flex;align-items:baseline;gap:.6rem;font-size:.95rem;
+  font-weight:700;color:var(--ink);margin:1.55rem 0 .55rem;padding-left:.85rem}
+.ghead::before{content:"";position:absolute;left:0;top:.2rem;bottom:.2rem;width:3px;
+  border-radius:2px;background:var(--ink)}
+.ghead .gt{font-weight:400;font-size:.82rem;color:var(--dim);border-left:1px solid var(--line2);
+  margin-left:.2rem;padding-left:.6rem}
+.gempty{font-size:.87rem;color:var(--dim);margin:.2rem 0 .5rem;padding:.55rem .8rem;
+  background:var(--card2);border:1px dashed var(--line);border-radius:9px}
+.claim{position:relative;border:1px solid var(--line);border-left-width:5px;
+  border-left-color:var(--line2);border-radius:12px;background:var(--card);
+  margin:.42rem 0;box-shadow:0 1px 2px rgba(16,21,29,.04);
+  transition:box-shadow .15s,border-color .15s}
+.claim:hover{box-shadow:var(--shadow);border-color:var(--line2)}
 .claim[data-verdict="__V1__"]{border-left-color:var(--pass)}
 .claim[data-verdict="__V2__"]{border-left-color:var(--fail)}
 .claim[data-verdict="__V3__"]{border-left-color:var(--undec);border-left-style:dashed}
-.claim>summary{cursor:pointer;padding:.5rem .8rem;display:grid;
-  grid-template-columns:max-content max-content max-content;
-  gap:.15rem .7rem;align-items:baseline;justify-content:start}
-.claim>summary:hover{background:#faf9f5}
-.claim[open]>summary{border-bottom:1px solid var(--line);background:#faf9f5}
-.cid{font-weight:700;font-family:ui-monospace,Consolas,monospace;font-size:.95rem;min-width:2.2rem}
-.cv{font-weight:600;min-width:5.4rem}
-.ctrust{font-size:.84rem}
-.cfals{grid-column:1/-1;font-size:.83rem;color:var(--dim)}
-.cwhat{grid-column:1/-1;font-weight:600;font-size:.98rem;line-height:1.5;margin-top:.1rem}
+.claim>summary{cursor:pointer;padding:.72rem 2.5rem .7rem .9rem;display:grid;
+  grid-template-columns:3.6rem 5.8rem 1fr;
+  gap:.18rem .75rem;align-items:baseline;justify-content:start;position:relative;
+  list-style:none}
+.claim>summary::-webkit-details-marker{display:none}
+.claim>summary::marker{content:""}
+.claim>summary::after{content:"+";position:absolute;right:.95rem;top:.52rem;
+  font:400 1.35rem/1 ui-monospace,Consolas,monospace;color:var(--mute)}
+.claim[open]>summary::after{content:"−"}
+.claim>summary:hover{background:#faf8f1}
+.claim[open]>summary{border-bottom:1px solid var(--line);background:#faf8f1}
+.cid{justify-self:start;font-weight:700;font-family:ui-monospace,Consolas,monospace;font-size:.86rem;
+  min-width:2.5rem;text-align:center;color:var(--ink);background:#f0ecdf;
+  border:1px solid var(--line);border-radius:6px;padding:.06rem .38rem}
+.cv{font-weight:650;min-width:5.2rem;white-space:nowrap}
+.ctrust{font-size:.83rem;white-space:nowrap;justify-self:start}
+.cfals{grid-column:1/-1;font-size:.82rem;line-height:1.55;color:var(--dim)}
+.cwhat{grid-column:1/-1;font-weight:600;font-size:.97rem;line-height:1.55;
+  margin-top:.08rem;color:#222831}
 /* --- 采信那格：三路各一形状（虚框=缺读数） --- */
-.t-true{border:1px solid #9ccdb2;background:#f2faf5;color:#1d6b42;border-radius:999px;padding:0 .45rem}
-.t-false{border:1px solid #e0bd7c;background:#fdf7ea;color:var(--rail);border-radius:999px;padding:0 .45rem}
-.t-none{border:1px dashed var(--line2);color:var(--dim);border-radius:999px;padding:0 .45rem}
+.t-true{border:1px solid #9ccdb2;background:#f2faf5;color:#1d6b42;border-radius:999px;padding:0 .48rem}
+.t-false{border:1px solid #e0bd7c;background:#fdf7ea;color:var(--rail);border-radius:999px;padding:0 .48rem}
+.t-none{border:1px dashed var(--line2);color:var(--dim);border-radius:999px;padding:0 .48rem}
 /* --- 展开之后：判据原文、读数、以及那几条附注 --- */
-.cbody{padding:.5rem .85rem .75rem}
-.cbody p{margin:.4rem 0}
-.cbody dl{margin:.5rem 0;padding:.45rem 0;display:grid;grid-template-columns:max-content 1fr;
-  gap:.15rem .8rem;border-top:1px dotted var(--line2);border-bottom:1px dotted var(--line2)}
-.cbody dt{font-family:ui-monospace,Consolas,monospace;font-size:.87rem;color:var(--dim);
+.cbody{padding:.75rem 1.1rem .95rem;background:#fdfbf6}
+.cbody p{margin:.42rem 0}
+.cbody dl{margin:.6rem 0;padding:.55rem 0;display:grid;grid-template-columns:max-content 1fr;
+  gap:.2rem .85rem;border-top:1px dotted var(--line2);border-bottom:1px dotted var(--line2)}
+.cbody dt{font-family:ui-monospace,Consolas,monospace;font-size:.85rem;color:var(--dim);
   display:flex;gap:.3rem;align-items:baseline}
 .cbody dd{margin:0;font-variant-numeric:tabular-nums}
-.warn{border-left:3px solid #e0bd7c;background:#fdf9ef;border-radius:6px;padding:.5rem .75rem;margin:.5rem 0}
-.warn p{margin:.22rem 0}
+.warn{border-left:3px solid #e0bd7c;background:#fdf8ec;border-radius:7px;
+  padding:.55rem .8rem;margin:.55rem 0}
+.warn p{margin:.24rem 0}
 
 /* --- 五格：一个 <details> 一格 --- */
-.grid{border:1px solid var(--line);border-radius:9px;background:var(--card);margin:.28rem 0}
-.grid>summary{cursor:pointer;padding:.5rem .8rem;font-weight:600}
-.grid .body{padding:.35rem .85rem .65rem}
-.dead{color:var(--fail);font-weight:600}
-.case{border-top:1px dotted var(--line2);padding:.35rem 0}
+.grid{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--card);
+  margin:.42rem 0;box-shadow:0 1px 2px rgba(16,21,29,.04)}
+.grid>summary{cursor:pointer;padding:.62rem 2.5rem .6rem .85rem;font-weight:650;position:relative;
+  list-style:none}
+.grid>summary::-webkit-details-marker{display:none}
+.grid>summary::marker{content:""}
+.grid>summary::after{content:"+";position:absolute;right:.95rem;top:.42rem;
+  font:400 1.35rem/1 ui-monospace,Consolas,monospace;color:var(--mute)}
+.grid[open]>summary::after{content:"−"}
+.grid>summary:hover{background:#faf8f1}
+.grid[open]>summary{border-bottom:1px solid var(--line)}
+.grid .body{padding:.5rem .95rem .75rem;background:#fdfbf6}
+.dead{color:var(--fail);font-weight:650}
+.case{border-top:1px dotted var(--line2);padding:.45rem 0}
 .case b{font-family:ui-monospace,Consolas,monospace}
 
 /* --- 末尾：是什么／不是什么、怎么读 --- */
-.policy{background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:.5rem 1.15rem 1rem;margin:.4rem 0}
+.policy{background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:.65rem 1.5rem 1.2rem;margin:.55rem 0;box-shadow:var(--shadow)}
 .policy h3.no{color:var(--fail)}
-.policy h3+ p{margin-top:.15rem}
-footer{margin-top:2.8rem;border-top:1px solid var(--line2);padding-top:.8rem;
-  font-size:.85rem;color:var(--dim)}
+.policy h3.no::before{content:"× ";font-weight:700}
+.policy h3:not(.no)::before{content:"✓ ";color:var(--pass);font-weight:700}
+.policy h3+p{margin-top:.18rem;color:#333a44}
+footer{margin-top:3rem;border-top:1px solid var(--line2);padding-top:1rem;
+  font-size:.83rem;line-height:1.7;color:var(--dim)}
+
+@media (max-width:1100px){
+  .issues{grid-template-columns:1fr}
+  .anchor,.hero{padding:1.9rem 1.7rem}
+}
+@media (max-width:780px){
+  body{padding:0 1.05rem 4rem}
+  .anchor,.hero{padding:1.5rem 1.2rem;border-radius:16px}
+  .states{grid-template-columns:1fr}
+  h1{font-size:1.85rem}
+  h2{margin-top:2.6rem}
+  .claim>summary{grid-template-columns:3.6rem 1fr}
+  .ctrust{grid-column:2;justify-self:start}
+  .state .n{font-size:3.4rem}
+}
 """
 
 
@@ -430,7 +554,7 @@ def _what_this_solves() -> str:
     for i, (bad, fix, kind, src) in enumerate(_UPSTREAM):
         cards.append(
             '<div class="issue">'
-            f'<p class="bad"><strong>问题 {_NUMS[i]}</strong>　{_md(bad)}</p>'
+            f'<p class="bad"><strong class="tag">问题 {_NUMS[i]}</strong>{_md(bad)}</p>'
             f'<p class="fix">处置：{_md(fix)}'
             f' <span class="chip">{_esc(kind)}</span></p>'
             f'<p class="lay">证据：见下面「<code>{_esc(A.LAYERS[i])}</code>」一组。</p>'
