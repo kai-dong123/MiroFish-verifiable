@@ -1,3 +1,5 @@
+[![verification](https://github.com/kai-dong123/MiroFish-verifiable/actions/workflows/verification.yml/badge.svg)](https://github.com/kai-dong123/MiroFish-verifiable/actions/workflows/verification.yml)
+
 > **This is a fork of MiroFish.** What is added is `backend/verification/` — runtime
 > guards and offline reproductions that make **one narrow question decidable: can this
 > run's outputs be trusted?** It does **not** judge simulation quality, and it applies

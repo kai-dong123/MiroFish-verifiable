@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12 17:36:02",
+  "generated_at": "2026-11-12 20:29:28",
   "not_a_pass_rate": true,
   "what_this_is": "一套**跨复现的**判据：把三条复现各自的读数放在同一张表上判定。每条判据都自带 falsifier，因此「它是否具备鉴别力」可以由机器核对。",
   "what_this_is_NOT": "不是分数，不是通过率，不是质量评价。判不了的条目**并未被判定**，不属于「未通过」—— 因此这张表**不得被聚合成任何比率**。",
@@ -12,17 +12,17 @@
   },
   "script": {
     "path": "verification/adjudicate.py",
-    "sha256": "a52f9a07036a986d6c878691ccb2b705e990b5d82b20d5c41542eb0c0a941e22"
+    "sha256": "30c792cc84e0478be00fb14c668e9a7923a87c1cbfdd1eb4a50f29397dd8ffed"
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-11-12T17:35:57",
-    "readings_sha256": "d31144246e284beaec2938361736d6a7cc228b5064e52aa5540324810d4427e3"
+    "generated_at": "2026-11-12T20:29:27",
+    "readings_sha256": "cfecacb457b4323660cf4c4b82e11272b27f5ed8453db73bc28d2c1b0510a04a"
   },
   "e2e_report": {
     "path": "e2e_report.json",
     "present": true,
-    "generated_at": "2026-11-11T22:25:11",
+    "generated_at": "2026-11-12T20:27:45",
     "arms": [
       "roomy_e2e",
       "bigtext_e2e",
@@ -526,5 +526,5 @@
     "not_a_rate": true,
     "note": "判不了的条目既不计入通过、也不计入否决，因此这里没有分母。"
   },
-  "seconds": 0.08
+  "seconds": 0.1
 }

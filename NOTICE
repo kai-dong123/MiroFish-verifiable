@@ -18,7 +18,7 @@ mirofish-verifiable —— MiroFish 的可验证性 fork
 | `backend/scripts/run_parallel_simulation.py` | 增加 `--guards` 参数，并在启动处调用新增的 `verification.attach.install_if_requested()` | 2026-09-16 |
 | `backend/scripts/run_reddit_simulation.py` | 同上 | 2026-09-16 |
 | `backend/scripts/run_twitter_simulation.py` | 同上 | 2026-09-16 |
-| `README.md` | 开头增加本 fork 的说明、被改动的上游文件清单与自研边界指向 | 2026-09-17 |
+| `README.md` | 开头增加本 fork 的说明、被改动的上游文件清单、自研边界指向与 CI 徽章 | 2026-11-12 |
 | `README-ZH.md` | 同上（中文） | 2026-09-17 |
 | `backend/requirements.txt` | 增加 `mcp<2` 上界与 `tiktoken==0.7.0` 锁定，各带一段说明 | 2026-09-19（`mcp<2` 先落在 09-17） |
 | `.gitignore` | 增加忽略装置自检产物（`verification_report.md` / `verification_report.json`）与变异留痕的运行时文件（锁 / journal）；并把上游那行从未生效的 `backend/logs/` 改为实际目录名 `backend/log/` | 2026-11-12 |
@@ -35,7 +35,7 @@ mirofish-verifiable —— MiroFish 的可验证性 fork
 其余四份文件（两份 `README`、`backend/requirements.txt`、`.gitignore`）的改动，
 除去上表注明的那一处（`backend/logs/` → `backend/log/`，一条从未生效的忽略规则），
 同样只是**增加文字或规则**：
-两份 `README` 对着基线是**纯插入**（`+36` / `+28`，`-0`）；
+两份 `README` 对着基线是**纯插入**（`+38` / `+28`，`-0`）；
 `backend/requirements.txt` 同样是**纯插入**（`+15`，`-0`，两条约束各带一段说明）；
 `.gitignore` 除那一行外，只有末行 `data/` 补了一个**行尾换行符**
 （上游那份文件末尾没有换行，内容未变）。

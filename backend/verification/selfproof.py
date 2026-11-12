@@ -251,14 +251,20 @@ def run() -> dict:
     # 读数不在时它们全是「不可判定」，实测和表态对不上，一跑就是一片红。
     # 那片红**不是发现**，是缺前提。所以按装置自己的三态惯用法：退 2，
     # 说清缺什么、怎么补（`exit_with(None)`）。**假红和假绿一样坏。**
-    if A.load_e2e_report() is None:
+    e2e, e2e_cause = A.load_e2e_report()
+    if e2e is None:
+        if e2e_cause is not None:
+            raise SelfproofError(
+                f"{e2e_cause['because']}\n"
+                f"  补法：{e2e_cause['to_fix']}\n"
+                f"  这是**没测到**，不是「没通过」。(exit 2)")
         raise SelfproofError(
             f"没有 `{A.E2E_REPORT.name}` —— 端到端那一层（E1–E5）读不到数，"
             f"而本自证的表态是照着「这一层有定论」写的。\n"
             f"  先跑一次：cd backend && python -m verification.e2e_stub\n"
             f"  这是**没测到**，不是「没通过」。(exit 2)")
 
-    cells, railed, unmeasured = A.all_cells()
+    cells, railed, unmeasured, _ = A.all_cells()
 
     base_rows = A.evaluate(A.CLAIMS, cells, railed, unmeasured)
     # 基础状态也走**同一套回填**（恒真 → 不采信）：`grid_of(base[i])` 是下面逐条
@@ -359,7 +365,7 @@ def run() -> dict:
                    # 两份报告一起出指纹 —— 只钉住其中一份，另一份换了读数这张表
                    # 就不会响（见 `A.readings_digest`）。
                    "readings_sha256": A.readings_digest(
-                       report, A.load_e2e_report())},
+                       report, A.load_e2e_report()[0])},
         "claims": {"count": len(A.CLAIMS), "ids": list(_ALL),
                    "source": "verification/adjudicate.py"},
         "base": [{"id": r["id"], "verdict": r["verdict"], "trusted": r["trusted"],
@@ -487,8 +493,8 @@ def main(argv=None) -> int:
           f"/{rep['claims']['count']}；恒真：{m['claims_vacuous'] or '没有'}")
     for p in rep["problems"]:
         print(f"  × {p}")
-    print("（下一步：`python -m verification.mutations` 重记指纹 —— "
-          "tests/ 或 verification/ 下的文件改动过就必须重跑。）")
+    print("（提示：若 `tests/` 或 `verification/` 下的文件有改动，"
+          "才需要重跑 `python -m verification.mutations` 重记指纹。）")
     return 0 if m["all_ok"] else 1
 
 

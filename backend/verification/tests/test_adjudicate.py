@@ -547,8 +547,9 @@ def test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused(tmp_path):
 
     # 端到端那份的惯例不同，**故意不改**：它读不了就返回 `None`，
     # 下游按「不可判定」处理（同文件里那条 `load_e2e_report` 的说明）。
-    assert A.load_e2e_report(bad) is None, (
-        "端到端那份读不了时该返回 `None`（→ 不可判定），不是抛")
+    rep, problem = A.load_e2e_report(bad)
+    assert rep is None and problem is None, (
+        "端到端那份读不了时该返回 `(None, None)`（→ 不可判定），不是抛")
 
     # 反向对照：好形状必须照过。少了这一半，一个「一律拒收」的实现也能让上面全绿。
     good = tmp_path / "good.json"
@@ -646,7 +647,8 @@ def test_the_artifacts_still_describe_the_code_on_disk(adj, sp):
                     f"先跑一次 `cd backend && python -m verification.run_all`。")
     # 走 `all_cells()`：格子有**两个**来源（三条复现 + 端到端），
     # 这里若只读一份，就会把「端到端那一层不在」误判成「产物过期」。
-    live = A.evaluate(A.CLAIMS, *A.all_cells())
+    cells, railed, unmeasured, _ = A.all_cells()
+    live = A.evaluate(A.CLAIMS, cells, railed, unmeasured)
 
     want = {r["id"]: (r["verdict"], r["trusted"]) for r in live}
     for rep, rerun in ((adj, _RERUN_A), (sp, _RERUN_S)):
@@ -985,3 +987,20 @@ def test_a_good_place_still_writes_the_artifacts(monkeypatch, tmp_path):
     assert js.is_file() and md.is_file(), "落点好着，两份产物却没落下来"
     assert json.loads(js.read_text(encoding="utf-8"))["summary"]["total"] == 1, (
         "落下来的 json 不是这一场的产物")
+
+
+def test_selfproof_surfaces_the_e2e_source_cause(monkeypatch, tmp_path, capsys):
+    """第二个消费者也要看得见来源门的 cause —— 否则它还在读没上过门的那一份。
+
+    `selfproof` 的表态是照着「端到端这一层有定论」写的；产物过期时它必须
+    退 `2` 并说出是哪个文件变了，而不是拿旧读数继续自证。
+    """
+    monkeypatch.setattr(A, "load_e2e_report", lambda *a, **k: (
+        None, {"because": "端到端产物不是这棵树跑的：camel_guards.py",
+               "to_fix": "用当前这棵树重跑一次 e2e_stub"}))
+
+    rc = S.main(["--json", str(tmp_path / "s.json"), "--md", str(tmp_path / "s.md")])
+    out = capsys.readouterr()
+    assert rc == 2, f"端到端来源对不上时自证退了 {rc}，该退 2（没测到）"
+    assert "camel_guards.py" in (out.out + out.err), (
+        "自证没有把「哪个文件变了」说出来")

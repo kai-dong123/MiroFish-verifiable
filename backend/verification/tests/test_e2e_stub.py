@@ -452,10 +452,10 @@ def test_all_cells_reads_both_reports(monkeypatch):
     monkeypatch.setattr(A, "load_report", lambda *a, **k: {
         "results": [{"readings": {"readings": {"arm_a": {"m": 1}},
                                   "boundaries": []}}]})
-    monkeypatch.setattr(A, "load_e2e_report", lambda *a, **k: {
+    monkeypatch.setattr(A, "load_e2e_report", lambda *a, **k: ({
         "results": [{"readings": {"readings": {"roomy_e2e": {"written_whole": 8}},
-                                  "boundaries": []}}]})
-    cells, _, _ = A.all_cells()
+                                  "boundaries": []}}]}, None))
+    cells, _, _, _ = A.all_cells()
     assert cells[("arm_a", "m")] == 1 and cells[("roomy_e2e", "written_whole")] == 8
 
 
@@ -465,11 +465,11 @@ def test_a_missing_e2e_report_is_none_not_an_exception(tmp_path):
     这和三条复现那份**故意不同**：那三条的读数必须都在（不在就说明前提坏了，
     该停下来），而这一层不在是正常状态。
     """
-    assert A.load_e2e_report(tmp_path / "nope.json") is None
-    assert A.load_e2e_report(tmp_path) is None            # 是个目录
+    assert A.load_e2e_report(tmp_path / "nope.json")[0] is None
+    assert A.load_e2e_report(tmp_path)[0] is None            # 是个目录
     bad = tmp_path / "bad.json"
     bad.write_text("不是 json", encoding="utf-8")
-    assert A.load_e2e_report(bad) is None, "文件在但不是 JSON —— 这也是「没测到」"
+    assert A.load_e2e_report(bad)[0] is None, "文件在但不是 JSON —— 这也是「没测到」"
 
 
 def test_a_missing_e2e_report_makes_that_layer_undecided(tmp_path, monkeypatch):
@@ -482,8 +482,9 @@ def test_a_missing_e2e_report_makes_that_layer_undecided(tmp_path, monkeypatch):
     monkeypatch.setattr(A, "load_report", lambda *a, **k: {
         "results": [{"readings": {"readings": {"arm_a": {"m": 1}},
                                   "boundaries": []}}]})
-    monkeypatch.setattr(A, "load_e2e_report", lambda *a, **k: None)
-    rows = A.evaluate(A.CLAIMS, *A.all_cells())
+    monkeypatch.setattr(A, "load_e2e_report", lambda *a, **k: (None, None))
+    cells, railed, unmeasured, _ = A.all_cells()
+    rows = A.evaluate(A.CLAIMS, cells, railed, unmeasured)
     by_id = {r["id"]: r for r in rows}
     e_ids = [c["id"] for c in A.CLAIMS if c["id"].startswith("E")]
     assert e_ids, "一条端到端断言都没有？"
@@ -566,3 +567,99 @@ def test_the_e2e_claims_are_wired_into_the_real_corpus():
             f"{c['id']} 的「缺什么」和「怎么才能判」必须成对")
         assert all(a.endswith("_e2e") for a, _ in c["operands"]), (
             f"{c['id']} 读了非端到端的格子 —— 层和格子对不上")
+
+
+# --------------------------------------------------------------------------
+# 来源门：这份端到端产物是不是**这棵树**跑的
+# --------------------------------------------------------------------------
+
+def _provenance_env() -> dict:
+    """按**现场**拼一份来源字段 —— 四个源文件的文本哈希 + 分词器。"""
+    from verification import tokenizer_cache as T
+    info = T.describe()
+    return {
+        "device_sources_sha256": {
+            name: P.sha256_text(A.HERE / name) for name in A.E2E_DEVICE_SOURCES},
+        "tokenizer": {"source": info["source"],
+                      "table_sha256": info["sha256"]},
+    }
+
+
+def _write_report(path, env):
+    path.write_text(json.dumps({"results": [], "environment": env},
+                               ensure_ascii=False), encoding="utf-8")
+
+
+def test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree(tmp_path):
+    """旧格式（没有 `device_sources_sha256`）→ 端到端五条判不了，补法是「当前树重跑」。"""
+    p = tmp_path / "e2e.json"
+    _write_report(p, {})
+
+    rep, cause = A.load_e2e_report(p)
+    assert rep is None and cause is not None
+    assert "device_sources_sha256" in cause["because"]
+    assert "当前" in cause["to_fix"]
+
+    rows = A.evaluate(A.CLAIMS, {}, {}, {})
+    A.apply_layer_causes(rows, {"端到端": cause})
+    e_rows = [r for r in rows if r["layer"] == "端到端"]
+    assert e_rows and all(r["verdict"] == A.UNDECIDED for r in e_rows)
+    assert all(r["undecidable_because"] == cause["because"] for r in e_rows)
+    assert all(r["to_make_decidable"] == cause["to_fix"] for r in e_rows)
+    others = [r for r in rows if r["layer"] != "端到端"]
+    assert all("不是这棵树" not in (r["undecidable_because"] or "")
+               for r in others), "别的层被端到端的 cause 污染了"
+
+
+def test_a_stale_e2e_report_names_the_changed_file(tmp_path):
+    """对不上时要说清**哪个文件**，而不是一句「对不上」。"""
+    env = _provenance_env()
+    env["device_sources_sha256"]["camel_guards.py"] = "0" * 64
+    p = tmp_path / "e2e.json"
+    _write_report(p, env)
+
+    rep, cause = A.load_e2e_report(p)
+    assert rep is None and "camel_guards.py" in cause["because"]
+
+
+def test_a_fresh_e2e_report_passes_the_gate(tmp_path):
+    """现场这棵树拼出来的来源字段 → 照常通过，不被误杀。"""
+    p = tmp_path / "e2e.json"
+    _write_report(p, _provenance_env())
+    rep, cause = A.load_e2e_report(p)
+    assert rep is not None and cause is None
+
+
+@pytest.mark.parametrize("name", A.E2E_DEVICE_SOURCES)
+def test_device_hashes_are_text_hashes(name, tmp_path):
+    """同一份内容换个行尾，文本哈希必须不变、字节哈希必须变。
+
+    这条钉的是跨平台：`e2e_report.json` 在 Windows 生成、在 Linux CI 上读。
+    用字节哈希的话，CI 会把每一份正常产物都判成「不是这棵树」。
+    """
+    src = A.HERE / name
+    raw = src.read_bytes()
+    body = raw.replace(b"\r\n", b"\n")
+    variant = body if b"\r\n" in raw else body.replace(b"\n", b"\r\n")
+    assert variant != raw, "这份文件没有可翻转的换行"
+
+    alt = tmp_path / name
+    alt.write_bytes(variant)
+    assert P.sha256_text(alt) == P.sha256_text(src)
+    assert (hashlib.sha256(alt.read_bytes()).hexdigest()
+            != hashlib.sha256(raw).hexdigest())
+
+
+def test_apply_layer_causes_rejects_a_typo_and_leaves_decided_rows_alone():
+    """层名拼错要当场抛；已经判出结果的行不许被 cause 改写。"""
+    cause = {"because": "不是这棵树", "to_fix": "重跑"}
+    with pytest.raises(ValueError):
+        A.apply_layer_causes([], {"端到端 ": cause})
+    with pytest.raises(ValueError):
+        A.apply_layer_causes([], {"端到端": {"because": "只有一半"}})
+
+    decided = [{"id": "E1", "layer": "端到端", "verdict": A.PASS_,
+                "undecidable_because": None, "to_make_decidable": None}]
+    A.apply_layer_causes(decided, {"端到端": cause})
+    assert decided[0]["undecidable_because"] is None
+    assert decided[0]["to_make_decidable"] is None

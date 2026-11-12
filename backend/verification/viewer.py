@@ -953,7 +953,8 @@ def render_artifacts_html(rows: list, title: str) -> str:
         drift = f"没测到（{exc}）"
     gate = ("<strong>MATCH</strong>" if drift is None
             else f'<span class="dead">{_esc(drift)}</span>')
-    body.append('<p class="dim">源码闸（与 <code>adjudicate</code> 同一个函数，'
+    body.append('<p class="dim">源码闸（默认 <code>verification_report.json</code>，'
+                '与 <code>adjudicate</code> 同一个函数，'
                 f'本页不另算）：{gate}</p>')
     for r in rows:
         count = ("未知" if r["count"] is None else str(r["count"])) \

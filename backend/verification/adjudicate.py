@@ -53,6 +53,7 @@ import platform
 import re
 import sys
 import time
+from typing import NamedTuple
 
 from . import _probe as P
 from .attach import STUB_MODEL_NAME, stub_banner_names   # 替身那件事只写一份（`attach.py`）
@@ -463,29 +464,79 @@ def load_report(path: pathlib.Path = REPORT) -> dict:
     return rep
 
 
-def load_e2e_report(path: pathlib.Path = E2E_REPORT):
-    """端到端那份报告。**不在就返回 `None` —— 不抛。**
+#: 端到端那一层的**四个装置源文件**。这一层的读数由它们共同决定；
+#: `camel_guards.py` 必须在名单里 —— 端到端量的就是它，漏了它，
+#: 最可能变动的那份会在门外，而 README 却写着「来源门已覆盖」。
+E2E_DEVICE_SOURCES = ("e2e_stub.py", "stub_model.py", "attach.py", "camel_guards.py")
 
-    和 `load_report` 的处置**故意不同**：三条复现的读数**必须**在（不在就说明
-    谁把前提搞坏了，该停下来），而端到端这一趟**本来就可以没跑过**。所以这里
-    返回 `None`，由 `evaluate` 的缺格子分支把那几条如实判成「不可判定」，
-    并带着「跑一次 e2e_stub」这条补法。**这正是三态里那一格的用处** ——
-    把「没测到」和「没通过」分开，而不是让它静默少几条。
+
+def _e2e_provenance_problem(rep: dict) -> dict | None:
+    """端到端产物是不是**这棵树**跑的。是 → `None`；不是 → `{because, to_fix}`。
+
+    两份哈希分开比，报错才说得出是「代码变了」还是「分词器换了」。
+    四个源文件一律**文本哈希**：`e2e_report.json` 入库，Windows 生成、Linux 读，
+    字节哈希会把行尾差异误报成「不是这棵树」。
+
+    **两种「判不了」不能合并**：报告不在 → 「跑一次」；报告在但不是这棵树 →
+    「用当前树重跑」。补救动作不同，`to_make_decidable` 就不能是同一句。
+    """
+    env = rep.get("environment") or {}
+    recorded = env.get("device_sources_sha256")
+    if not isinstance(recorded, dict) or not recorded:
+        return {"because": "端到端产物没有 `device_sources_sha256`（旧格式）",
+                "to_fix": "用当前这棵树重跑一次 `python -m verification.e2e_stub`"}
+
+    diffs = []
+    for name in E2E_DEVICE_SOURCES:
+        want = P.sha256_text(HERE / name)
+        got = recorded.get(name)
+        if got != want:
+            diffs.append(f"{name}（记录 {str(got)[:12]}… / 现场 {want[:12]}…）")
+
+    from . import tokenizer_cache
+    info = tokenizer_cache.describe()
+    tok = env.get("tokenizer")
+    if not isinstance(tok, dict):
+        diffs.append("tokenizer（缺这一格）")
+    elif (tok.get("source"), tok.get("table_sha256")) != (info["source"], info["sha256"]):
+        diffs.append(
+            "tokenizer（记录 "
+            f"{tok.get('source')}/{str(tok.get('table_sha256'))[:12]}… / 现场 "
+            f"{info['source']}/{str(info['sha256'])[:12]}…）")
+
+    if diffs:
+        return {"because": "端到端产物不是这棵树跑的：" + "；".join(diffs),
+                "to_fix": "用当前这棵树重跑一次 `python -m verification.e2e_stub`"}
+    return None
+
+
+def load_e2e_report(path: pathlib.Path = E2E_REPORT):
+    """端到端那份报告。返回 **`(报告, cause)`** —— 只有一条读取路径。
+
+    * 不在 / 不是 JSON / 结构不对 → `(None, None)`：这是「没跑过」，补法是
+      「跑一次 e2e_stub」；
+    * 在、结构对、但来源对不上 → `(None, {because, to_fix})`：这是「跑过但不是
+      这棵树」，补法是「用当前树重跑」；
+    * 都对 → `(rep, None)`。
+
+    **为什么不另加一个 `_checked` 版本**：`selfproof` 是第二个消费者。
+    只让 `adjudicate` 走来源门，自证就还在读没上过门的那一份 —— 裁决说
+    「不可判定」、自证说「读数在」，正是 `reconcile_selfcheck` 自己记下的那个病。
+    签名改动必须把所有调用点一起改；少一处就是静默分叉。
     """
     if not path.is_file():
-        return None
+        return None, None
     try:
         rep = json.loads(path.read_text(encoding="utf-8"))
     except ValueError:
-        # 文件在、但不是 JSON —— 这是**没测到**，不是「读数为空」。返回 None，
-        # 让它按同样的路走到「不可判定」，而不是在这里崩掉整张表。
-        return None
+        # 文件在、但不是 JSON —— 这是**没测到**，不是「读数为空」。
+        return None, None
     if _report_shape_problem(rep) is not None:
-        # 同上，只是那一段漏掉的一半：**读得成 JSON、结构却不对**。也返回 None
-        # （和「不在」同一条路）—— 于是 E1–E5 如实转「不可判定」，并带着
-        # 「跑一次 `e2e_stub`」那条补法，而不是在 `cells_from` 里崩掉整张表。
-        return None
-    return rep
+        return None, None
+    problem = _e2e_provenance_problem(rep)
+    if problem is not None:
+        return None, problem
+    return rep, None
 
 
 def cells_from(report: dict, *extra):
@@ -514,14 +565,29 @@ def cells_from(report: dict, *extra):
     return cells, railed, unmeasured
 
 
-def all_cells():
+class Cells(NamedTuple):
+    """`all_cells()` 的返回形状。**用 NamedTuple 而不是裸元组**：
+    `unmeasured` 与 `layer_causes` 都是字典，位置对调时裸解包不会报错。"""
+    cells: dict
+    railed: dict
+    unmeasured: dict
+    layer_causes: dict
+
+
+def all_cells() -> Cells:
     """**本表判的全部格子**，一个入口。`run()` 与 `selfproof` 都走它。
 
     存在的理由：格子有**两个**来源了（三条复现 + 端到端），而「两边都读上」
     这件事必须是**一处**说了算 —— 两处各读一半，就会出现「这份产物判了 15 条、
     那份判了 10 条」而没人发现。
+
+    `layer_causes` 把「端到端产物不是这棵树」带出去；它是**按层**的，
+    不是全局的 —— 离线那十层跟这份产物没关系，不该被一起判成没测到。
     """
-    return cells_from(load_report(), load_e2e_report())
+    e2e, cause = load_e2e_report()
+    cells, railed, unmeasured = cells_from(load_report(), e2e)
+    return Cells(cells, railed, unmeasured,
+                 {"端到端": cause} if cause else {})
 
 
 # ---------------------------------------------------------------------------
@@ -585,6 +651,30 @@ def evaluate(claims=CLAIMS, cells=None, railed=None, unmeasured=None,
                           f"{h}（{railed[tuple(h.split('.'))]}）" for h in hits)
                          if hits else ""),
         })
+    return rows
+
+
+def apply_layer_causes(rows, causes, claims=CLAIMS) -> list:
+    """把「按层的原因」回填到**不可判定**的行上。纯函数，改行不改判。
+
+    为什么不在 `evaluate` 上加参数：`evaluate` / `falsifier_report` 的调用点
+    有好几处，穿参数每多一处就多一次「忘了传就静默丢 cause」的机会。
+    这和 `apply_vacuous_no_trust` 是同一个套路：判完之后再回填。
+
+    未知层名**直接抛**：`"端到端 "` 这种拼写错误如果不抛，那五条会退回
+    泛泛的「读不到格子」—— 正是这道门要修的病的另一个入口。
+    """
+    known = {c["layer"] for c in claims}
+    unknown = sorted(set(causes) - known)
+    if unknown:
+        raise ValueError(f"未知的层名：{unknown}（已知：{sorted(known)}）")
+    for layer, cause in causes.items():
+        if set(cause) != {"because", "to_fix"}:
+            raise ValueError(f"{layer} 的 cause 必须同时有 because 与 to_fix：{cause!r}")
+    for r in rows:
+        if r.get("verdict") == UNDECIDED and r.get("layer") in causes:
+            r["undecidable_because"] = causes[r["layer"]]["because"]
+            r["to_make_decidable"] = causes[r["layer"]]["to_fix"]
     return rows
 
 
@@ -862,9 +952,11 @@ def readings_digest_of(cells, railed, unmeasured) -> str:
 def run() -> dict:
     t0 = time.time()
     report = load_report()
-    e2e = load_e2e_report()
+    e2e, e2e_cause = load_e2e_report()
     cells, railed, unmeasured = cells_from(report, e2e)
     rows = evaluate(CLAIMS, cells, railed, unmeasured)
+    if e2e_cause:
+        apply_layer_causes(rows, {"端到端": e2e_cause})
     fals = falsifier_report(CLAIMS, cells, railed, unmeasured, base_rows=rows)
     # 「恒真 → 不采信」回填在这里，**在 `summarize` 之前** —— 汇总里的
     # 「采信/不采信」必须反映回填之后的状态，否则上半张表和下半张表还是两套口径。

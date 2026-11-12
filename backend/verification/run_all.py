@@ -235,6 +235,7 @@ def _environment() -> dict:
         "tokenizer_cache_bytes": None,
         "tokenizer_table_sha256": None,
         "tokenizer_source": None,
+        "tokenizer_external_rejected": [],
     }
     try:
         from . import _probe as P
@@ -266,6 +267,9 @@ def _environment() -> dict:
         env["tokenizer_cache_bytes"] = info["bytes"]
         env["tokenizer_table_sha256"] = info["sha256"]
         env["tokenizer_source"] = info["source"]
+        # **被拒的外部目录也要落进报告**：只退回仓库、不说为什么，
+        # 读者会以为外部缓存根本没设过。这一格是账目的一部分。
+        env["tokenizer_external_rejected"] = info.get("external_rejected") or []
     except Exception as exc:  # noqa: BLE001
         env["tokenizer"] = f"取不到（{exc.__class__.__name__}）"
     return env
@@ -429,6 +433,7 @@ def _write_report(prefix: str, results: list, env: dict,
     for key in ("python", "platform", "camel_ai", "camel_oasis",
                 "tokenizer", "tokenizer_cache", "tokenizer_cache_bytes",
                 "tokenizer_table_sha256", "tokenizer_source",
+                "tokenizer_external_rejected",
                 "clock_step_ns", "cwd"):
         val = env.get(key)
         label = {"python": "Python", "platform": "平台",
@@ -437,7 +442,10 @@ def _write_report(prefix: str, results: list, env: dict,
                  "tokenizer_cache_bytes": "编码表落盘字节数 (B)",
                  "tokenizer_table_sha256": "编码表内容 sha256",
                  "tokenizer_source": "编码表来源（external/vendor/default/missing）",
+                 "tokenizer_external_rejected": "被拒的外部缓存目录（内容与钉住哈希不符）",
                  "clock_step_ns": "时钟最小步长 (ns)", "cwd": "工作目录"}[key]
+        if isinstance(val, list):
+            val = "、".join(val) if val else "（无）"
         md.append(f"| {label} | {val if val is not None else '未知'} |")
     step_ns = env.get("clock_step_ns")
     if step_ns:

@@ -567,6 +567,25 @@ def _environment() -> dict:
     env = {"python": sys.version.split()[0], "cwd": "backend/",
            "entry": "scripts/run_parallel_simulation.py",
            "platform_type": "REDDIT", "guards": "both", "seed": SEED}
+    # **这一层是谁跑出来的。** 四个源文件一律文本哈希：这份产物入库，
+    # Windows 生成、Linux 读，字节哈希会把行尾差异误报成「不是这棵树」。
+    # `camel_guards.py` 必须在名单里 —— 端到端量的就是它。
+    try:
+        env["device_sources_sha256"] = {
+            name: P.sha256_text(HERE / name)
+            for name in ("e2e_stub.py", "stub_model.py", "attach.py",
+                         "camel_guards.py")
+        }
+    except OSError:
+        env["device_sources_sha256"] = None
+    # 分词器也是读数的一部分：表换了，守卫数出来的 token 就变了。
+    try:
+        from . import tokenizer_cache
+        info = tokenizer_cache.describe()
+        env["tokenizer"] = {"source": info["source"],
+                            "table_sha256": info["sha256"]}
+    except Exception:  # noqa: BLE001
+        env["tokenizer"] = None
     for key, mod in (("camel_ai", "camel"), ("camel_oasis", "oasis")):
         try:
             env[key] = getattr(__import__(mod), "__version__", "未知")

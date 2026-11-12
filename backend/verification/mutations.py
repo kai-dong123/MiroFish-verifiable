@@ -364,7 +364,7 @@ MUTATIONS = (
     _M("J7", G_ADJ_E2E, "端到端报告不在时**编一份读数**出来 —— 最容易写下的"
                         "那种「补全」，而且编完那张表看着更完整",
        T_ADJ_E2E, [(ADJUDICATE,
-                    '    if not path.is_file():\n        return None\n    try:',
+                    '    if not path.is_file():\n        return None, None\n    try:',
                     '    if not path.is_file():\n'
                     '        # 变异：没跑过就编一份读数 —— 于是那五条照判「通过」\n'
                     '        return {"results": [{"readings": {\n'
@@ -381,7 +381,7 @@ MUTATIONS = (
                     '"still_sliced": 0,\n'
                     '                            "timestamp_pushed": 1, '
                     '"db_posts": 2}},\n'
-                    '            "boundaries": []}}]}\n'
+                    '            "boundaries": []}}]}, None\n'
                     '    try:')],
        expect=1, claim="README「裁决：三种结果不是两种」：端到端读数缺了要判不可判定，"
                        "编一份补上当场红"),
@@ -631,6 +631,11 @@ MUTATIONS = (
                       "readings_end.get(\"sha256\"))",
                       "        run_stable = True  # 变异：指纹门形同虚设")],
        expect=3, claim="读数指纹：树在跑的过程中被改过却退 0 → 当场红 3 条"),
+    _M("A1", G_FRESH, "端到端来源门焊死（旧产物照判，五个源文件白记）",
+       T_ADJ_E2E, [(ADJUDICATE,
+                    "    problem = _e2e_provenance_problem(rep)",
+                    "    problem = None  # 变异：来源门形同虚设")],
+       expect=2, claim="端到端来源：旧格式/换过文件的产物照判 → 当场红 2 条"),
 
     # ---- 阴性对照 ----------------------------------------------------------
     #: `M1` 不是「改坏被测代码」，是**把判据退回计数相减** —— 基线红 X、这一轮

@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import json
+import pathlib
 
 import pytest
 
@@ -32,6 +33,36 @@ def _make_tree(root, *, drop=None):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(f"# {rel}\n", encoding="utf-8")
     return root
+
+
+def test_the_environment_records_rejected_external_tables(monkeypatch):
+    """外部表被拒这件事必须进环境一节 —— 否则账上还是「没设过外部缓存」。
+
+    只退回仓库、不说为什么，读者会以为那台机器没有外部缓存；
+    而真相是「有，但内容不对，被闸挡下了」。
+    """
+    from verification import tokenizer_cache as T
+
+    monkeypatch.setattr(T, "describe", lambda: {
+        "source": "vendor", "path": "vendor/x", "sha256": "a" * 64,
+        "bytes": 1, "external_rejected": ["D:/bad-table"]})
+
+    env = R._environment()
+    assert env["tokenizer_external_rejected"] == ["D:/bad-table"]
+
+
+def test_the_markdown_environment_table_shows_rejected_dirs(tmp_path):
+    """人读的那份也要有 —— 评委看的是 MD，不是 JSON。"""
+    env = {"tokenizer_external_rejected": ["D:/bad-table"]}
+    md_path, js_path = R._write_report(
+        str(tmp_path / "rep"), [("verification.repro_01_slicing", "切片", 0, "body")],
+        env, readings=())
+
+    md = pathlib.Path(md_path).read_text(encoding="utf-8")
+    assert "被拒的外部缓存目录" in md
+    assert "D:/bad-table" in md
+    assert json.loads(pathlib.Path(js_path).read_text(encoding="utf-8"))[
+        "environment"]["tokenizer_external_rejected"] == ["D:/bad-table"]
 
 
 def test_a_missing_source_is_unmeasured_not_an_empty_hash(tmp_path):
