@@ -98,9 +98,12 @@ _state: dict = {
 def _next_timestamp(agent, timestamp):
     """这次写入该用哪个时间戳：每个 agent 一条**严格递增**的逻辑时钟。
 
-    `timestamp_pushed` 只数我们自己取读数、却被推后的那些。camel 显式给的那对
-    （请求 / 回执）**几乎总会被推**（它的 1e-6 小于一个步长），那是把门撑开、
-    不是撞上门，所以不计数 —— **这个计数不是「撞窗口的次数」，别那样读它。**
+    `timestamp_pushed` 只数**快路径上**我们自己取读数、却被推后的那些。camel 显式
+    给的那对（请求 / 回执）**几乎总会被推**（它的 1e-6 小于一个步长），那是把门
+    撑开、不是撞上门，所以不计数 —— **这个计数不是「撞窗口的次数」，别那样读它。**
+
+    回退支（`_hand_back_timestamp`）也会推，但按构造不进这个计数：它退的是
+    「没走快路径」，不是「没发生碰撞」。端到端里那一格因此恒为 0，是贴界，不是读数。
     """
     last = getattr(agent, "_ts_guard_last", None)
     if timestamp is not None:
@@ -115,17 +118,44 @@ def _next_timestamp(agent, timestamp):
     return value
 
 
-def _note_timestamp(agent, timestamp):
-    """交给原方法去写时，把游标推到**它可能用到的时间戳之外**。
+def _hand_back_timestamp(agent, timestamp, own_tokens=None, content=None):
+    """回退分支该用的时间戳：**先推到游标之后，再把游标抬到这条消息可能用到的最后一个时间戳之外**。
 
-    原方法自己那次读数我们看不到，而且它还会把一条消息切成若干块、每块再各自
-    `+ i * 1e-6`。用一个步长当前缀，覆盖到 1000 块为止 —— 再多就说明这条消息
-    被切成了一 token 一块，那是另一个守卫管的另一个事故。
+    两条回退支（算不出 token / 消息自己就超上限）原先直接把调用方给的
+    `timestamp` 原样交回去。显式给的那一对还能靠 camel 自己的 `+1e-6` 排开；
+    `timestamp=None` 时是**原方法自己读钟**，读到的完全可能落在游标之前 ——
+    于是「后写的一定有更大的时间戳」这条不变式在回退支上**断了**，而记忆一满，
+    绝大多数写入走的正是这条支。所以这里返回的必须是**推过**的值，不只是抬游标。
+
+    游标还要抬过原方法可能写到的最后一个时间戳：它会把一条消息切成若干块，
+    每块再各自 `+ i * 1e-6`。块数的上界取两条已知支里能拿到的那一个：
+
+    - **自己超上限**那条支：`own_tokens` 就是上界 —— 每块至少装 1 token，
+      块数 ≤ token 数。精确、有界，不依赖上游的 chunk 公式。
+    - **算不出 token**那条支：用消息的 UTF-8 字节数。byte-level BPE 每个 token
+      至少吃 1 字节，所以 tokens ≤ bytes，同样是构造性的上界。
+    - 两条都拿不到（内容不是字符串）：才退回 `1e-2` 这个保守值，覆盖 10k 块。
+      它**不是**上界，是一条贴界声明 —— 有上界时不用它。
+
+    **不累加 `timestamp_pushed`**：那个计数只记快路径上我们自己的读数被推后的
+    次数（见 `_next_timestamp` 与 `counters()`）。回退支按构造不参与那个计数 ——
+    它退的是「没走快路径」，不是「没发生碰撞」。
+
+    末尾两行是 `mutations.py` 里 `G8` 的靶串，改动要同步那一条。
     """
-    value = timestamp if timestamp is not None else time.time_ns() / 1e9
+    base = timestamp if timestamp is not None else time.time_ns() / 1e9
     last = getattr(agent, "_ts_guard_last", None)
-    agent._ts_guard_last = (value + STEP if last is None
-                            else max(last, value) + STEP)
+    value = max(base, last + STEP) if last is not None else base
+
+    if own_tokens is not None:
+        span = own_tokens * 1e-6
+    elif isinstance(content, str):
+        span = len(content.encode("utf-8")) * 1e-6
+    else:
+        span = 1e-2
+
+    agent._ts_guard_last = value + span + STEP
+    return value
 
 
 def _dispatch(self, message, role, timestamp=None):
@@ -146,16 +176,23 @@ def _dispatch(self, message, role, timestamp=None):
         own_tokens = creator.token_counter.count_tokens_from_messages(
             [message.to_openai_message(role)])
     except Exception:  # noqa: BLE001
-        # 算不出来就别自作聪明 —— 交回原方法。
+        # 算不出来就别自作聪明 —— 交回原方法。**但交回的时间戳仍要推过**：
+        # 回退不等于可以绕开时钟不变式（见 `_hand_back_timestamp`）。
         if _state["timestamp"]:
-            _note_timestamp(self, timestamp)
+            return original(self, message, role,
+                            _hand_back_timestamp(
+                                self, timestamp,
+                                content=getattr(message, "content", None)))
         return original(self, message, role, timestamp)
 
     if own_tokens > limit:
         # 自己就超上限：切是必要的（不切谁也装不进去），交回原方法。
+        # 时间戳仍要推过，余量按「块数上界 = token 数」算（见 `_hand_back_timestamp`）。
         _state["still_sliced"] += 1
         if _state["timestamp"]:
-            _note_timestamp(self, timestamp)
+            return original(self, message, role,
+                            _hand_back_timestamp(self, timestamp,
+                                                 own_tokens=own_tokens))
         return original(self, message, role, timestamp)
 
     # 放得下：原样写。旧记录由 ScoreBasedContextCreator 按分数去驱逐。

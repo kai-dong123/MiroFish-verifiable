@@ -38,6 +38,11 @@ yarn-error.log*
 
 # 测试
 .pytest_cache/
+
+# 变异留痕的运行时文件（锁与崩溃现场，都不入库）
+backend/verification/.mutation.lock
+backend/verification/.mutation_journal.json
+backend/verification/.mutation_journal.json.tmp
 .coverage
 htmlcov/
 

@@ -1,6 +1,6 @@
 """变异测试留痕 —— 把「这套测试不是恒真的」变成一份**可复核的产物**。
 
-`README.md` 里那几句「验过它不是恒真的（七处都变红 / 红 16·3·16 条 / 五处都红）」
+`README.md` 里那几句「验过它不是恒真的（八处都变红 / 红 16·3·16 条 / 五处都红）」
 原先只是**断言**：仓库里既没有变异脚本，也没有结果文件。一个无法复核的断言，
 和一句自夸没有区别 —— 而它恰恰是「装置可信」这个论点的唯一支撑。
 
@@ -33,6 +33,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -57,6 +58,9 @@ ADJUDICATE = HERE / "adjudicate.py"
 #: 装置盯着别人的那一族缺陷（`e2e_stub` 的超时、分词器缓存、`kill()` 的返回码）
 #: 全是这个形状 —— 所以它自己身上也得有一个人去捅。
 VIEWER = HERE / "viewer.py"
+#: 编码表解析（`T1` 的靶子）。它坏了不崩：一个空的外部缓存目录就把仓库内
+#: 那份表绕过去、退回联网，读数换了一套而没人知道。
+TOKENIZER = HERE / "tokenizer_cache.py"
 #: 另外两道入口，加上汇总驱动 —— 「落点」那一组要证明**三道门都不是摆设**。
 #: 它们共用 `_probe.refuse_out_path`，所以只验一处的话，谁把另外两道删掉，
 #: 账上照样一片安静。
@@ -89,6 +93,11 @@ T_ENV_PINS = "verification/tests/test_environment_pins.py"
 T_DOC_CLAIMS = "verification/tests/test_docs_claims.py"
 T_BASELINE = "verification/tests/test_upstream_baseline.py"
 T_VIEWER = "verification/tests/test_viewer.py"
+T_TOKENIZER = "verification/tests/test_tokenizer_cache.py"
+T_RUNALL_FP = "verification/tests/test_run_all_fingerprint.py"
+#: 变异机器**自己的簿记**（`_newly_red` / 字节还原 / journal / 锁）由这个文件测。
+#: 它**不**在变异轮跳自己 —— 否则 `M1` 永远红不了。
+T_HARNESS = "verification/tests/test_mutation_harness.py"
 
 #: 下半那条变异要植回去的**错引写法**。
 #:
@@ -154,7 +163,7 @@ G_ADJ = "裁决"
 G_ADJ_MISS = "裁决·缺读数"
 G_ADJ_VAC = "裁决·恒真"
 #: 后加的两组。**没有并进上面任何一组** —— 上面那几组的条数写在 README 的
-#: 声明里（「守卫：七处」），并进去就会把那句话变成过期的。
+#: 声明里（「守卫：八处」），并进去就会把那句话变成过期的。
 G_COUNTERS = "守卫·计数落盘"
 G_ADJ_E2E = "裁决·端到端"
 G_CITE_VERBATIM = "引文·逐字块"
@@ -164,13 +173,16 @@ G_BASELINE = "上游基线"
 G_OUT = "落点"
 G_UNMEASURED = "没测到·不许折"
 G_VIEW = "展示层"
+#: 「读数指纹」这一组没有并进上面任何一组：README 里那句「眼下是 N 处」按组拆开数，
+#: 新组并进旧组会把旧组的数变成过期的。
+G_FRESH = "读数指纹"
 G_CONTROL = "阴性对照"
 
-CLAIM_7 = "README「守卫：两个方向都要成立」：七处变异都变红"
+CLAIM_7 = "README「守卫：两个方向都要成立」：八处变异都变红"
 CLAIM_5 = "README「引文：文档里的行号不许腐烂」：上半五处变异都红"
 
 MUTATIONS = (
-    # ---- 守卫：七处 --------------------------------------------------------
+    # ---- 守卫：八处 --------------------------------------------------------
     _M("G1", G_GUARD, "判据的边界写成 `>=`（顶格的消息会被误判成超限）",
        T_GUARDS, [(GUARDS, "    if own_tokens > limit:", "    if own_tokens >= limit:")],
        claim=CLAIM_7),
@@ -198,9 +210,13 @@ MUTATIONS = (
     _M("G6", G_GUARD, "去掉兜底（算不出 token 时不再交回原方法，直接抛）",
        T_GUARDS, [(GUARDS,
                    "    except Exception:  # noqa: BLE001\n"
-                   "        # 算不出来就别自作聪明 —— 交回原方法。\n"
+                   "        # 算不出来就别自作聪明 —— 交回原方法。**但交回的时间戳仍要推过**：\n"
+                   "        # 回退不等于可以绕开时钟不变式（见 `_hand_back_timestamp`）。\n"
                    '        if _state["timestamp"]:\n'
-                   "            _note_timestamp(self, timestamp)\n"
+                   "            return original(self, message, role,\n"
+                   "                            _hand_back_timestamp(\n"
+                   "                                self, timestamp,\n"
+                   '                                content=getattr(message, "content", None)))\n'
                    "        return original(self, message, role, timestamp)",
                    "    except Exception:  # noqa: BLE001\n"
                    "        raise")],
@@ -216,6 +232,13 @@ MUTATIONS = (
                    '        _state["timestamp"] = timestamp\n'
                    "        return _state")],
        claim=CLAIM_7),
+    _M("G8", G_GUARD, "推了游标但不交回（回退支仍把原时间戳交给原方法）",
+       T_GUARDS, [(GUARDS,
+                   "    agent._ts_guard_last = value + span + STEP\n"
+                   "    return value",
+                   "    agent._ts_guard_last = value + span + STEP\n"
+                   "    return timestamp")],
+       expect=3, claim=CLAIM_7),
 
     # ---- 判词：三处 --------------------------------------------------------
     _M("V1", G_VERDICT, "判词写死（直接把结论摆在预期那一侧，不再由读数算）",
@@ -579,7 +602,46 @@ MUTATIONS = (
                    '    # 变异：只报例数，条目数不提了\n')],
        expect=1, claim="展示层：一例落两格却不交代 → 一个数被当成另一个数，当场红 1 条"),
 
+    # ---- 读数指纹·新鲜度：两处 ---------------------------------------------
+    # 这一组盯的是 P0 之后新加的那道门：「这份报告是不是用这棵树跑的」。
+    # 两个靶子都不崩、不报错，只是**悄悄把门变成摆设** —— 和它防的那种坏法
+    # 是同一个形状，所以它自己身上也得有人去捅。
+    #
+    #   T1：把「空的外部目录也算有表」放行 —— 评委机器上一个空的
+    #       `TIKTOKEN_CACHE_DIR` 就会把仓库内那份编码表绕过去、退回联网，
+    #       而报告里的 `tokenizer_source` 还写着 `external`，看不出换了来源。
+    #   T2：只验「文件在不在」、不验内容 —— 一个同名但内容不对的外部表会顶掉
+    #       仓库副本；tiktoken 随后会删掉它并联网重取，账上却仍写着 `external`。
+    #   R1：把开始/结束双哈希的门焊成恒真 —— 跑的过程中树被改过，
+    #       照样落一份「看起来有效」的报告，`adjudicate` 的源码门也跟着失明。
+    _M("T1", G_FRESH, "空的外部目录也算有表（仓库内那份编码表被一个空目录绕过去）",
+       T_TOKENIZER, [(TOKENIZER,
+                      "    return p.is_file() and P.sha256_bytes(p) == EXPECTED_SHA256",
+                      "    return True  # 变异：空目录也算有表")],
+       expect=3, claim="读数指纹：空外部目录压过仓库副本／报成 missing → 当场红 3 条"),
+    _M("T2", G_FRESH, "外部表只验在不在、不验内容（同名错表顶掉仓库副本）",
+       T_TOKENIZER, [(TOKENIZER,
+                      "    return p.is_file() and P.sha256_bytes(p) == EXPECTED_SHA256",
+                      "    return p.is_file()  # 变异：只看在不在，不验内容")],
+       expect=1, claim="读数指纹：内容不对的外部表被让位 → 当场红 1 条"),
+    _M("R1", G_FRESH, "开始/结束双哈希的门焊成恒真（报告不成立也照常出有效指纹）",
+       T_RUNALL_FP, [(RUN_ALL,
+                      "        run_stable = (readings_start.get(\"sha256\") is not None\n"
+                      "                      and readings_start[\"sha256\"] == "
+                      "readings_end.get(\"sha256\"))",
+                      "        run_stable = True  # 变异：指纹门形同虚设")],
+       expect=3, claim="读数指纹：树在跑的过程中被改过却退 0 → 当场红 3 条"),
+
     # ---- 阴性对照 ----------------------------------------------------------
+    #: `M1` 不是「改坏被测代码」，是**把判据退回计数相减** —— 基线红 X、这一轮
+    #: 多红一条 Y（X 仍红）时，差是 0，阴性对照会被读成「相符」。它守的正是
+    #: 「红的是哪几条」而不是「红了几条」。
+    _M("M1", G_CONTROL, "判据退回「数红条」：基线红的是 X、这轮多红 Y 也会被减成 0",
+       T_HARNESS, [(MUTATIONS_SELF,
+                    '    return [i for i in (res.get("failed_ids") or ()) '
+                    'if i not in base]',
+                    '    return list(res.get("failed_ids") or ())  # 变异：退回数红条')],
+       expect=1, claim="阴性对照：集合差退回计数差 → 新加的「红的是另一条」测试红 1 条"),
     _M("K0", G_CONTROL, "语义上什么都不改（只在 `STEP` 那行尾加一句注释）",
        T_GUARDS, [(GUARDS, "STEP = 1e-3", "STEP = 1e-3  # 阴性对照：这行不该有行为差异")],
        expect=0, claim="本模块自己的纪律：不做任何语义改动的编辑，一条都不许红"),
@@ -609,6 +671,137 @@ class MutationPremiseError(RuntimeError):
     和装置另外几条线同一个契约。最典型的情形是基线那一轮没跑成：那时每一条
     变异都要拿它的 `failed` 去做减法，继续跑下去只会产出一份看着完整的废纸。
     """
+
+
+#: 两个**运行时**文件，都不入库（见 `.gitignore`）。**必须分开**：它们的失效
+#: 方式相反 —— 锁要的是「进程死了自动释放」，journal 要的是「进程死了还能读到」。
+#: 合成一个会当场踩坑：journal 每轮都要原子更新（`os.replace`），而替换掉一个
+#: 正被锁着的文件，锁就失效了。
+LOCK = HERE / ".mutation.lock"
+JOURNAL = HERE / ".mutation_journal.json"
+
+
+class _MutationLock:
+    """单实例锁：进程被 kill 时由**操作系统**释放，不留需要人工清的僵尸锁。
+
+    今天真实踩过一次：后台跑留痕时终端会话被重置，进程被杀，`viewer.py` 停在
+    变异态，而那时没有任何东西阻止第二次运行去覆盖现场。
+    """
+
+    def __init__(self, path: pathlib.Path | None = None):
+        self.path = pathlib.Path(path) if path is not None else LOCK
+        self._fh = None
+
+    def __enter__(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        fh = open(self.path, "a+b")
+        try:
+            if os.name == "nt":
+                import msvcrt
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            fh.close()
+            raise MutationPremiseError(
+                f"另一个留痕正在跑（{self.path.name} 被占着："
+                f"{exc.__class__.__name__}）—— 变异期间工作区里的源码是被改坏的，"
+                "不能让两份同时跑。") from None
+        self._fh = fh
+        return self
+
+    def __exit__(self, *exc):
+        fh, self._fh = self._fh, None
+        if fh is None:
+            return False
+        try:
+            if os.name == "nt":
+                import msvcrt
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        except OSError:
+            pass
+        fh.close()
+        return False
+
+
+def _sha_bytes(path) -> str:
+    """**字节**哈希：与 `_sha`（文本）方向相反，理由见 `_probe.sha256_bytes`。"""
+    return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+
+
+def _journal_write(mid: str, paths) -> None:
+    """`_apply` **之前**落盘：这轮要碰的每个文件，改之前长什么样（含原字节）。
+
+    只记哈希不够：崩溃后若直接用 `git checkout` 恢复，会把跑之前本来就有的
+    未提交改动一起丢掉 —— 恢复动作本身制造一次损失。存原字节，`--recover`
+    才能精确写回。
+    """
+    doc = {
+        "mutation": mid,
+        "written_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "files": {
+            _rel(p): {
+                "sha256": _sha_bytes(p),
+                "bytes_b64": base64.b64encode(pathlib.Path(p).read_bytes()).decode("ascii"),
+            }
+            for p in sorted({pathlib.Path(x) for x in paths})
+        },
+    }
+    tmp = JOURNAL.with_name(JOURNAL.name + ".tmp")
+    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, JOURNAL)            # 原子替换：崩溃不会留下半截 journal
+
+
+def _journal_clear() -> None:
+    try:
+        JOURNAL.unlink()
+    except FileNotFoundError:
+        pass
+
+
+def _journal_bad_files(doc: dict) -> list:
+    """journal 记的文件里，现在**字节对不上**的那些（`(rel, 原 sha, 现 sha)`）。"""
+    bad = []
+    for rel, rec in (doc.get("files") or {}).items():
+        p = BACKEND / rel
+        got = _sha_bytes(p) if p.is_file() else None
+        if got != rec.get("sha256"):
+            bad.append((rel, (rec.get("sha256") or "")[:12], (got or "缺")[:12]))
+    return bad
+
+
+def _recover_interrupted_journal() -> None:
+    """上次跑到一半被 kill：先判断工作区现在是什么状态。
+
+    * 所有文件字节都等于 journal 记的 → 崩在还原之后，**清掉继续**；清的时候
+      必须打印一行 —— 「静默成功」也是一种静默。
+    * 有文件对不上 → **一个都不碰**，打印路径与恢复命令，退 `2`。这里不自动
+      写回：那一步会覆盖磁盘上的源码，要人明确说 `--recover`。
+    """
+    if not JOURNAL.is_file():
+        return
+    try:
+        doc = json.loads(JOURNAL.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise MutationPremiseError(
+            f"{JOURNAL.name} 读不出来（{exc.__class__.__name__}）—— "
+            "上一次中断得不干净，先手工看一眼再跑。") from None
+    bad = _journal_bad_files(doc)
+    if bad:
+        lines = "\n".join(f"  {rel}  原 {want} → 现 {got}" for rel, want, got in bad)
+        raise MutationPremiseError(
+            "上一次留痕被中断，这些文件**还停在改坏的状态**：\n" + lines +
+            "\n先恢复（仓库里改过的用 `git checkout -- <path>`，"
+            "或跑 `python -m verification.mutations --recover --yes`），再重跑。")
+    print(f"○ 发现上次中断的 journal（{doc.get('mutation', '?')}），"
+          "文件已是原状，已清除。")
+    _journal_clear()
 
 
 def _verdict(measured: bool, in_target: int, expect) -> bool | None:
@@ -741,21 +934,27 @@ def _apply(edits, backups: dict) -> None:
         path = pathlib.Path(e["file"])
         if not path.is_absolute():
             path = BACKEND / path
+        raw = path.read_bytes()
         text = path.read_text(encoding="utf-8")
-        backups.setdefault(path, text)
+        backups.setdefault(path, {"text": text, "raw": raw})
         n = text.count(e["old"])
         if n != 1:
             raise RuntimeError(
                 f"变异目标不唯一：{path.name} 里 {e['old']!r} 命中 {n} 次（要求正好 1 次）"
                 " —— 源码动过了，先看那条论断还成不成立，别硬改变异脚本")
-        path.write_text(text.replace(e["old"], e["new"], 1), encoding="utf-8")
+        # **按文件自己的换行写回**：`read_text` 把 CRLF 归一成 LF，若一律用
+        # `newline=""` 写，CRLF 靶子会被改成 LF ——「还原」当场变成一次改写。
+        newline = "\r\n" if b"\r\n" in raw else ""
+        with path.open("w", encoding="utf-8", newline=newline) as fh:
+            fh.write(text.replace(e["old"], e["new"], 1))
 
 
 def _revert(backups: dict) -> bool:
+    """按**原字节**写回 —— 「逐字节还原」是构造性成立的，不依赖换行推断。"""
     ok = True
-    for path, text in backups.items():
-        path.write_text(text, encoding="utf-8")
-        if path.read_text(encoding="utf-8") != text:
+    for path, entry in backups.items():
+        path.write_bytes(entry["raw"])
+        if path.read_bytes() != entry["raw"]:
             ok = False
     return ok
 
@@ -805,6 +1004,8 @@ def _delta(round_res: dict, baseline: dict, target: str) -> tuple[int, int]:
     两个数（原样的、扣过的）都留在报告里，扣没扣由读者自己核。
     （靶子上的红**少于**基线时，结果是负数 —— 照实记，不夹到 0：
     那说明这条变异没让靶子多红，反而盖掉了基线那条红。）
+    **负数这句话只属于这两个计数列**：判定不靠它们，见 `_newly_red` ——
+    「多红了几条」在「红的换了一条」时会得 0，那正是阴性对照的假绿来源。
     """
     in_target = (round_res["failed_by_file"].get(target, 0)
                  - baseline["failed_by_file"].get(target, 0))
@@ -812,10 +1013,22 @@ def _delta(round_res: dict, baseline: dict, target: str) -> tuple[int, int]:
     return in_target, whole_round
 
 
-def run(only: set | None = None) -> dict:
+def _newly_red(res: dict, baseline: dict) -> list:
+    """这一轮**新增**的红条（node id）。基线本来就红的那些不算。
+
+    计数相减（`|本轮| - |基线|`）在「红的换了一条」时会得 0：基线红 X、
+    这一轮 X 仍红且 Y 也红 → 差 0 → `expect=0` 的阴性对照被读成「相符」。
+    判据要问的是「**多**红了哪几条」，不是「多红了几条」。
+    """
+    base = set(baseline.get("failed_ids") or ())
+    return [i for i in (res.get("failed_ids") or ()) if i not in base]
+
+
+def _run_locked(only: set | None = None) -> dict:
     sources = _touched()
     source_before = {_rel(p): _sha(p.read_text(encoding="utf-8"))
                      for p in sorted(sources)}
+    source_before_bytes = {_rel(p): _sha_bytes(p) for p in sorted(sources)}
 
     print("基线（一点没改）：", end=" ", flush=True)
     baseline = _run_pytest("baseline")
@@ -835,22 +1048,35 @@ def run(only: set | None = None) -> dict:
             continue
         print(f"{mut['id']:<3} {mut['what']} … ", end="", flush=True)
         backups: dict = {}
+        touched = []
+        for e in mut["edits"]:
+            p = pathlib.Path(e["file"])
+            touched.append(p if p.is_absolute() else BACKEND / p)
+        _journal_write(mut["id"], touched)      # 先落盘，再动手
         try:
             _apply(mut["edits"], backups)
             res = _run_pytest(f"mutation:{mut['id']}")
         finally:
             reverted = _revert(backups)
+            if reverted:
+                # 还原干净才清 journal；没还原就把现场留给下一次启动去发现
+                _journal_clear()
         if not reverted:
             raise RuntimeError("还原失败 —— 工作区被改坏在磁盘上了，先手工检查再继续")
 
         in_target, whole_delta = _delta(res, baseline, mut["target"])
         raw_in_target = res["failed_by_file"].get(mut["target"], 0)
         base_in_target = baseline["failed_by_file"].get(mut["target"], 0)
-        matched = _verdict(res["measured"], in_target, mut["expect_failed"])
+        new_ids = _newly_red(res, baseline)
+        new_in_target = sum(1 for i in new_ids
+                            if i.split("::", 1)[0] == mut["target"])
+        matched = _verdict(res["measured"], new_in_target, mut["expect_failed"])
         records.append({**mut, **res, "failed_in_target": in_target,
                         "failed_in_target_raw": raw_in_target,
                         "baseline_in_target": base_in_target,
                         "failed_delta": whole_delta,
+                        "newly_red_in_target": new_in_target,
+                        "newly_red_total": len(new_ids),
                         "matched": matched, "reverted": reverted})
         if matched is None:
             why = ("超时" if res["timed_out"]
@@ -862,13 +1088,17 @@ def run(only: set | None = None) -> dict:
         cut = "" if (raw_in_target == in_target and res["failed"] == whole_delta) else (
             f"（原样 {raw_in_target} / 整轮 {res['failed']}；"
             f"已扣掉基线本来就红的 {base_in_target} / {baseline['failed']} 条）")
-        print(f"红 {in_target} 条（目标文件）· 整轮 {whole_delta} 条"
+        print(f"新增红 {new_in_target} 条（目标文件）· 整轮新增 {len(new_ids)} 条"
               f" · {'相符' if matched else '**与声明不符**'}{cut}")
 
-    # 再确认一遍：全跑完，上面那 `sources` 里每个源文件都必须逐字节回到原样
+    # 再确认一遍：全跑完，上面那 `sources` 里每个源文件都必须回到原样。
+    # **两种哈希各报各的**：文本哈希回答「跨机器是不是同一份」，字节哈希回答
+    # 「本机这份有没有被动过」。合并成一个就又回到了「两种口径混用」那个坑。
     source_after = {_rel(p): _sha(p.read_text(encoding="utf-8"))
                     for p in sorted(sources)}
+    source_after_bytes = {_rel(p): _sha_bytes(p) for p in sorted(sources)}
     all_reverted = source_after == source_before
+    all_reverted_bytes = source_after_bytes == source_before_bytes
 
     mismatches = [r["id"] for r in records if r["matched"] is False]
     #: 「没跑成」那几条单列 —— **它们既不算相符，也不算与声明不符**。
@@ -902,11 +1132,22 @@ def run(only: set | None = None) -> dict:
             "mismatches": mismatches,
             "unmeasured": unmeasured,
             "all_sources_reverted": all_reverted,
+            "reverted_bytes": all_reverted_bytes,
             "baseline_green": (baseline["measured"]
                                and baseline["failed"] == 0
                                and baseline["returncode"] == 0),
         },
     }
+
+
+def run(only: set | None = None) -> dict:
+    """拿锁 → 处理上次中断的现场 → 开跑。
+
+    锁和 journal 都在这一层：任何一次 `run()`（包括测试里的）都走同一条门。
+    """
+    with _MutationLock():
+        _recover_interrupted_journal()
+        return _run_locked(only)
 
 
 def _selfcheck_test_count() -> int:
@@ -958,9 +1199,11 @@ def _markdown(rep: dict) -> str:
              "那一组问的是「这份报告有没有过期」，而本模块每一轮都在被改坏的源码上跑 —— "
              f"它见到环境变量 `{_MUTATION_ENV}` 会跳过自己。"
              "「报告过期」由普通 `pytest` 抓，见那个文件。")
-    L.append(f"- {rep['source_count']} 个源文件跑完后逐字节还原："
-             f"**{'是' if s['all_sources_reverted'] else '否（！）'}**"
-             "（逐文件 `sha256` 见 `mutations_report.json` 的 `sources` / `sources_after`）。")
+    L.append(f"- {rep['source_count']} 个源文件跑完后："
+             f"**文本哈希 {'一致' if s['all_sources_reverted'] else '不一致（！）'}**、"
+             f"**字节{'逐字节还原' if s['reverted_bytes'] else '未还原（！）'}**"
+             "（文本那份见 `sources` / `sources_after`；字节这一格回答的是"
+             "「本机这份有没有被动过」，两件事分开记）。")
     L.append("")
     L.append("## 对照表")
     L.append("")
@@ -972,7 +1215,7 @@ def _markdown(rep: dict) -> str:
     for r in rep["mutations"]:
         claim = "至少 1 条" if r["expect_failed"] is None else f"{r['expect_failed']} 条"
         L.append(f"| `{r['id']}` | {r['group']} | {r['what']} | {claim} | "
-                 f"**{r['failed_in_target']} 条** | {_VERDICT_MARKS[r['matched']]} |")
+                 f"**{r['newly_red_in_target']} 条** | {_VERDICT_MARKS[r['matched']]} |")
     L.append("")
     L.append(f"共 **{s['total']}** 处变异，其中 **{s['matched']}** 处的实测与声明相符。")
     if s["mismatches"]:
@@ -1002,8 +1245,8 @@ def _markdown(rep: dict) -> str:
             raw_note = (f"（原样数：目标文件 {r['failed_in_target_raw']} 条、"
                         f"整轮 {r['failed']} 条 —— 上面两个已经扣掉基线本来就红的 "
                         f"{r['baseline_in_target']} / {base['failed']} 条）")
-        L.append(f"- 实测：目标文件红 **{r['failed_in_target']}** 条"
-                 f"（相对基线多红的），整轮红 **{r['failed_delta']}** 条{raw_note}、"
+        L.append(f"- 实测：**新增红 {r['newly_red_in_target']} 条**"
+                 f"（目标文件）、整轮新增 {r['newly_red_total']} 条{raw_note}、"
                  f"绿 {r['passed']} 条、跳过 {r['skipped']} 条，"
                  f"退出码 {r['returncode']}，{r['seconds']}s")
         for e in r["edits"]:
@@ -1027,7 +1270,16 @@ def _markdown(rep: dict) -> str:
         L.append("<details><summary>原样输出（末 12 行）</summary>")
         L.append("")
         L.append("```")
-        L.append(r["raw_tail"])
+        # **这里也必须过 `_redact()`**：`raw_tail` 是 pytest 的原话逐字转录，
+        # 而 C6 那一轮的合法失败输出（错引测试抓住植入字面量时的断言消息）里
+        # **就含着那个字面量**。不脱敏的话，它被抄进这份报告 →
+        # `test_no_known_misquote_survives_in_our_materials` 抓住报告自己 →
+        # 下一轮的**基线**红 → 之后每一轮都把这条红当基线扣掉 →
+        # C6「与声明不符」。edit diff 那两行（上面）早就过了 `_redact`，
+        # 漏的正是这一处 —— 原话比 diff 更容易带着字面量进来。
+        # `mutations_report.json` 里保持原样不脱敏：`.json` 不在扫描范围，
+        # 这是 `_REDACTION_NOTE` 交代过的口径。
+        L.append(_redact(r["raw_tail"]))
         L.append("```")
         L.append("")
         L.append("</details>")
@@ -1040,13 +1292,15 @@ def _markdown(rep: dict) -> str:
         L.append(f"○ **这一份留痕不完整**：{len(s['unmeasured'])} 处变异那一轮没跑成"
                  f"（见上面那张表的「○ 没测到」）。"
                  f"**没测到不是结论** —— 先把它们跑成，再读这份产物。")
-    elif s["matched"] == s["total"] and s["all_sources_reverted"] and s["baseline_green"]:
+    elif (s["matched"] == s["total"] and s["all_sources_reverted"]
+          and s["reverted_bytes"] and s["baseline_green"]):
         # 「按声明」——**不是**「全部变红」：阴性对照 `K0` 的声明就是「一条都不红」。
         # 名字从记录里数出来，不写死（写死的名字会在这份产物里变成第二份事实）。
         quiet = [r["id"] for r in rep["mutations"] if r["expect_failed"] == 0]
         tail = (f"（其中 {'、'.join(f'`{i}`' for i in quiet)} 是阴性对照："
                 f"按声明**一条都不该红**）" if quiet else "")
-        L.append(f"**{s['total']} 处变异全部按声明对上{tail}，基线全绿，源文件逐字节还原。** "
+        L.append(f"**{s['total']} 处变异全部按声明对上{tail}，基线全绿，"
+                 "源文件逐字节还原。** "
                  "这份测试集不是恒真的 —— 它有**会被改坏**的地方，而那些地方都被盯着；"
                  "反过来，也有地方**被盯着「改了却什么都不该红」**："
                  "那处证明红是**冲着这个缺陷**红的，而不是改一行字就红。")
@@ -1056,7 +1310,10 @@ def _markdown(rep: dict) -> str:
         L.append("- 「不符」：先看**论断还成不成立**（测试是不是真的失去了鉴别力），"
                  "再决定是改材料里那个数字、还是补测试 —— **不许只把期望值改成漂移后的样子**。")
         if not s["all_sources_reverted"]:
-            L.append("- 源文件没还原干净：**先去 `git diff` 看一眼**，别接着往下做。")
+            L.append("- 源文件没还原干净（文本哈希）：**先去 `git diff` 看一眼**，别接着往下做。")
+        if not s["reverted_bytes"]:
+            L.append("- 源文件没还原干净（**字节**）：文本哈希相同不代表磁盘上那份没变 —— "
+                     "行尾被换过也会走到这里。先 `git diff` 看清楚。")
         if not s["baseline_green"]:
             L.append("- 基线本身就是红的：底下每条的「红几条」**已经扣掉**基线那部分，"
                      "但基线红这件事本身仍然要修 —— 它说明交付物此刻是红的，"
@@ -1065,12 +1322,110 @@ def _markdown(rep: dict) -> str:
     return "\n".join(L)
 
 
+def preflight() -> int:
+    """只验靶串唯一性：不跑变异、不写文件，几秒出结果。
+
+    `_apply` 的 `count != 1` 报错写得很清楚，但它是**跑到那一条才抛**：一轮十几
+    分钟，`G5` 排在第 5、`C7` 更靠后，于是要等几分钟才知道靶串哑了。这里把同一
+    件事提前，一次列出所有哑掉的靶。
+
+    **它只验唯一性，验不了「靶串还在、但语义已经变了」** —— 后者只能靠 `git diff`
+    和论断本身。所以它绿不等于变异会绿，只等于「不会崩在靶串上」。
+
+    退出码沿用三态：`0` 全唯一；`2` 有靶串找不到或命中多次（**没测到**，不是
+    「不符」—— 一条都还没跑）。
+    """
+    bad = []
+    for mut in MUTATIONS:
+        for e in mut["edits"]:
+            path = pathlib.Path(e["file"])
+            if not path.is_absolute():
+                path = BACKEND / path
+            if not path.exists():
+                bad.append((mut["id"], e["file"], "文件不存在"))
+                continue
+            n = path.read_text(encoding="utf-8").count(e["old"])
+            if n != 1:
+                bad.append((mut["id"], e["file"], f"命中 {n} 次"))
+    if bad:
+        print(f"\n○ 没测到：{len(bad)} 处靶串不唯一或不在 —— 先修锚点，别跑那十几分钟：",
+              file=sys.stderr)
+        for mid, f, why in bad:
+            print(f"  · {mid}  {f}  {why}", file=sys.stderr)
+        return 2
+    edits = sum(len(m["edits"]) for m in MUTATIONS)
+    print(f"√ {len(MUTATIONS)} 条变异的 {edits} 处靶串都唯一")
+    return 0
+
+
+def _recover_cli(yes: bool) -> int:
+    """按 journal 精确写回原字节 —— **本装置唯一会覆盖人写内容的动作**。
+
+    先打印逐文件差异（原/现哈希、字节数），再说「加 `--yes` 才会写」。
+    这一步值得多一次停顿：它覆盖的是磁盘上的源码，不是产物。
+    """
+    if not JOURNAL.is_file():
+        print("没有待恢复的 journal —— 上次没有中断，或者已经恢复过。")
+        return 0
+    try:
+        doc = json.loads(JOURNAL.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"○ 没测到：{JOURNAL.name} 读不出来（{exc.__class__.__name__}）。",
+              file=sys.stderr)
+        return 2
+    rows, bad = [], []
+    for rel, rec in (doc.get("files") or {}).items():
+        p = BACKEND / rel
+        raw = p.read_bytes() if p.is_file() else b""
+        got = hashlib.sha256(raw).hexdigest() if p.is_file() else None
+        rows.append((rel, rec.get("sha256") or "", got, len(raw) if p.is_file() else 0))
+        if got != rec.get("sha256"):
+            bad.append((rel, p, rec))
+    print(f"journal：`{doc.get('mutation', '?')}`（{doc.get('written_at', '?')}）")
+    for rel, want, got, size in rows:
+        print(f"  {rel}  原 {want[:12]}  现 {(got or '缺')[:12]}  {size} B  "
+              f"{'一致' if got == want else '**不一致**'}")
+    if not bad:
+        _journal_clear()
+        print("文件都与 journal 一致，已清除 journal。")
+        return 0
+    if not yes:
+        print("\n这会**覆盖磁盘上的源码**。核对上面的差异后，加 `--yes` 才会写回。",
+              file=sys.stderr)
+        return 2
+    try:
+        with _MutationLock():
+            for rel, p, rec in bad:
+                p.write_bytes(base64.b64decode(rec["bytes_b64"]))
+                if _sha_bytes(p) != rec["sha256"]:
+                    print(f"○ 没测到：{rel} 写回后哈希仍不对。", file=sys.stderr)
+                    return 2
+            _journal_clear()
+    except MutationPremiseError as exc:
+        print(f"\n○ 没测到：{exc}", file=sys.stderr)
+        return 2
+    print(f"已按 journal 写回 {len(bad)} 个文件。")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="变异测试留痕：改坏被测代码，看测试红不红")
     ap.add_argument("--only", default="", help="只跑这几条（逗号分隔，如 G1,V3）")
     ap.add_argument("--json", default=str(HERE / "mutations_report.json"))
     ap.add_argument("--md", default=str(HERE / "MUTATIONS.md"))
+    ap.add_argument("--preflight", action="store_true",
+                    help="只验靶串唯一性（几秒），不跑变异、不写文件")
+    ap.add_argument("--recover", action="store_true",
+                    help="按上次中断留下的 journal 恢复源文件（需配 --yes 才写）")
+    ap.add_argument("--yes", action="store_true",
+                    help="配合 --recover：确认写回磁盘")
     args = ap.parse_args(argv)
+
+    if args.recover:
+        return _recover_cli(args.yes)
+
+    if args.preflight:
+        return preflight()
 
     only = {x.strip() for x in args.only.split(",") if x.strip()} or None
     if only:
@@ -1123,7 +1478,8 @@ def main(argv=None) -> int:
 
     s = rep["summary"]
     print(f"\n{s['matched']}/{s['total']} 与声明相符；"
-          f"源文件还原={'是' if s['all_sources_reverted'] else '否'}；"
+          f"源文件还原（文本）={'是' if s['all_sources_reverted'] else '否'}；"
+          f"（字节）={'是' if s['reverted_bytes'] else '否'}；"
           f"基线={'绿' if s['baseline_green'] else '红'}")
     # 「没测到」既不算相符也不算不符 —— 它自己一条出口（`2`）。
     # **`2` 不许折进 `1`**：那会让一次没跑成的留痕看起来像一处发现。
@@ -1132,7 +1488,7 @@ def main(argv=None) -> int:
               f"这一份留痕不完整，别照它下结论。", file=sys.stderr)
         return 2
     return 0 if (s["matched"] == s["total"] and s["all_sources_reverted"]
-                 and s["baseline_green"]) else 1
+                 and s["reverted_bytes"] and s["baseline_green"]) else 1
 
 
 if __name__ == "__main__":

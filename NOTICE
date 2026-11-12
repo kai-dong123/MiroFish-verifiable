@@ -21,7 +21,7 @@ mirofish-verifiable —— MiroFish 的可验证性 fork
 | `README.md` | 开头增加本 fork 的说明、被改动的上游文件清单与自研边界指向 | 2026-09-17 |
 | `README-ZH.md` | 同上（中文） | 2026-09-17 |
 | `backend/requirements.txt` | 增加 `mcp<2` 上界与 `tiktoken==0.7.0` 锁定，各带一段说明 | 2026-09-19（`mcp<2` 先落在 09-17） |
-| `.gitignore` | 增加忽略装置自检产物（`verification_report.md` / `verification_report.json`）；并把上游那行从未生效的 `backend/logs/` 改为实际目录名 `backend/log/` | 2026-09-17 |
+| `.gitignore` | 增加忽略装置自检产物（`verification_report.md` / `verification_report.json`）与变异留痕的运行时文件（锁 / journal）；并把上游那行从未生效的 `backend/logs/` 改为实际目录名 `backend/log/` | 2026-11-12 |
 
 **改动的性质：那三个入口脚本的改动是纯增量的，而且默认关闭。** 不传 `--guards`
 时，走的是与上游完全相同的代码路径 —— 仿真行为逐字未变。装置的全部新增代码都在

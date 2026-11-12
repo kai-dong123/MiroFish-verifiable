@@ -870,7 +870,124 @@ def render_html(adj: dict, sp: dict, title: str) -> str:
 
 
 # --------------------------------------------------------------------------
-# 三、入口
+# 三、产物一览（**六份产物，缺哪份就写缺**）
+# --------------------------------------------------------------------------
+#
+# 这一页只做一件事：把装置落下的六份产物摆在一张表上 —— 在哪、什么时候生成、
+# 有多少条、**它读谁**。评审时最常见的三个问题（「证据在哪」「这是什么时候的」
+# 「改了 A 要不要重跑 B」）都在这张表上。
+#
+# **不重算、不判定、不扩 `findings()` 的闭集**：条数是从产物里读出来的，
+# 文件不在就写「缺」，**不补 0** —— 「0 条」和「没有这份产物」是两件事。
+
+#: `(标题, 机读 json, 人读 md, 一句话, 它读谁, 条数取法)`
+#: 条数取法拿不到就返回 `None`（页面写「未知」），**不返回 0**。
+_BACKEND = HERE.parent
+ARTIFACTS = (
+    ("可验证性报告",
+     _BACKEND / "verification_report.json", _BACKEND / "verification_report.md",
+     "三条复现 + 与上游草稿对账", (),
+     lambda d: d.get("summary", {}).get("total")),
+    ("裁决留痕",
+     HERE / "adjudication_report.json", HERE / "ADJUDICATION.md",
+     "把三条复现的读数判成三态", ("verification_report.json", "e2e_report.json"),
+     lambda d: d.get("summary", {}).get("total")),
+    ("反例自证",
+     HERE / "selfproof_report.json", HERE / "SELFPROOF.md",
+     "证明这套判据对这批读数有鉴别力", ("adjudication_report.json",),
+     lambda d: len(d["cases"]) if isinstance(d.get("cases"), list) else None),
+    ("端到端",
+     HERE / "e2e_report.json", HERE / "e2e_report.md",
+     "替身模型驱真入口脚本，不花一次 API", (),
+     lambda d: len(d["results"]) if isinstance(d.get("results"), list) else None),
+    ("变异留痕",
+     HERE / "mutations_report.json", HERE / "MUTATIONS.md",
+     "逐条改坏源码，看测试红不红", (),
+     lambda d: len(d["mutations"]) if isinstance(d.get("mutations"), list) else None),
+    ("对账自检",
+     HERE / "reconcile_selfcheck_report.json", HERE / "RECONCILE_SELFCHECK.md",
+     "检「对账」那一步自己有没有走岔", ("verification_report.json",),
+     lambda d: len(d["rounds"]) if isinstance(d.get("rounds"), list) else None),
+)
+
+
+def artifact_rows() -> list[dict]:
+    """把六份产物的现状读出来。**读不出来就记「缺」/「未知」**，不猜。"""
+    rows = []
+    for name, js, md, what, deps, count in ARTIFACTS:
+        row = {"name": name, "json": js, "md": md, "what": what,
+               "deps": deps, "count": None, "generated_at": None,
+               "sha256": None, "json_ok": False, "md_ok": md.is_file()}
+        if js.is_file():
+            try:
+                doc = json.loads(js.read_text(encoding="utf-8"))
+                row["json_ok"] = True
+                row["generated_at"] = doc.get("generated_at")
+                row["count"] = count(doc)
+                row["sha256"] = P.sha256_text(js)
+            except (OSError, ValueError, KeyError, TypeError):
+                # 文件在、读不出来 —— **不算「有」**。形状不对的产物不能替自己作证。
+                pass
+        rows.append(row)
+    return rows
+
+
+def render_artifacts_html(rows: list, title: str) -> str:
+    """六份产物的一览页。零 JavaScript、无外部引用、不重算任何数。"""
+    css = (_CSS.replace("__V1__", A.PASS_).replace("__V2__", A.FAIL_)
+           .replace("__V3__", A.UNDECIDED).replace("__LAYER_RULES__", ""))
+    n_ok = sum(1 for r in rows if r["json_ok"])
+    body = [
+        f'<h1>{_esc(title)}</h1>',
+        '<p class="dim">这一页只说「证据在哪、什么时候的、有多少条、读完谁」——'
+        '<strong>不判定、不重算</strong>。条数从产物里读；文件不在就写「缺」，'
+        '<strong>不补 0</strong>：「0 条」和「没有这份产物」是两件事。</p>',
+        f'<h2>{len(rows)} 份产物（机读齐了 {n_ok}/{len(rows)} 份）</h2>',
+        '<table><thead><tr><th>产物</th><th>条数</th><th>生成时间</th>'
+        '<th>它读谁</th><th>机读 / 人读</th></tr></thead><tbody>']
+    # **把闸的结论原样搬上来，不在这里另算。** 页上自己比一次哈希就是第二个
+    # 结论源；两处独立计算迟早分叉，而那一刻屏幕上会出现两个不同的答案。
+    try:
+        drift = A.source_drift_problem()
+    except A.AdjudicationError as exc:
+        drift = f"没测到（{exc}）"
+    gate = ("<strong>MATCH</strong>" if drift is None
+            else f'<span class="dead">{_esc(drift)}</span>')
+    body.append('<p class="dim">源码闸（与 <code>adjudicate</code> 同一个函数，'
+                f'本页不另算）：{gate}</p>')
+    for r in rows:
+        count = ("未知" if r["count"] is None else str(r["count"])) \
+            if r["json_ok"] else "<strong>缺</strong>"
+        stamp = _esc(r["generated_at"] or "—") if r["json_ok"] else "—"
+        deps = "、".join(r["deps"]) or "（不读别的产物）"
+        paths = []
+        for p, ok in ((r["json"], r["json_ok"]), (r["md"], r["md_ok"])):
+            try:
+                shown = p.relative_to(_BACKEND).as_posix()
+            except ValueError:
+                # 不在仓库里（落点换过、或者产物在别处）—— 写绝对路径，
+                # 但**不放宽**「缺」的判定：`ok` 才是那个答案。
+                shown = p.as_posix()
+            paths.append(f"<code>{_esc(shown)}</code>" if ok
+                         else f"<code>{_esc(shown)}</code>（缺）")
+        body.append(
+            f'<tr><td><strong>{_esc(r["name"])}</strong><br>'
+            f'<span class="dim">{_esc(r["what"])}</span></td>'
+            f'<td>{count}</td><td>{stamp}</td><td>{_esc(deps)}</td>'
+            f'<td>{"<br>".join(paths)}</td></tr>')
+    body.append('</tbody></table>')
+    if n_ok < len(rows):
+        body.append('<p class="dim">○ 有产物缺着或读不出来 —— 这一页只报现状，'
+                    '不替它们补一份。补法见 <code>verification/README.md</code> '
+                    '末尾的「复跑一遍」。</p>')
+    return ('<!doctype html>\n<html lang="zh-CN"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            f'<title>{_esc(title)}</title><style>{css}</style></head><body>'
+            + "\n".join(body) + '</body></html>\n')
+
+
+# --------------------------------------------------------------------------
+# 四、入口
 # --------------------------------------------------------------------------
 
 def main(argv=None) -> int:
@@ -881,20 +998,69 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default=str(DEFAULT_OUT),
                     help="写到哪儿（默认系统临时目录，不落进仓库）")
     ap.add_argument("--stdout", action="store_true", help="打到标准输出，不落盘")
+    ap.add_argument("--check", action="store_true",
+                    help="只核对两份产物（形状 + 自相矛盾），不渲染、不落盘。"
+                         "CI 里用它；退出码仍是 0/1/2 三态")
+    ap.add_argument("--artifacts", action="store_true",
+                    help="不渲染判据页，改渲染「六份产物一览」页")
     ap.add_argument("--title", default=DEFAULT_TITLE)
     args = ap.parse_args(argv)
 
+    # `--artifacts` 与判据页**不能落到同一个文件**上（默认都写进临时目录）。
+    # 用户没指定 `--out` 时，产物一览改名 —— 两个页面互不覆盖。
+    out = args.out
+    if args.artifacts and out == str(DEFAULT_OUT):
+        out = str(DEFAULT_OUT.with_name("verification_artifacts.html"))
+
     # 落点先问一句，**问在读取之前**（同 `adjudicate` / `selfproof`）：前提再全，
-    # 写不出去也等于一条都没量到，该退 `2`。`--stdout` 时没有落点，跳过。
-    if not args.stdout:
-        rc = P.refuse_out_path(args.out)
+    # 写不出去也等于一条都没量到，该退 `2`。`--stdout` / `--check` 时没有落点，跳过。
+    if not (args.stdout or args.check):
+        rc = P.refuse_out_path(out)
         if rc is not None:
             return rc
+
+    if args.artifacts:
+        rows = artifact_rows()
+        page = render_artifacts_html(
+            rows, args.title + " · 产物一览")
+        if args.stdout:
+            sys.stdout.write(page)
+        else:
+            try:
+                with open(out, "w", encoding="utf-8", newline="\n") as fh:
+                    fh.write(page)
+            except OSError as exc:
+                print(f"\n○ 没测到：产物一览页写不下去"
+                      f"（{exc.__class__.__name__}: {exc}）—— "
+                      "页面渲染出来了，但**这一份没落成**。")
+                return 2
+            print(f"\n→ {os.path.abspath(out)}")
+        missing = [r["name"] for r in rows if not (r["json_ok"] and r["md_ok"])]
+        print(f"  产物一览：机读齐了 {sum(1 for r in rows if r['json_ok'])}/{len(rows)} 份")
+        if missing:
+            # **缺产物就是「没测到」。** 这一页照样落下来（它自己会说哪份缺），
+            # 但不按「一切正常」退出 —— 同 `run_all`：缺读数不是结论。
+            print(f"○ 没测到：这几份缺着或读不出来：{'、'.join(missing)} —— "
+                  "页面只报现状，不替它们补一份。")
+            return 2
+        return 0
 
     try:
         adj = load(args.adj)
         sp = load(args.sp)
         check_shape(adj, sp)
+        if args.check:
+            # **只判不画。** 用的是同一套形状检查 + `findings()` 那个窄闭集
+            # （只比两份产物同一格有没有自相矛盾），**不另开一套判据** ——
+            # 展示层一旦自己长出一套判定，屏幕上就会出现两个「结论」。
+            found = findings(adj, sp)
+            for x in found:
+                print(f"  × {x}")
+            if found:
+                print(f"\n× 展示层发现 {len(found)} 处折合／不一致 —— 不按「表是好的」退出。")
+                return 1
+            print(f"√ 两份产物形状对得上、也没有自相矛盾（{len(adj['rows'])} 条判据）。")
+            return 0
         page = render_html(adj, sp, args.title)
     except ViewerError as e:
         # 前提不成立是「没测到」（`2`），不是「没达到预期」（`1`）——

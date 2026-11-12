@@ -7,7 +7,8 @@
 不发 LLM 请求、不要 API key、不要 Zep、不花钱。机器闲着时本机约 38 秒跑完
 （三次计时 37.1 / 37.8 / 37.8 秒；其中一部分是最后那步对账）。
 **这个秒数不是刻度**：同一台机器、同一份代码，忙起来实测能到 86 秒。
-（首次运行要下一次分词器的编码表 —— 一张几 MB 的静态表，不是 LLM 调用，但要用到网。）
+（编码表已随仓库带入一份（`verification/vendor/tiktoken/`，见 `tokenizer_cache.py`）——
+不是 LLM 调用，常规路径**不用网**。）
 
 ## 退出码（**三种，不是两种**）
 
@@ -232,6 +233,8 @@ def _environment() -> dict:
         "tokenizer": None,
         "tokenizer_cache": None,
         "tokenizer_cache_bytes": None,
+        "tokenizer_table_sha256": None,
+        "tokenizer_source": None,
     }
     try:
         from . import _probe as P
@@ -253,37 +256,19 @@ def _environment() -> dict:
 
         enc = tiktoken.get_encoding("o200k_base")
         env["tokenizer"] = f"tiktoken o200k_base (n_vocab={enc.n_vocab})"
+        # **实际用的哪一份表、内容是什么** —— 走 `tokenizer_cache`，别再在这里
+        # 拼一遍路径：仓库内那份、外部缓存、tiktoken 默认缓存，三种来源它都认，
+        # 而 `_tokenizer_cache_bytes` 原先只认最后一种（会把仓库内那份记成「未知」）。
+        from . import tokenizer_cache
+
+        info = tokenizer_cache.describe()
         env["tokenizer_cache"] = os.environ.get("TIKTOKEN_CACHE_DIR") or "默认临时目录"
-        env["tokenizer_cache_bytes"] = _tokenizer_cache_bytes()
+        env["tokenizer_cache_bytes"] = info["bytes"]
+        env["tokenizer_table_sha256"] = info["sha256"]
+        env["tokenizer_source"] = info["source"]
     except Exception as exc:  # noqa: BLE001
         env["tokenizer"] = f"取不到（{exc.__class__.__name__}）"
     return env
-
-
-#: 编码表那份静态数据的下载地址。tiktoken 把它按 **URL 的 sha1** 落进缓存目录，
-#: 所以这个哈希就是缓存里的文件名 —— 于是不用去猜「哪个文件是它」。
-_TIKTOKEN_BLOB = ("https://openaipublic.blob.core.windows.net/encodings/"
-                  "o200k_base.tiktoken")
-
-
-def _tokenizer_cache_bytes():
-    """量一下那份编码表**在本机落盘多少字节**（拿不到就 `None`，不猜）。
-
-    README 里写着「首次会下一张几 MB 的表」。那句话是**观测值不是常数** ——
-    编码表跟着 `tiktoken` 的版本走，哪天变了，材料里那句话就悄悄过期了。
-    所以把**实测**的这个数记进产物的环境块：将来谁要核，核的是它，不是散文。
-    """
-    import hashlib
-    import tempfile
-
-    cache = (os.environ.get("TIKTOKEN_CACHE_DIR")
-             or os.environ.get("DATA_GYM_CACHE_DIR")
-             or os.path.join(tempfile.gettempdir(), "data-gym-cache"))
-    blob = os.path.join(cache, hashlib.sha1(_TIKTOKEN_BLOB.encode()).hexdigest())
-    try:
-        return os.path.getsize(blob)
-    except OSError:
-        return None                       # 缓存目录被别人清过／还没下完
 
 
 #: 单条复现的墙钟上限（秒）。与 `e2e_stub` 的 `--timeout` 同量级：本机一条
@@ -382,16 +367,33 @@ def _run_one(mod: str, echo: bool = True,
 
 
 def _write_report(prefix: str, results: list, env: dict,
-                  recon_rc: int = 0, recon_lines: tuple = ()) -> tuple:
+                  recon_rc: int = 0, recon_lines: tuple = (),
+                  readings: tuple = (), run_stable: bool = True) -> tuple:
     """落盘 `.md` 与 `.json`。返回两个路径。
 
     `.json` 里**只有汇总与环境**，外加每条的原文 —— 同样不做二次解析。
+
+    `readings` 是 `(开始指纹, 结束指纹)`（`_probe.readings_fingerprint()` 的返回值），
+    `run_stable` 说这两次是否相同。**不相同就不写指纹、写 `null`** —— 一份
+    「跑的过程中树被改过」的报告，比没有报告更危险：它看起来像有效读数。
     """
     worst = max([rc for _, _, rc, _ in results] + [recon_rc], default=0)
     n_ok = sum(1 for _, _, rc, _ in results if rc == 0)
     # 措辞**不再在这里抄第二份** —— 用模块级那一张（见 `VERDICTS` 那里的说明）：
     # 打屏与产物必须说同一句话，而「同一句话抄两遍」正是它们分叉的唯一原因。
     verdicts = VERDICTS
+
+    start_fp = readings[0] if readings else {}
+    end_fp = readings[1] if len(readings) > 1 else {}
+
+    def _fp_show(fp) -> str:
+        """一行写清一个指纹。**取不到就写「没测到」**，不写一个空串充当值。"""
+        sha = fp.get("sha256")
+        if not sha:
+            miss = fp.get("missing") or []
+            why = f"缺 {len(miss)} 份输入" if miss else "编码表缺失"
+            return f"**没测到**（{why}）"
+        return f"`{sha[:12]}…`（{len(fp.get('files') or {})} 份输入 + 编码表）"
 
     md = ["# 可验证性报告", "",
           f"生成时间：{time.strftime('%Y-%m-%d %H:%M:%S')}", "",
@@ -411,16 +413,30 @@ def _write_report(prefix: str, results: list, env: dict,
            "所以「一致」不是结构保证，是一条要守的断言。", "",
            f"- 判定：**{verdicts.get(recon_rc, recon_rc)}**（退出码 `{recon_rc}`）", "",
            "```text", "\n".join(recon_lines), "```", "",
+           "## 读数指纹（这份报告是不是用这棵树跑的）", "",
+           "> 口径：**产出这三条读数所依赖的输入** —— `_probe.READING_SOURCES` 那份"
+           "源码清单，加上实际用的那张编码表。不含展示层与派生文档：改它们只影响"
+           "「怎么说」，不影响「量到什么」，不该让报告过期。", "",
+           f"- 开始：{_fp_show(start_fp)}",
+           f"- 结束：{_fp_show(end_fp)}",
+           ("- 期间未变：**是** —— 这份报告与当前这棵树对得上。"
+            if run_stable else
+            "- 期间未变：**否** —— **这份报告不成立**：跑的过程中读数集被改过，"
+            "或者一开始就不全。产物里的 `readings_sha256` 因此写的是 `null`。"),
+           "",
            "## 环境（这批数字是用什么跑的）", "",
            "| 项 | 值 |", "|---|---|"]
     for key in ("python", "platform", "camel_ai", "camel_oasis",
                 "tokenizer", "tokenizer_cache", "tokenizer_cache_bytes",
+                "tokenizer_table_sha256", "tokenizer_source",
                 "clock_step_ns", "cwd"):
         val = env.get(key)
         label = {"python": "Python", "platform": "平台",
                  "camel_ai": "camel-ai", "camel_oasis": "camel-oasis",
                  "tokenizer": "分词器", "tokenizer_cache": "分词器缓存目录",
                  "tokenizer_cache_bytes": "编码表落盘字节数 (B)",
+                 "tokenizer_table_sha256": "编码表内容 sha256",
+                 "tokenizer_source": "编码表来源（external/vendor/default/missing）",
                  "clock_step_ns": "时钟最小步长 (ns)", "cwd": "工作目录"}[key]
         md.append(f"| {label} | {val if val is not None else '未知'} |")
     step_ns = env.get("clock_step_ns")
@@ -443,9 +459,9 @@ def _write_report(prefix: str, results: list, env: dict,
                "所以不影响三条复现的判定。"]
     md += ["",
            "分词器那一行不是装饰：切片那一节的数字（270 条 / 5130 token）**是它数出来的**，",
-           "换个分词器就不是这些数。它首次使用要下的一份静态数据文件"
-           "（一张几 MB 的静态表，之后走缓存；本机实测字节数见下表）——",
-           "所以「不发 LLM 请求」是准确的，「这台机器上不需要任何网络」不是。", "",
+           "换个分词器就不是这些数。那张静态编码表**已随仓库带入一份**，外部缓存里",
+           "有表时让位给外部（来源与内容哈希见下表 `tokenizer_source` / `tokenizer_table_sha256`）——",
+           "所以「不发 LLM 请求」是准确的，「这台机器上不需要任何网络」如今**也**是准确的。", "",
            "---", "", "## 各条原样转录", "",
            "> 下面每一条的正文，就是那条命令当时打在屏幕上的原话，逐字转录。",
            "> **不做二次解析** —— 报告里的数字如果是「再算一遍」来的，就可能和产生它的",
@@ -490,6 +506,19 @@ def _write_report(prefix: str, results: list, env: dict,
     json_doc = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "not_a_pass_rate": True,
+        # **这份报告是不是用这棵树跑的。** 开始/结束各算一次；不等就是
+        # 「跑的过程中输入被改过」—— 那种报告不能算数，所以指纹写 `null`。
+        # `adjudicate` 会拿 `end` 与当前这棵树再比一次，对不上就退 `2`。
+        "run_stable": bool(run_stable),
+        "readings_sha256": (
+            {"start": start_fp.get("sha256"),
+             "end": end_fp.get("sha256"),
+             "sources": len(end_fp.get("files") or {}),
+             # 逐文件哈希只作**诊断**用：指纹对不上时，`adjudicate` 能说出
+             # 是「哪一份」变了，而不是只甩两个十六进制串让人自己找。
+             "files": end_fp.get("files") or {},
+             "tokenizer_table": end_fp.get("tokenizer_table")}
+            if run_stable else None),
         "environment": env,
         "results": [_repro_entry(i, mod, what, rc, body)
                     for i, (mod, what, rc, body) in enumerate(results, 1)],
@@ -532,6 +561,10 @@ def main(argv=None) -> int:
         rc = P.refuse_out_path(f"{args.out}.md", f"{args.out}.json")
         if rc is not None:
             return rc
+        # **动手之前**先给这棵树拍一张。跑完再拍一张，两张不一样就说明
+        # 读数集在跑的过程中被改过 —— 那不是「读数可信不可信」，是「这份
+        # 报告是不是同一次运行」的问题。见 `_probe.readings_fingerprint`。
+        readings_start = P.readings_fingerprint()
 
     print("=" * 66)
     print("装置自检：三个复现，一条命令")
@@ -589,18 +622,26 @@ def main(argv=None) -> int:
     for line in _boundary_disclaimer(results):
         print(line)
     print("  以上都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。")
-    print("  （前提是分词器那份静态编码表拿得到 —— 首次使用要下一次，约几 MB，"
-          "之后走缓存。）")
+    print("  （前提是分词器那份静态编码表拿得到 —— 仓库里带了一份，外部缓存有表"
+          "时让位给外部，两边都没有才要联网下一份。）")
     print("  取不到时上面会明确写「没测到」，**不会**把没跑成的记成「没达到预期」"
           " —— 缺读数不是结论。")
     print("  对账单独列在汇总里，**不并进那个 x/3** —— 它不是第四个复现，")
     print("  它管的是「装置和准备发出去的草稿有没有走岔」。")
 
+    run_stable = True
     if not args.no_report:
+        from . import _probe as P
+
+        readings_end = P.readings_fingerprint()
+        run_stable = (readings_start.get("sha256") is not None
+                      and readings_start["sha256"] == readings_end.get("sha256"))
         env = _environment()
         try:
             md_path, js_path = _write_report(args.out, results, env,
-                                             recon_rc, recon_lines)
+                                             recon_rc, recon_lines,
+                                             readings=(readings_start, readings_end),
+                                             run_stable=run_stable)
         except OSError as exc:
             # 落点上面那道门已经问过一次（不存在/不可写）。这里接的是**它挡不住
             # 的那一半**：目录在、但文件建不出来（同名目录、被占用、只读盘）。
@@ -613,8 +654,19 @@ def main(argv=None) -> int:
         print(f"  报告已落盘：{os.path.abspath(md_path)}")
         print(f"              {os.path.abspath(js_path)}")
         print("  （不是通过率：两条是可修的具体失效，一条是划出来的边界。）")
+        if not run_stable:
+            # **报告写了，但它不算数。** 磁盘上留一份「这次没测到」的产物，
+            # 比留一份旧的、看起来有效的产物好 —— 后者会被当成有效读数读走。
+            print("\n○ 没测到：**这份报告不成立** —— 开始与结束时读数集的指纹不一致"
+                  "（跑的过程中有输入被改过），或者开始时就取不全"
+                  "（缺文件／缺编码表）。")
+            print("  产物里的 `readings_sha256` 已按约定写成 `null`。"
+                  "重跑一遍、别在跑的时候改文件，就能拿到一份有效的。")
 
-    return max([rc for _, _, rc, _ in results] + [recon_rc], default=0)
+    worst = max([rc for _, _, rc, _ in results] + [recon_rc], default=0)
+    # 一份不成立的报告即使三条都「达到预期」也不能退 `0`；也不退 `1`
+    # （那是「有真的要看的东西」，会把人指去查复现）—— 我们**没测到**。
+    return 2 if not run_stable else worst
 
 
 if __name__ == "__main__":

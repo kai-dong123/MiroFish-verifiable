@@ -510,6 +510,25 @@ def sha256_text(path) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def sha256_bytes(path) -> str:
+    """一个文件**按字节**算的 sha256 —— 与 `sha256_text` 方向相反。
+
+    两者不能共用一个名字，因为它们回答的不是同一个问题：
+
+    * `sha256_text` 要的是「**跨机器**同一份内容」——换行符是 git 的合法产物，
+      不该让判据变红，所以它先归一化再算；
+    * `sha256_bytes` 要的是「**本机这份**有没有被动过」——变异测试的还原、
+      编码表这种必须按字节喂给下游的数据文件，认的都是字面字节。
+
+    一份材料里同时出现两种 `sha256` 而不写清是哪一种，读的人就得猜；
+    这个装置在别处拒绝的正是这件事。
+    """
+    import hashlib
+    import pathlib
+
+    return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+
+
 # --------------------------------------------------------------------------
 # 5. 出口：**三种退出码，不是两种**
 # --------------------------------------------------------------------------
@@ -578,3 +597,80 @@ def refuse_out_path(*paths) -> int | None:
                   "所以退 `2`（没测到），不退回「没达到预期」。")
             return 2
     return None
+
+
+# --------------------------------------------------------------------------
+# 7. 读数集的指纹：**这份报告是不是用这棵树跑的**
+# --------------------------------------------------------------------------
+
+#: 产出读数所依赖的输入，**显式清单**，相对 `backend/verification/`。
+#:
+#: 为什么**不用** `mutations._touched()`：那个集合是「变异的靶子」，
+#: `_probe.py` / `run_all.py` / `__init__.py` 都不在里面 —— 而那些恰恰决定了
+#: 读数长什么样（分词器怎么定、三条复现怎么被驱动）。拿靶子集当读数集，
+#: 就是拿一把量错的尺子去核另一把尺子。
+#:
+#: 为什么**不含**展示层与派生文档：`viewer.py`、`ADJUDICATION.md`、本文件生成的
+#: `.md` 只影响「怎么说」，不影响「量到什么」。把它们算进来，一次纯排版改动就会
+#: 让报告判成过期 —— 又是「钉一个本来就会合法地变的东西」。
+#:
+#: `README.md` **在**这里，而且整文件算：`reconcile_selfcheck.claim_from_readme()`
+#: 现场打开它抽三行数，改了那三行，对账的输入就变了。
+READING_SOURCES = (
+    "run_all.py",
+    "__init__.py",
+    "_probe.py",
+    "camel_guards.py",
+    "tokenizer_cache.py",
+    "repro_01_slicing.py",
+    "repro_02_timestamp.py",
+    "repro_03_concurrency.py",
+    "reconcile_selfcheck.py",
+    "upstream/repro_min_01_slicing.py",
+    "upstream/repro_min_02_timestamp.py",
+    "README.md",
+)
+
+
+def readings_fingerprint(root=None) -> dict:
+    """把读数集连同编码表算成一个指纹。返回一个**可判真假**的字典。
+
+    * `sha256` —— 全部输入都在时才有值；缺任何一份读不出内容，记 `None`
+      （**没测到，不补一个空串**）；
+    * `complete` —— 与上面同义，单独留一格是为了让调用处读起来不像在猜布尔；
+    * `files` —— 每份输入的文本归一化哈希，出问题时能指出是哪一份变了；
+    * `missing` —— 读不出来的清单（文件不在、不是 UTF-8 文本）；
+    * `tokenizer_table` —— 实际用的那张编码表的哈希。**必须算进去**：
+      换表 = 换 token 数，而切片那一整节的读数全部是它数出来的。
+
+    哈希口径**与 `sha256_text` 一致**（读文本、不读字节）：`core.autocrlf`
+    在 Windows 上默认把 LF 换成 CRLF，拿字节哈希去钉会让每个默认配置 clone
+    的人先红一次，报的还是个根本不存在的问题。这条坑本装置踩过，见
+    `sha256_text` 的 docstring。
+    """
+    import hashlib
+    import pathlib
+
+    here = (pathlib.Path(__file__).resolve().parent if root is None
+            else pathlib.Path(root))
+    files, missing = {}, []
+    for rel in READING_SOURCES:
+        try:
+            files[rel] = sha256_text(here / rel)
+        except (OSError, UnicodeDecodeError):
+            missing.append(rel)
+
+    from . import tokenizer_cache
+
+    table = tokenizer_cache.table_sha256()
+
+    if missing or table is None:
+        return {"sha256": None, "complete": False, "files": files,
+                "missing": missing, "tokenizer_table": table}
+
+    digest = hashlib.sha256()
+    for rel in sorted(files):
+        digest.update(f"{rel}\0{files[rel]}\n".encode("utf-8"))
+    digest.update(f"tokenizer_table\0{table}\n".encode("utf-8"))
+    return {"sha256": digest.hexdigest(), "complete": True, "files": files,
+            "missing": missing, "tokenizer_table": table}

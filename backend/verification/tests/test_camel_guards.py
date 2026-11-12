@@ -276,6 +276,86 @@ def test_hands_back_when_tokens_cannot_be_counted():
 
 
 # --------------------------------------------------------------------------
+# 回退支也要守住时钟 —— 两条支各一条，加上「调用方给 None」一条
+# --------------------------------------------------------------------------
+
+
+def _frozen_ns(monkeypatch, t0: int = 1_700_000_000_000_000_000) -> float:
+    """把 `time.time_ns()` 冻在 `t0`，返回它换算成的秒数。
+
+    **为什么必须冻钟。** 改之前，回退支把调用方给的 `None` 原样交回，替身
+    自己读钟。本机（Windows）的时钟步长是零点几毫秒，三次紧邻调用几乎必然
+    读到同一个值，测试会红；但 Linux 的步长是 100 ns 量级，三次紧邻调用很可能
+    读到三个不同的值 —— **同一条测试在 Linux 上改前也是绿的**，而它恰好是这次
+    修复唯一的证据。冻住之后两个平台行为一致，改前必红。
+
+    `camel_guards` 和本文件 import 的是同一个 `time` 模块对象，所以这一手同时
+    冻住守卫和替身的读数。
+    """
+    monkeypatch.setattr(time, "time_ns", lambda: t0)
+    return t0 / 1e9
+
+
+def test_hands_back_pushes_clock_when_over_limit(monkeypatch):
+    """**自己就超上限**那条回退支：三次写入，时间戳必须严格递增。
+
+    改前这一条会红：交回的是 `None`，替身读冻住的钟，三次都是同一个值。
+    只写一次测不出来 —— 改前改后都只有一个值，断言不出「推」这件事。
+    """
+    frozen = _frozen_ns(monkeypatch)
+    T = stand_in(token_limit=100)
+    G.install(T, slicing=True, timestamp=True)
+    agent = T()
+
+    for _ in range(3):
+        agent.update_memory(msg(101), USER)
+
+    ts = [seen[2] for seen in agent.seen]
+    assert len(ts) == 3, "这一档本该走回退支"
+    assert ts[0] == frozen, "第一条不该被动 —— 它是往后推，不是替换"
+    assert ts[1] > ts[0], "第二条没被推开 —— 回退支绕过了时钟守卫"
+    assert ts[2] > ts[1], "第三条没被推开 —— 只推了一次、没接上第三条"
+
+
+def test_hands_back_pushes_clock_when_tokens_uncomputable(monkeypatch):
+    """**算不出 token**那条回退支：同样三次写入、同样严格递增。
+
+    这条支没有 `own_tokens`，余量按消息的 UTF-8 字节数算（tokens ≤ bytes）。
+    """
+    frozen = _frozen_ns(monkeypatch)
+    T = stand_in(explode=True)
+    G.install(T, slicing=True, timestamp=True)
+    agent = T()
+
+    for _ in range(3):
+        agent.update_memory(msg(7), USER)
+
+    ts = [seen[2] for seen in agent.seen]
+    assert len(ts) == 3, "这一档本该走算不出 token 的回退支"
+    assert ts[0] == frozen
+    assert ts[1] > ts[0], "第二条没被推开 —— 回退支绕过了时钟守卫"
+    assert ts[2] > ts[1], "第三条没被推开 —— 只推了一次、没接上第三条"
+
+
+def test_hands_back_supplies_value_when_caller_gave_none(monkeypatch):
+    """调用方给 `None` 时，回退支必须交回一个**显式的**时间戳。
+
+    否则原方法自己去读钟，读到的值可能落在上一条之前 —— 「后写的一定有更大
+    的时间戳」在回退支上就断了。而记忆一满，绝大多数写入走的正是这条支。
+    """
+    frozen = _frozen_ns(monkeypatch)
+    T = stand_in(token_limit=100)
+    G.install(T, slicing=True, timestamp=True)
+    agent = T()
+
+    agent.update_memory(msg(101), USER)
+
+    assert len(agent.seen) == 1, "这一档本该走回退支"
+    assert agent.seen[0][2] is not None, "回退支把 None 原样交回去了"
+    assert agent.seen[0][2] >= frozen
+
+
+# --------------------------------------------------------------------------
 # 不装 == 上游行为（这是「默认 off」的判据）
 # --------------------------------------------------------------------------
 

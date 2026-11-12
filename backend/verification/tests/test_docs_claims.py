@@ -187,14 +187,17 @@ def test_the_test_count_here_is_not_a_second_copy(doc_text):
     readme = README.read_text(encoding="utf-8")
 
     a = re.search(r"pytest verification/tests -q\s*#\s*当前 (\d+) 条", readme)
-    b = re.search(r"\*\*(\d+) 条\*\*，实测 `(\d+) passed`", doc_text)
+    b = re.search(r"\*\*(\d+) 条\*\*，实测 `(\d+) passed(?: / (\d+) skipped)?`", doc_text)
     assert a, "README 里那个「当前 N 条」不见了"
     assert b, ("清单里「**N 条**，实测 `N passed`」这句话找不到了 —— "
                "改写法就把这里的正则一起改。")
-    assert b.group(1) == b.group(2), (
-        f"清单里自己就前后不一致：写「{b.group(1)} 条」，又说「{b.group(2)} passed」")
-    assert b.group(1) == a.group(1), (
-        f"README 写 {a.group(1)} 条，清单写 {b.group(1)} 条。"
+    stated_n = int(b.group(1))
+    assert int(b.group(2)) + int(b.group(3) or 0) == stated_n, (
+        f"清单里写着 {stated_n} 条，实测却是 {b.group(2)} passed"
+        + (f" / {b.group(3)} skipped" if b.group(3) else "")
+        + " —— 两个数加起来对不上总数")
+    assert stated_n == int(a.group(1)), (
+        f"README 写 {a.group(1)} 条，清单写 {stated_n} 条。"
         "两处指的是同一批测试，必须同进同退 —— "
         "README 那处是被 `pytest --collect-only` 核过的，清单这处以它为准。")
 

@@ -651,3 +651,90 @@ def test_the_four_ways_to_dig_in_are_all_here_without_javascript(adj, sp):
     assert page.count("body:has(#lf-") == len(A.LAYERS), "层筛选少了轴"
     for g in S.GRIDS:
         assert g in page, f"五格里的「{g}」在页面上找不到"
+
+
+# ---------------------------------------------------------------------------
+# 五、`--check` 与「产物一览」页
+# ---------------------------------------------------------------------------
+
+def test_check_mode_uses_the_same_findings_and_writes_nothing(
+        capsys, tmp_path, adj, sp):
+    """`--check` 只核不画：**同一套** `findings()`，零落盘。
+
+    CI 里用它 —— 一个「另开一套判据」的 `--check` 会让 CI 与展示页说两种话。
+    """
+    out = tmp_path / "never.html"
+    rc = V.main(["--check", "--out", str(out)])
+    got, _ = capsys.readouterr()
+    assert rc == 0, f"干净的一对，`--check` 却退了 {rc}：{got}"
+    assert "√" in got and "自相矛盾" in got
+    assert not out.exists(), "`--check` 落盘了"
+
+    # 造一处折合：某条「不可判定」带着一个采信值 → 与渲染模式同一条发现，退 1。
+    bad = copy.deepcopy(adj)
+    for r in bad["rows"]:
+        if r["verdict"] == A.UNDECIDED:
+            r["trusted"] = False
+            break
+    else:
+        pytest.fail("入库的裁决产物里没有「不可判定」的行 —— 这条测试量不到东西")
+    rc = V.main(["--check", "--adj", _dump(tmp_path, "bad.json", bad),
+                 "--sp", str(SP_JSON), "--out", str(out)])
+    got, _ = capsys.readouterr()
+    assert rc == 1, f"折合没被 `--check` 抓到（退了 {rc}）"
+    assert "折合" in got
+    assert not out.exists(), "`--check` 落盘了"
+
+
+def test_the_artifacts_page_lists_all_six_and_never_invents_a_count():
+    """六份产物都要在这一页上；缺的写「缺」，**不写 0**。"""
+    rows = V.artifact_rows()
+    assert [r["name"] for r in rows] == [
+        "可验证性报告", "裁决留痕", "反例自证", "端到端", "变异留痕", "对账自检"]
+
+    page = V.render_artifacts_html(rows, "一览")
+    assert "6 份产物" in page
+    assert "verification_report.json" in page
+    assert "adjudication_report.json" in page
+    assert "<script" not in page.lower(), "一览页里混进了 JavaScript"
+
+
+def test_a_missing_artifact_shows_as_missing_and_exits_two(
+        capsys, tmp_path, monkeypatch):
+    """缺一份 → 页面照样落下来（上面写着「缺」），但退 `2`（没测到）。
+
+    「0 条」和「没有这份产物」是两件事：前者是一个读数，后者是没量到。
+    """
+    fake = tuple(V.ARTIFACTS) + (
+        ("现造缺的", tmp_path / "nope.json", tmp_path / "nope.md",
+         "故意指向不存在的文件", (), lambda d: 0),)
+    monkeypatch.setattr(V, "ARTIFACTS", fake)
+
+    out = tmp_path / "artifacts.html"
+    rc = V.main(["--artifacts", "--out", str(out)])
+    got, _ = capsys.readouterr()
+    assert rc == 2, f"缺产物却退了 {rc} —— 该退 2（没测到）"
+    assert "现造缺的" in got
+    assert out.is_file(), "缺产物时这一页也该落下来 —— 它自己会说哪份缺"
+    assert "（缺）" in out.read_text(encoding="utf-8")
+
+
+def test_the_artifacts_page_repeats_the_source_gate_conclusion(
+        tmp_path, monkeypatch):
+    """指纹门那一格**搬闸的原话**，不在这里另算一遍。
+
+    页上自己比一次哈希，就是第二个结论源；两处独立计算迟早分叉，而那一刻
+    屏幕上会出现两个不同的答案。这里直接替身掉那个函数，确认页面印的就是它。
+    """
+    monkeypatch.setattr(V.A, "source_drift_problem", lambda: "第 3 份输入变了")
+    out = tmp_path / "artifacts.html"
+    V.main(["--artifacts", "--out", str(out)])
+    page = out.read_text(encoding="utf-8")
+    assert "源码闸" in page
+    assert "第 3 份输入变了" in page
+
+    monkeypatch.setattr(V.A, "source_drift_problem", lambda: None)
+    V.main(["--artifacts", "--out", str(out)])
+    page = out.read_text(encoding="utf-8")
+    assert "源码闸" in page and "MATCH" in page
+

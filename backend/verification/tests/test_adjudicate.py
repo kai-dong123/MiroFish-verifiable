@@ -472,6 +472,51 @@ def test_no_report_is_undecided_and_gets_no_traceback(monkeypatch, tmp_path):
     assert not (tmp_path / "a.json").exists(), "判都没判定，不该落下产物"
 
 
+def test_a_report_from_another_tree_is_not_measured(monkeypatch, tmp_path, capsys):
+    """报告不是用**当前这棵树**跑的 → 没测到（`2`），而且 `run()` 一次都不跑。
+
+    判完才发现报告是别棵树量出来的，等于白判一场，还会落下一张看着有效的表。
+    所以门问在 `run()` 之前；`run` 换成一个记账的桩，被调到就是这条测试要抓的事。
+    """
+    calls: list = []
+    monkeypatch.setattr(A, "run", lambda: (calls.append("run"), _FAKE_ADJ)[1])
+    monkeypatch.setattr(A, "render_markdown", lambda rep: "（现造的）")
+
+    rep = _fake_report()
+    rep["run_stable"] = True
+    rep["readings_sha256"] = {"end": "0" * 64,
+                              "files": {"repro_01_slicing.py": "1" * 64}}
+    monkeypatch.setattr(A, "load_report", lambda *a, **k: rep)
+    monkeypatch.setattr(A.P, "readings_fingerprint", lambda *a, **k: {
+        "sha256": "f" * 64, "complete": True, "missing": [],
+        "files": {"repro_01_slicing.py": "2" * 64, "README.md": "3" * 64},
+        "tokenizer_table": "t"})
+
+    rc = A.main(["--json", str(tmp_path / "a.json"), "--md", str(tmp_path / "a.md")])
+    out = capsys.readouterr().out
+    assert rc == 2, f"报告不是这棵树跑的，却退了 {rc} —— 该退 2（没测到）"
+    assert "不是用这棵树跑的" in out, "得说清是**哪件事**对不上"
+    # 指得出是哪一份变了，别让人拿两个十六进制串自己找
+    assert "repro_01_slicing.py" in out and "README.md" in out
+    assert calls == [], "报告都对不上，裁决却先算了一场 —— 该在动手之前就退"
+    assert not (tmp_path / "a.json").exists(), "没判定，不该落下产物"
+
+    # **缺字段也是「没测到」，不是「大概没事」** —— 旧报告没有 `run_stable`
+    rep.pop("run_stable")
+    rc = A.main(["--json", str(tmp_path / "b.json"), "--md", str(tmp_path / "b.md")])
+    out = capsys.readouterr().out
+    assert rc == 2, f"旧格式报告退了 {rc} —— 缺 `run_stable` 时该退 2"
+    assert "run_stable" in out, "得点名是哪个字段缺了"
+
+    # 反向对照：指纹对得上就照常出表。少了这一半，一个「一律退 2」的实现也能全绿。
+    monkeypatch.setattr(A, "load_report", lambda *a, **k: {
+        **_fake_report(), "run_stable": True,
+        "readings_sha256": {"end": "f" * 64, "files": {"README.md": "3" * 64}}})
+    assert A.main(["--json", str(tmp_path / "c.json"),
+                   "--md", str(tmp_path / "c.md")]) == 0, (
+        "指纹对得上却不让判 —— 那道门成了「一律拒收」")
+
+
 def test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused(tmp_path):
     """**读得成 JSON ≠ 结构对。** 结构不对要当场说清，不许甩 traceback。
 
@@ -521,7 +566,8 @@ def test_a_vacuous_claim_makes_the_table_refuse_to_exit_green(monkeypatch, tmp_p
     monkeypatch.setattr(A, "CLAIMS", (
         _claim("T9", (("A", "x"),), lambda v, t: v[0] == 10),   # 没有 falsifier
     ))
-    rc = A.main(["--json", str(tmp_path / "b.json"), "--md", str(tmp_path / "b.md")])
+    rc = A.main(["--json", str(tmp_path / "b.json"), "--md", str(tmp_path / "b.md"),
+                 "--allow-source-mismatch"])
     assert rc == 1, f"判据恒真时退出码是 {rc} —— 该是 1（表生成了，但有东西白写）"
     assert (tmp_path / "b.json").is_file(), "表还是要落下来，人得看得见它"
 
@@ -531,7 +577,8 @@ def test_a_vacuous_claim_makes_the_table_refuse_to_exit_green(monkeypatch, tmp_p
                falsifier={("A", "x"): 99}),
     ))
     assert A.main(["--json", str(tmp_path / "c.json"),
-                   "--md", str(tmp_path / "c.md")]) == 0, (
+                   "--md", str(tmp_path / "c.md"),
+                   "--allow-source-mismatch"]) == 0, (
         "补上 falsifier 之后还是不让退 0 —— 那上面那条断言是恒真的")
 
 
@@ -906,7 +953,8 @@ def test_a_write_that_fails_anyway_is_still_not_measured(
     monkeypatch.setattr(A, "render_markdown", lambda rep: "（现造的）")
 
     monkeypatch.setattr(A, "run", lambda: _FAKE_ADJ)
-    rc = A.main(["--json", str(tmp_path / "a.json"), "--md", str(tmp_path / "a.md")])
+    rc = A.main(["--json", str(tmp_path / "a.json"), "--md", str(tmp_path / "a.md"),
+                 "--allow-source-mismatch"])
     out = capsys.readouterr().out
     assert rc == 2, f"裁决：写不下去时退了 `{rc}` —— 该退 `2`（没测到）"
     assert "没测到" in out and "没落成" in out, (
@@ -931,7 +979,7 @@ def test_a_good_place_still_writes_the_artifacts(monkeypatch, tmp_path):
     monkeypatch.setattr(A, "render_markdown", lambda rep: "（现造的）")
 
     js, md = tmp_path / "a.json", tmp_path / "a.md"
-    rc = A.main(["--json", str(js), "--md", str(md)])
+    rc = A.main(["--json", str(js), "--md", str(md), "--allow-source-mismatch"])
 
     assert rc == 0, f"落点好着、产物也该落成，却退了 `{rc}`"
     assert js.is_file() and md.is_file(), "落点好着，两份产物却没落下来"

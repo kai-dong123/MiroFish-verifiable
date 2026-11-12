@@ -908,10 +908,58 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def source_drift_problem() -> str | None:
+    """这份报告是不是用**当前这棵树**跑的。是 → `None`，不是 → 一句人话。
+
+    **为什么不放进 `load_report()`**：测试用 `load_report(path)` 读固定 fixture，
+    那条路不该被「当前工作区刚好改了一行」影响 —— 否则每次改代码，测试都会
+    先红一次，而它报的是个**跟被测对象无关**的状态。
+
+    只在 `main()` 这条路上问，而且问在 `run()` 之前：判完才发现报告不是这棵树
+    跑的，等于白判一场，还会把一张看似有效的表落盘。
+    """
+    rep = load_report()
+
+    if rep.get("run_stable") is not True:
+        return ("`verification_report.json` 里 `run_stable` 不是 `true`"
+                "（旧报告没有这一格，同样按「没测到」处理）—— 它自己就说了："
+                "这次跑的过程中读数集被改过、或者一开始就取不全。那份报告不算数。")
+
+    recorded = rep.get("readings_sha256")
+    if not isinstance(recorded, dict) or not recorded.get("end"):
+        return ("`verification_report.json` 里没有 `readings_sha256.end` —— "
+                "这是旧格式的报告，没法说它是不是用这棵树跑的。"
+                "重跑一次 `python -m verification.run_all` 就带上了。")
+
+    now = P.readings_fingerprint()
+    if now.get("sha256") is None:
+        miss = "、".join(now.get("missing") or []) or "编码表"
+        return f"当前这棵树的读数集取不全（缺：{miss}）—— 两边没法比。"
+
+    if now["sha256"] == recorded["end"]:
+        return None
+
+    # 能指出**哪一份**变了就不让人拿两个十六进制串自己找。旧报告没有
+    # 逐文件那一格时，只能报总指纹 —— 但不说「大概是谁」，不猜。
+    recorded_files = recorded.get("files") or {}
+    changed = sorted(k for k, v in now.get("files", {}).items()
+                     if recorded_files.get(k) != v)
+    which = (f"变的是：{'、'.join(changed)}。" if changed
+             else "（旧报告没记逐文件哈希，指不出是哪一份。）")
+    return (f"**报告不是用这棵树跑的**：报告记的结束指纹是 "
+            f"`{recorded['end'][:12]}…`，现在这棵树是 `{now['sha256'][:12]}…`。"
+            f"{which}\n"
+            "  重跑一次 `python -m verification.run_all` 再判。"
+            "如果你**就是要**判那份旧报告（比如核对归档），加 "
+            "`--allow-source-mismatch` —— 那是显式地在说「我知道它不是这棵树」。")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="把复现读数判成三种结果")
     ap.add_argument("--json", default=str(JS_PATH))
     ap.add_argument("--md", default=str(MD_PATH))
+    ap.add_argument("--allow-source-mismatch", action="store_true",
+                    help="跳过「报告是不是用当前这棵树跑的」那道门（判归档报告时用）")
     args = ap.parse_args(argv)
 
     # 落点先问一句，**问在 `run()` 之前**：判定算完再发现写不出去，等于白算一场，
@@ -921,7 +969,17 @@ def main(argv=None) -> int:
     if rc is not None:
         return rc
 
+    if args.allow_source_mismatch:
+        print("  ⚠ `--allow-source-mismatch`：跳过源码指纹门。"
+              "判的是**别的那棵树**量出来的读数 —— 数字照旧有效，"
+              "但别把它读成「现在这棵树」的结论。")
+
     try:
+        if not args.allow_source_mismatch:
+            why = source_drift_problem()
+            if why is not None:
+                print(f"\n○ 没测到：{why}")
+                return 2
         rep = run()
     except AdjudicationError as e:
         # **不发 traceback，也不发退出码 1。** 前提不成立（报告不在、判据表缺声明）

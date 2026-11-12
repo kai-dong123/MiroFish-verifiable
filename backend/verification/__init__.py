@@ -29,3 +29,10 @@ def _harden_streams() -> None:
 
 
 _harden_streams()
+
+
+# 编码表必须在**任何** `OpenAITokenCounter` 构造之前定下来：`stub_model.py` 在
+# `__init__` 里就建它，比 `_probe.py` 更早。放这里（包导入时）才盖得住。
+from . import tokenizer_cache as _tokenizer_cache  # noqa: E402
+
+_tokenizer_cache.ensure()

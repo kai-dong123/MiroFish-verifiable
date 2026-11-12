@@ -1,0 +1,5 @@
+# 编码表是 base64 文本，但**必须按字节原样检出**：
+# 本机 core.autocrlf=true 会把它转成 CRLF，字节哈希就对不上了。
+# 判据是**字节**哈希（就是 tiktoken `o200k_base()` 要的 `expected_hash`），
+# 文本哈希只是在这份文件恰好 LF-only 时与它相等 —— 那是巧合，不是依据。
+backend/verification/vendor/tiktoken/* -text

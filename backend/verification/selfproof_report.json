@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13 23:24:26",
+  "generated_at": "2026-11-12 17:36:03",
   "not_a_pass_rate": true,
   "what_this_is": "对**真实读数**施加单点受控扰动，逐条检验这套判据是否具备鉴别力。",
   "what_this_is_NOT": "不是「判据是否正确」的证明 —— 它证明的是「一处改动会使它发生变化」，证明不了「判据与读数不会同时出错」。真正的锚点在对照臂上。",
@@ -14,8 +14,8 @@
   },
   "report": {
     "path": "verification_report.json",
-    "generated_at": "2026-10-03T16:36:58",
-    "readings_sha256": "2e6896b5d792465b85dd1cc34dbe8e6b5d7d8b0dce09f20f84a68678146b72ed"
+    "generated_at": "2026-11-12T17:35:57",
+    "readings_sha256": "d31144246e284beaec2938361736d6a7cc228b5064e52aa5540324810d4427e3"
   },
   "claims": {
     "count": 15,
@@ -807,5 +807,5 @@
     "all_ok": true
   },
   "problems": [],
-  "seconds": 0.08
+  "seconds": 0.09
 }

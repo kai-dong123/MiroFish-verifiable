@@ -74,6 +74,8 @@ def test_the_report_does_not_claim_to_be_a_pass_rate(report):
         "基线本身就是红的，底下那些红条一条都解释不了 —— 先修基线，再看这张表")
     assert s["all_sources_reverted"] is True, (
         "跑完没还原文 —— 先 `git diff` 看清楚工作区被改成了什么样")
+    assert s["reverted_bytes"] is True, (
+        "文本哈希一致、字节不一致 —— 行尾被改过；「逐字节还原」这句声明现在是假的")
 
 
 def test_the_report_covers_exactly_the_mutations_that_exist(report):
