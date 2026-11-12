@@ -1,0 +1,110 @@
+# 可验证性装置：在**两个平台**上把整条链跑一遍。
+#
+# 这份工作流只做一件事：证明「本机绿」不是环境巧合。它**不是**质量评分，
+# 也不产生通过率 —— 三条复现回答三个不同性质的问题（见
+# `backend/verification/README.md`）。
+#
+# 三条纪律，写在这里免得后来的人改坏：
+#
+# 1. **两个平台都跑。** 本装置里有一处真实存在的平台差异（时钟刻度：
+#    Windows 100 ns 量级、Linux 更细），曾把同一条判据在两边判成不同结果。
+#    只在一个平台上绿，等于没测另一半。
+# 2. **这里跑 `run_all` 要写盘**（不带 `--no-report`），紧接着
+#    `adjudicate` / `selfproof` / `viewer --check` 读的正是那份产物。
+#    用 `--no-report` 会让后面几步读上一轮的旧报告 —— 那正是本装置要抓的
+#    「拿旧读数当新结论」，不能自己先犯一次。
+# 3. **Python 钉 3.11。** 版本一放开，平台差异会和解释器差异混在一起，
+#    红了说不清是谁的问题。
+#
+# 另：本装置**不再需要联网下编码表** —— `o200k_base` 已随仓库带入
+# `backend/verification/vendor/tiktoken/`，并钉了内容哈希。所以这份工作流
+# 在断网 runner 上也应当绿；如果哪天它开始要网，那是回归。
+#
+# ⚠️ **仓库名守卫**：本工作流只在 `kai-dong123/MiroFish-verifiable` 上生效。
+# fork 出来的仓库默认不跑 —— 免得别人一 fork 就收到一串红叉，而红叉的原因
+# 只是「这不是我们的赛道仓库」。要试的人可以手动 `workflow_dispatch`。
+#
+# ⚠️ **先别挂徽章。** 等 Windows / Linux 各连绿三次再挂：一次绿说明不了
+# 确定性，只说明那一次没撞上。
+
+name: verification
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'kai-dong123/MiroFish-verifiable'
+    strategy:
+      fail-fast: false          # 一个平台红了，另一个照样跑完 —— 差异本身就是要看的
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # **必须拉全历史。** 默认 depth 1 下，`test_upstream_baseline.py` 的
+          # 祖先检查与 `test_docs_claims.py` 的 diff 表会**安静地 skip** ——
+          # 那不是绿，是两条关键检查没跑。加上它是为了让它们真跑；
+          # 阶段 0 第一次红在这上面是预期内的。
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      # 只装装置真正用到的三样（camel-ai / camel-oasis / tiktoken），
+      # 不装整套后端依赖：`verification/` 下的复现不 import Flask、Zep、
+      # PyMuPDF。装整套只会让 CI 慢一截，还会把一个跟读数无关的包版本
+      # 变成红的理由。**改这里之前先确认 `repro_0*.py` 的 import 没变。**
+      - name: 装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "camel-ai==0.2.78" "camel-oasis==0.2.5" "tiktoken==0.7.0" "mcp<2" "pytest==8.2.0"
+
+      # **写盘**（见上面第 2 条）。退出码三态：0/1/2；2（没测到）在这里
+      # 同样是失败 —— 缺读数不能当通过，也不能当「没通过」。
+      - name: 跑三条复现 + 对账（落一份报告）
+        run: python -m verification.run_all
+
+      - name: 裁决（读上一步的报告）
+        run: python -m verification.adjudicate
+
+      - name: 自证（读上一步的裁决）
+        run: python -m verification.selfproof
+
+      # 只核不画：同一套形状检查 + `findings()` 窄闭集，零落盘。
+      - name: 展示层自检（不渲染、不落盘）
+        run: python -m verification.viewer --check
+
+      # 对账那一步自己也要被验：故意改坏一份草稿，看它会不会响。
+      - name: 对账留痕（A 轮期望 0、B 轮期望 1）
+        run: python -m verification.reconcile_selfcheck
+
+      # 变异靶串预检：几秒，不跑变异、不写产物。靶串一漂，早红比晚红好。
+      - name: 变异靶串预检
+        run: python -m verification.mutations --preflight
+
+      # 变异冒烟：三条，含阴性对照。`--only` **不落产物**（mutations.py 里
+      # `if only is None:` 那一道），所以不会把入库的完整报告覆盖成三条。
+      - name: 变异冒烟（T1/T2 编码表闸 + K0 阴性对照）
+        run: python -m verification.mutations --only T1,T2,K0
+
+      # 单元测试放最后：上面几步已经把那批产物刷新成「这台机器刚跑出来的」，
+      # 这批测试里有一部分正是拿当前产物与当前代码对账。
+      - name: 单元测试
+        run: python -m pytest verification/tests -q
