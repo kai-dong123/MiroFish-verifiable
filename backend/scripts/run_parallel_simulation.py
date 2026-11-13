@@ -173,6 +173,14 @@ except ImportError as e:
     print("请先安装: pip install oasis-ai camel-ai")
     sys.exit(1)
 
+# --- camel 运行时守卫 -------------------------------------------------------
+# 两个静默失效（记忆切片正反馈 / 同拍时间戳碰撞）的运行时补丁。
+# 不改 site-packages；只替换 ChatAgent.update_memory，可 uninstall 还原。
+# 装不上就退出；确实要裸奔请显式加 --no-guards。
+from _camel_bootstrap import install_guards_or_exit
+
+install_guards_or_exit()
+
 
 # Twitter可用动作（不包含INTERVIEW，INTERVIEW只能通过ManualAction手动触发）
 TWITTER_ACTIONS = [

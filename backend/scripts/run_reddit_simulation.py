@@ -130,6 +130,12 @@ except ImportError as e:
     print("请先安装: pip install oasis-ai camel-ai")
     sys.exit(1)
 
+# --- camel 运行时守卫 -------------------------------------------------------
+# 与 run_parallel_simulation.py 相同：装不上就退出，--no-guards 显式关断。
+from _camel_bootstrap import install_guards_or_exit
+
+install_guards_or_exit()
+
 
 # IPC相关常量
 IPC_COMMANDS_DIR = "ipc_commands"
