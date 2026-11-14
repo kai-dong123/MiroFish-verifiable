@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12 22:20:30",
+  "generated_at": "2026-11-14 22:02:49",
   "not_a_pass_rate": true,
   "what_this_is": "逐条改坏被测代码、看测试红不红的对照表。**红色是期望的结果**；这不是通过率、不是覆盖率、不是得分。",
   "environment": {
@@ -18,7 +18,7 @@
     "verification/camel_guards.py": "410ec962e92d135f21a9b0ec7ed8f4f7dcf4f78a9cc0f15d63a88afa69c19a3d",
     "verification/e2e_stub.py": "7d6069a285d35a55c5e988767d4769311c7168280e703623289211395fb81ac1",
     "verification/mutations.py": "5d0e7add0346509b89506e604331d22a65b43b5b7c68cf6da2ae150c714901df",
-    "verification/README.md": "8b7e9a628a97a1a9badb7ebc63281c1a69b35c0f9062900c78e2907363bd7776",
+    "verification/README.md": "7103251b0c0a998c8970761268b4f5ecfc7066cc8b5d28c2e03b607b434d7abe",
     "verification/reconcile_selfcheck.py": "84cd894c086fa8ad5a3adff9d19667445b12e66c6cb6c7afbb26cc4a1220a5fa",
     "verification/repro_02_timestamp.py": "caa5ac621ef4f8475a386794565cf888acec520f7b85dca309a58773142ae125",
     "verification/run_all.py": "f4ca06594f014c586d2134e10ab1f74e5eec4cd33659ea7e9deb9f5d55d6b8d9",
@@ -27,7 +27,7 @@
     "verification/tests/test_upstream_baseline.py": "1ed3bb5de9f270a400109e6a7221454880d1fcd1098b353e26bbb801d4d7a2d7",
     "verification/tokenizer_cache.py": "15194e7263efe0c2f4fc57aa09fe3d2f79b3c3cbc389cacff92c8b5391ffdf94",
     "verification/viewer.py": "fe8c6ec06e0499cb917f610672b87eb9e0dd1ab6c7575cf2e0febe859fe67387",
-    "../docs/开源及第三方资源使用清单.md": "3d1e59343c29d1348b2074b88510111f352b57b85d9f75316f440f58cb77845d"
+    "../docs/开源及第三方资源使用清单.md": "57e51b40017db945ca2c525d2e606f13baca7f78098f7c5d4a86746670b3d5a7"
   },
   "sources_after": {
     "requirements.txt": "fd78362935bc4e7c9117e9b70e6a3a0c3ea8c6a5eeb6af47d7c8aa9e7e2f4bee",
@@ -35,7 +35,7 @@
     "verification/camel_guards.py": "410ec962e92d135f21a9b0ec7ed8f4f7dcf4f78a9cc0f15d63a88afa69c19a3d",
     "verification/e2e_stub.py": "7d6069a285d35a55c5e988767d4769311c7168280e703623289211395fb81ac1",
     "verification/mutations.py": "5d0e7add0346509b89506e604331d22a65b43b5b7c68cf6da2ae150c714901df",
-    "verification/README.md": "8b7e9a628a97a1a9badb7ebc63281c1a69b35c0f9062900c78e2907363bd7776",
+    "verification/README.md": "7103251b0c0a998c8970761268b4f5ecfc7066cc8b5d28c2e03b607b434d7abe",
     "verification/reconcile_selfcheck.py": "84cd894c086fa8ad5a3adff9d19667445b12e66c6cb6c7afbb26cc4a1220a5fa",
     "verification/repro_02_timestamp.py": "caa5ac621ef4f8475a386794565cf888acec520f7b85dca309a58773142ae125",
     "verification/run_all.py": "f4ca06594f014c586d2134e10ab1f74e5eec4cd33659ea7e9deb9f5d55d6b8d9",
@@ -44,7 +44,7 @@
     "verification/tests/test_upstream_baseline.py": "1ed3bb5de9f270a400109e6a7221454880d1fcd1098b353e26bbb801d4d7a2d7",
     "verification/tokenizer_cache.py": "15194e7263efe0c2f4fc57aa09fe3d2f79b3c3cbc389cacff92c8b5391ffdf94",
     "verification/viewer.py": "fe8c6ec06e0499cb917f610672b87eb9e0dd1ab6c7575cf2e0febe859fe67387",
-    "../docs/开源及第三方资源使用清单.md": "3d1e59343c29d1348b2074b88510111f352b57b85d9f75316f440f58cb77845d"
+    "../docs/开源及第三方资源使用清单.md": "57e51b40017db945ca2c525d2e606f13baca7f78098f7c5d4a86746670b3d5a7"
   },
   "source_count": 15,
   "selfcheck_tests": 15,
@@ -54,13 +54,13 @@
     "timed_out": false,
     "measured": true,
     "failed": 0,
-    "passed": 280,
+    "passed": 281,
     "skipped": 47,
     "errors": 0,
     "failed_ids": [],
     "failed_by_file": {},
-    "seconds": 36.66,
-    "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n........................................................................ [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n280 passed, 47 skipped in 34.74s"
+    "seconds": 37.75,
+    "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n........................................................................ [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n281 passed, 47 skipped in 35.80s"
   },
   "mutations": [
     {
@@ -81,7 +81,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -90,8 +90,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 34.46,
-      "raw_tail": "..........s..........sssssss...sssss...........F........................ [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal - assert 0 == 1\n1 failed, 271 passed, 55 skipped in 32.60s",
+      "seconds": 33.6,
+      "raw_tail": "..........s..........sssssss...sssss...........F........................ [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal - assert 0 == 1\n1 failed, 272 passed, 55 skipped in 31.68s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -119,7 +119,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 13,
-      "passed": 259,
+      "passed": 260,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -140,8 +140,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 13
       },
-      "seconds": 36.88,
-      "raw_tail": "FAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched - assert 0 == 1\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock - AssertionError: 第二条没被推开 —— 同拍碰撞没被修掉\nassert 1234.0 >= ((1234.0 + 0.001) - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls - AssertionError: 1794491213.6965647 → 1794491213.6965647 没拉开一个步长\nassert 1794491213.6965647 >= (1794491213.6965647 + 0.001)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted - AssertionError: 回执没被推得足够远\nassert (1000.000001 - 1000.0) >= (0.001 - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads - assert 0 == 1\n13 failed, 259 passed, 55 skipped in 34.84s",
+      "seconds": 34.09,
+      "raw_tail": "FAILED verification/tests/test_camel_guards.py::test_slicing_on_timestamp_off_leaves_timestamps_untouched - assert 0 == 1\nFAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock - AssertionError: 第二条没被推开 —— 同拍碰撞没被修掉\nassert 1234.0 >= ((1234.0 + 0.001) - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls - AssertionError: 1794663026.6093524 → 1794663026.6093524 没拉开一个步长\nassert 1794663026.6093524 >= (1794663026.6093524 + 0.001)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted - AssertionError: 回执没被推得足够远\nassert (1000.000001 - 1000.0) >= (0.001 - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads - assert 0 == 1\n13 failed, 260 passed, 55 skipped in 32.21s",
       "failed_in_target": 13,
       "failed_in_target_raw": 13,
       "baseline_in_target": 0,
@@ -169,7 +169,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 4,
-      "passed": 268,
+      "passed": 269,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -181,8 +181,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 4
       },
-      "seconds": 38.11,
-      "raw_tail": ".......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit - assert 0 == 1\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal - assert 0 == 1\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_over_limit - AssertionError: 这一档本该走回退支\nassert 0 == 3\n +  where 0 = len([])\nFAILED verification/tests/test_camel_guards.py::test_hands_back_supplies_value_when_caller_gave_none - AssertionError: 这一档本该走回退支\nassert 0 == 1\n +  where 0 = len([])\n +    where [] = <test_camel_guards.stand_in.<locals>._StandIn object at 0x000001D516B64AD0>.seen\n4 failed, 268 passed, 55 skipped in 35.90s",
+      "seconds": 36.74,
+      "raw_tail": "........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_message_itself_exceeds_limit - assert 0 == 1\nFAILED verification/tests/test_camel_guards.py::test_boundary_is_strict_greater_not_greater_equal - assert 0 == 1\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_over_limit - AssertionError: 这一档本该走回退支\nassert 0 == 3\n +  where 0 = len([])\nFAILED verification/tests/test_camel_guards.py::test_hands_back_supplies_value_when_caller_gave_none - AssertionError: 这一档本该走回退支\nassert 0 == 1\n +  where 0 = len([])\n +    where [] = <test_camel_guards.stand_in.<locals>._StandIn object at 0x0000026F574E5750>.seen\n4 failed, 269 passed, 55 skipped in 34.78s",
       "failed_in_target": 4,
       "failed_in_target_raw": 4,
       "baseline_in_target": 0,
@@ -210,7 +210,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -219,8 +219,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 36.32,
-      "raw_tail": "..........s..........sssssss...sssss........................F........... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset - assert 1e-07 > (1e-06 * 100)\n +  where 1e-07 = G.STEP\n1 failed, 271 passed, 55 skipped in 34.36s",
+      "seconds": 37.87,
+      "raw_tail": "..........s..........sssssss...sssss........................F........... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_step_is_larger_than_camels_offset - assert 1e-07 > (1e-06 * 100)\n +  where 1e-07 = G.STEP\n1 failed, 272 passed, 55 skipped in 35.75s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -248,7 +248,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 4,
-      "passed": 268,
+      "passed": 269,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -260,8 +260,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 4
       },
-      "seconds": 35.42,
-      "raw_tail": "FAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock - AssertionError: 第二条没被推开 —— 同拍碰撞没被修掉\nassert 1234.0 >= ((1234.0 + 0.001) - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls - AssertionError: 1794491325.0636988 → 1794491325.0636988 没拉开一个步长\nassert 1794491325.0636988 >= (1794491325.0636988 + 0.001)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted - AssertionError: 回执没被推得足够远\nassert (1000.000001 - 1000.0) >= (0.001 - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads - assert 1794491325.0806487 >= (1794492325.0806487 + 0.001)\n +  where 0.001 = G.STEP\n4 failed, 268 passed, 55 skipped in 33.46s",
+      "seconds": 38.83,
+      "raw_tail": "FAILED verification/tests/test_camel_guards.py::test_timestamp_on_slicing_off_only_moves_the_clock - AssertionError: 第二条没被推开 —— 同拍碰撞没被修掉\nassert 1234.0 >= ((1234.0 + 0.001) - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_is_strictly_increasing_across_calls - AssertionError: 1794663135.9964092 → 1794663135.9964092 没拉开一个步长\nassert 1794663135.9964092 >= (1794663135.9964092 + 0.001)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_explicit_pair_is_pushed_apart_but_not_counted - AssertionError: 回执没被推得足够远\nassert (1000.000001 - 1000.0) >= (0.001 - 1e-09)\n +  where 0.001 = G.STEP\nFAILED verification/tests/test_camel_guards.py::test_timestamp_pushed_counts_only_our_own_reads - assert 1794663136.0171418 >= (1794664136.0171418 + 0.001)\n +  where 0.001 = G.STEP\n4 failed, 269 passed, 55 skipped in 36.66s",
       "failed_in_target": 4,
       "failed_in_target_raw": 4,
       "baseline_in_target": 0,
@@ -289,7 +289,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 2,
-      "passed": 270,
+      "passed": 271,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -299,8 +299,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 2
       },
-      "seconds": 37.23,
-      "raw_tail": "..........s..........sssssss...sssss............F.F..................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted - RuntimeError: 模拟取不到 context creator\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_tokens_uncomputable - RuntimeError: 模拟取不到 context creator\n2 failed, 270 passed, 55 skipped in 35.03s",
+      "seconds": 39.08,
+      "raw_tail": "..........s..........sssssss...sssss............F.F..................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_when_tokens_cannot_be_counted - RuntimeError: 模拟取不到 context creator\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_tokens_uncomputable - RuntimeError: 模拟取不到 context creator\n2 failed, 271 passed, 55 skipped in 36.95s",
       "failed_in_target": 2,
       "failed_in_target_raw": 2,
       "baseline_in_target": 0,
@@ -328,7 +328,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -337,8 +337,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 41.12,
-      "raw_tail": "..........s..........sssssss...sssss....F............................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - assert <function _dispatch at 0x000001EBA21A2840> is <function stand_in.<locals>._StandIn.update_memory at 0x000001EBA494C680>\n1 failed, 271 passed, 55 skipped in 39.11s",
+      "seconds": 37.83,
+      "raw_tail": "..........s..........sssssss...sssss....F............................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_install_is_idempotent - assert <function _dispatch at 0x00000210E84B2840> is <function stand_in.<locals>._StandIn.update_memory at 0x00000210EAC60680>\n1 failed, 272 passed, 55 skipped in 35.77s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -366,7 +366,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 3,
-      "passed": 269,
+      "passed": 270,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -377,8 +377,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 3
       },
-      "seconds": 40.86,
-      "raw_tail": "..........s..........sssssss...sssss.............FFF.................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_over_limit - AssertionError: 第一条不该被动 —— 它是往后推，不是替换\nassert None == 1700000000.0\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_tokens_uncomputable - assert None == 1700000000.0\nFAILED verification/tests/test_camel_guards.py::test_hands_back_supplies_value_when_caller_gave_none - AssertionError: 回退支把 None 原样交回去了\nassert None is not None\n3 failed, 269 passed, 55 skipped in 38.80s",
+      "seconds": 35.36,
+      "raw_tail": "..........s..........sssssss...sssss.............FFF.................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_over_limit - AssertionError: 第一条不该被动 —— 它是往后推，不是替换\nassert None == 1700000000.0\nFAILED verification/tests/test_camel_guards.py::test_hands_back_pushes_clock_when_tokens_uncomputable - assert None == 1700000000.0\nFAILED verification/tests/test_camel_guards.py::test_hands_back_supplies_value_when_caller_gave_none - AssertionError: 回退支把 None 原样交回去了\nassert None is not None\n3 failed, 270 passed, 55 skipped in 33.44s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -406,7 +406,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 16,
-      "passed": 256,
+      "passed": 257,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -430,8 +430,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 16
       },
-      "seconds": 40.71,
-      "raw_tail": "assert not True\n +  where True = _asserts_cross('跨拍 → 误打误撞免疫')\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001] - AssertionError: gap=0.00099 < tick=0.001 却是「跨拍」判词：'跨拍 → 误打误撞免疫'\nassert not True\n +  where True = _asserts_cross('跨拍 → 误打误撞免疫')\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed - AssertionError: 没报出与预期不符：'同拍 → 碰撞才发生'\nassert '与预期相反' in '同拍 → 碰撞才发生'\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported - AssertionError: 没报出与预期不符：'跨拍 → 误打误撞免疫'\nassert '与预期相反' in '跨拍 → 误打误撞免疫'\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode - AssertionError: 量不到一拍却当成符合预期：'同拍 → 碰撞才发生'\nassert '与预期相反' in '同拍 → 碰撞才发生'\n16 failed, 256 passed, 55 skipped in 38.60s",
+      "seconds": 35.56,
+      "raw_tail": "assert not True\n +  where True = _asserts_cross('跨拍 → 误打误撞免疫')\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.00099-0.001] - AssertionError: gap=0.00099 < tick=0.001 却是「跨拍」判词：'跨拍 → 误打误撞免疫'\nassert not True\n +  where True = _asserts_cross('跨拍 → 误打误撞免疫')\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed - AssertionError: 没报出与预期不符：'同拍 → 碰撞才发生'\nassert '与预期相反' in '同拍 → 碰撞才发生'\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported - AssertionError: 没报出与预期不符：'跨拍 → 误打误撞免疫'\nassert '与预期相反' in '跨拍 → 误打误撞免疫'\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode - AssertionError: 量不到一拍却当成符合预期：'同拍 → 碰撞才发生'\nassert '与预期相反' in '同拍 → 碰撞才发生'\n16 failed, 257 passed, 55 skipped in 33.64s",
       "failed_in_target": 16,
       "failed_in_target_raw": 16,
       "baseline_in_target": 0,
@@ -459,7 +459,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 3,
-      "passed": 269,
+      "passed": 270,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -470,8 +470,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 43.13,
-      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004] - AssertionError: gap=0.0004 >= tick=0.0004 却是「同拍」判词：'同拍 → 碰撞才发生'\nassert not True\n +  where True = _asserts_same('同拍 → 碰撞才发生')\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004] - AssertionError: gap=0.0004 >= tick=0.0004 却是「同拍」判词：'**同一拍**（与预期相反）'\nassert not True\n +  where True = _asserts_same('**同一拍**（与预期相反）')\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed - AssertionError: assert '**同一拍**（与预期相反）' == '跨拍 → 误打误撞免疫'\n  \n  - 跨拍 → 误打误撞免疫\n  + **同一拍**（与预期相反）\n3 failed, 269 passed, 55 skipped in 41.07s",
+      "seconds": 35.46,
+      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[True-0.0004-0.0004] - AssertionError: gap=0.0004 >= tick=0.0004 却是「同拍」判词：'同拍 → 碰撞才发生'\nassert not True\n +  where True = _asserts_same('同拍 → 碰撞才发生')\nFAILED verification/tests/test_repro_verdicts.py::test_verdict_never_contradicts_its_own_numbers[False-0.0004-0.0004] - AssertionError: gap=0.0004 >= tick=0.0004 却是「同拍」判词：'**同一拍**（与预期相反）'\nassert not True\n +  where True = _asserts_same('**同一拍**（与预期相反）')\nFAILED verification/tests/test_repro_verdicts.py::test_boundary_gap_equal_to_tick_counts_as_crossed - AssertionError: assert '**同一拍**（与预期相反）' == '跨拍 → 误打误撞免疫'\n  \n  - 跨拍 → 误打误撞免疫\n  + **同一拍**（与预期相反）\n3 failed, 270 passed, 55 skipped in 33.50s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -499,7 +499,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 3,
-      "passed": 269,
+      "passed": 270,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -510,8 +510,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 3
       },
-      "seconds": 36.32,
-      "raw_tail": ".....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........FF...F..........................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed - AssertionError: 没报出与预期不符：'跨拍 → 误打误撞免疫'\nassert '与预期相反' in '跨拍 → 误打误撞免疫'\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported - AssertionError: 没报出与预期不符：'同拍 → 碰撞才发生'\nassert '与预期相反' in '同拍 → 碰撞才发生'\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode - AssertionError: 量不到一拍却当成符合预期：'跨拍 → 误打误撞免疫'\nassert '与预期相反' in '跨拍 → 误打误撞免疫'\n3 failed, 269 passed, 55 skipped in 34.37s",
+      "seconds": 35.67,
+      "raw_tail": "......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........FF...F..........................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_actual_regression_is_reported_not_smoothed - AssertionError: 没报出与预期不符：'跨拍 → 误打误撞免疫'\nassert '与预期相反' in '跨拍 → 误打误撞免疫'\nFAILED verification/tests/test_repro_verdicts.py::test_opposite_direction_of_surprise_is_also_reported - AssertionError: 没报出与预期不符：'同拍 → 碰撞才发生'\nassert '与预期相反' in '同拍 → 碰撞才发生'\nFAILED verification/tests/test_repro_verdicts.py::test_zero_tick_does_not_explode - AssertionError: 量不到一拍却当成符合预期：'跨拍 → 误打误撞免疫'\nassert '与预期相反' in '跨拍 → 误打误撞免疫'\n3 failed, 270 passed, 55 skipped in 33.73s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -539,7 +539,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -548,8 +548,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 35.97,
-      "raw_tail": "...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200] - AssertionError: \n  camel.agents.chat_agent:934 对不上了。\n    期望含：'base_chunk_size = max(1, remaining_budget) // 10'\n    实为　：''\n    这条引文支持的是：camel_guards / README §①：残余预算先被 //10 砍一刀\n    **先看那个论断还成不成立**，别只把期望值改成漂移后的样子。\nassert 'base_chunk_size = max(1, remaining_budget) // 10' in ''\n1 failed, 271 passed, 55 skipped in 33.80s",
+      "seconds": 35.44,
+      "raw_tail": "................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-934-base_chunk_size = max(1, remaining_budget) // 10-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200] - AssertionError: \n  camel.agents.chat_agent:934 对不上了。\n    期望含：'base_chunk_size = max(1, remaining_budget) // 10'\n    实为　：''\n    这条引文支持的是：camel_guards / README §①：残余预算先被 //10 砍一刀\n    **先看那个论断还成不成立**，别只把期望值改成漂移后的样子。\nassert 'base_chunk_size = max(1, remaining_budget) // 10' in ''\n1 failed, 272 passed, 55 skipped in 33.51s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -577,7 +577,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -586,8 +586,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 41.31,
-      "raw_tail": "..........s..........sssssss...sssss.................................F.. [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens] - AssertionError: camel.agents.chat_agent 只有 4385 行，却引了第 999999 行 —— 上游大概动过了。这条引文支持的是：README §① / camel_guards：残余预算用的是**截断后**的 ctx_tokens\nassert 999999 <= 4385\n +  where 4385 = len(['# ========= Copyright 2023-2024 @ CAMEL-AI.org. All Rights Reserved. =========', '# Licensed under the Apache Licens...e License.', '# You may obtain a copy of the License at', '#', '#     http://www.apache.org/licenses/LICENSE-2.0', ...])\n1 failed, 271 passed, 55 skipped in 39.13s",
+      "seconds": 35.4,
+      "raw_tail": "..........s..........sssssss...sssss.................................F.. [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-999999-remaining_budget = max(0, token_limit - ctx_tokens)-README \\xa7\\u2460 / camel_guards\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u7528\\u7684\\u662f**\\u622a\\u65ad\\u540e**\\u7684 ctx_tokens] - AssertionError: camel.agents.chat_agent 只有 4385 行，却引了第 999999 行 —— 上游大概动过了。这条引文支持的是：README §① / camel_guards：残余预算用的是**截断后**的 ctx_tokens\nassert 999999 <= 4385\n +  where 4385 = len(['# ========= Copyright 2023-2024 @ CAMEL-AI.org. All Rights Reserved. =========', '# Licensed under the Apache Licens...e License.', '# You may obtain a copy of the License at', '#', '#     http://www.apache.org/licenses/LICENSE-2.0', ...])\n1 failed, 272 passed, 55 skipped in 33.48s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -615,7 +615,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -624,8 +624,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 38.45,
-      "raw_tail": "...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200] - AssertionError: \n  camel.agents.chat_agent:933 对不上了。\n    期望含：'base_chunk_size = max(1, remaining_budget) // 100'\n    实为　：'base_chunk_size = max(1, remaining_budget) // 10'\n    这条引文支持的是：camel_guards / README §①：残余预算先被 //10 砍一刀\n    **先看那个论断还成不成立**，别只把期望值改成漂移后的样子。\nassert 'base_chunk_size = max(1, remaining_budget) // 100' in '        base_chunk_size = max(1, remaining_budget) // 10'\n1 failed, 271 passed, 55 skipped in 36.42s",
+      "seconds": 35.35,
+      "raw_tail": "................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_cited_line_still_says_what_we_say_it_says[camel.agents.chat_agent-933-base_chunk_size = max(1, remaining_budget) // 100-camel_guards / README \\xa7\\u2460\\uff1a\\u6b8b\\u4f59\\u9884\\u7b97\\u5148\\u88ab //10 \\u780d\\u4e00\\u5200] - AssertionError: \n  camel.agents.chat_agent:933 对不上了。\n    期望含：'base_chunk_size = max(1, remaining_budget) // 100'\n    实为　：'base_chunk_size = max(1, remaining_budget) // 10'\n    这条引文支持的是：camel_guards / README §①：残余预算先被 //10 砍一刀\n    **先看那个论断还成不成立**，别只把期望值改成漂移后的样子。\nassert 'base_chunk_size = max(1, remaining_budget) // 100' in '        base_chunk_size = max(1, remaining_budget) // 10'\n1 failed, 272 passed, 55 skipped in 33.43s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -653,7 +653,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 270,
+      "passed": 271,
       "skipped": 56,
       "errors": 0,
       "failed_ids": [
@@ -662,8 +662,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 36.48,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n..........s...........F..............ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable - AssertionError: 这些模块取不到，对应的引文等于没核：['camel.memories.base_missing']\nassert not ['camel.memories.base_missing']\n1 failed, 270 passed, 56 skipped in 34.45s",
+      "seconds": 35.35,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n..........s...........F...............ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_every_citation_module_is_reachable - AssertionError: 这些模块取不到，对应的引文等于没核：['camel.memories.base_missing']\nassert not ['camel.memories.base_missing']\n1 failed, 271 passed, 56 skipped in 33.39s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -696,7 +696,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -705,8 +705,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 36.1,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.......................F.............ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - AssertionError: 重复的引文：{('oasis.environment.env', 193)}\nassert not {('oasis.environment.env', 193)}\n1 failed, 271 passed, 55 skipped in 34.12s",
+      "seconds": 35.37,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n.......................F..............ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_duplicate_citations - AssertionError: 重复的引文：{('oasis.environment.env', 193)}\nassert not {('oasis.environment.env', 193)}\n1 failed, 272 passed, 55 skipped in 33.45s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -734,7 +734,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -743,8 +743,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 36.84,
-      "raw_tail": "..........................F..........ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12] - AssertionError: \n  材料里出现了已知的错引：\n    camel_guards.py:14  `chunk_body_limit = max(1, base_chunk_size - 12)`（948 行，\n    正确的写法：base_chunk_size - prefix_token_len（948 行；那个减数是 943 行**量**出来的）\n    出过的事：把「前缀长度」这个当场量出来的值写死成了字面量 12，还标成 948 行的原文 —— 数值上对（gpt-4o-mini 下恰好是 12），**引文上错**：换个分词器就不是 12\nassert not ['camel_guards.py:14  `chunk_body_limit = max(1, base_chunk_size - 12)`（948 行，']\n1 failed, 271 passed, 55 skipped in 34.87s",
+      "seconds": 35.51,
+      "raw_tail": "..........................F...........ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_no_known_misquote_survives_in_our_materials[base_chunk_size\\\\s*-\\\\s*12-base_chunk_size - prefix_token_len\\uff08948 \\u884c\\uff1b\\u90a3\\u4e2a\\u51cf\\u6570\\u662f 943 \\u884c**\\u91cf**\\u51fa\\u6765\\u7684\\uff09-\\u628a\\u300c\\u524d\\u7f00\\u957f\\u5ea6\\u300d\\u8fd9\\u4e2a\\u5f53\\u573a\\u91cf\\u51fa\\u6765\\u7684\\u503c\\u5199\\u6b7b\\u6210\\u4e86\\u5b57\\u9762\\u91cf 12\\uff0c\\u8fd8\\u6807\\u6210 948 \\u884c\\u7684\\u539f\\u6587 \\u2014\\u2014 \\u6570\\u503c\\u4e0a\\u5bf9\\uff08gpt-4o-mini \\u4e0b\\u6070\\u597d\\u662f 12\\uff09\\uff0c**\\u5f15\\u6587\\u4e0a\\u9519**\\uff1a\\u6362\\u4e2a\\u5206\\u8bcd\\u5668\\u5c31\\u4e0d\\u662f 12] - AssertionError: \n  材料里出现了已知的错引：\n    camel_guards.py:14  `chunk_body_limit = max(1, base_chunk_size - 12)`（948 行，\n    正确的写法：base_chunk_size - prefix_token_len（948 行；那个减数是 943 行**量**出来的）\n    出过的事：把「前缀长度」这个当场量出来的值写死成了字面量 12，还标成 948 行的原文 —— 数值上对（gpt-4o-mini 下恰好是 12），**引文上错**：换个分词器就不是 12\nassert not ['camel_guards.py:14  `chunk_body_limit = max(1, base_chunk_size - 12)`（948 行，']\n1 failed, 272 passed, 55 skipped in 33.56s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -772,7 +772,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -781,8 +781,8 @@
       "failed_by_file": {
         "verification/tests/test_citations.py": 1
       },
-      "seconds": 37.55,
-      "raw_tail": ".......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_verbatim_blocks_match_upstream_line_for_line[-camel.agents.chat_agent-0] - AssertionError: \n  README.md 里贴着的那一行，和 camel.agents.chat_agent:885 **对不上**。\n    材料里：'if current_tokens <= remaining_budget:'\n    上游是：''\n    这一行既不在 `CITATIONS` 表里、也不在 `KNOWN_MISQUOTES` 里，只有这个逐字块在管它。\n    **先看那段话的论断还成不成立**；要是这行本来就不是原文，把它改成原文，别把行号改成让它对得上的样子。\nassert 'if current_t...ining_budget:' == ''\n  \n  + if current_tokens <= remaining_budget:\n1 failed, 271 passed, 55 skipped in 35.59s",
+      "seconds": 35.38,
+      "raw_tail": "........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_citations.py::test_verbatim_blocks_match_upstream_line_for_line[-camel.agents.chat_agent-0] - AssertionError: \n  README.md 里贴着的那一行，和 camel.agents.chat_agent:885 **对不上**。\n    材料里：'if current_tokens <= remaining_budget:'\n    上游是：''\n    这一行既不在 `CITATIONS` 表里、也不在 `KNOWN_MISQUOTES` 里，只有这个逐字块在管它。\n    **先看那段话的论断还成不成立**；要是这行本来就不是原文，把它改成原文，别把行号改成让它对得上的样子。\nassert 'if current_t...ining_budget:' == ''\n  \n  + if current_tokens <= remaining_budget:\n1 failed, 272 passed, 55 skipped in 33.41s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -810,7 +810,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -819,8 +819,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 37.24,
-      "raw_tail": ".F........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets - KeyError: ('B', 'x')\n1 failed, 271 passed, 55 skipped in 35.16s",
+      "seconds": 35.38,
+      "raw_tail": ".F........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_railing_is_judged_per_cell_not_by_the_product_of_two_sets - KeyError: ('B', 'x')\n1 failed, 272 passed, 55 skipped in 33.45s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -848,7 +848,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 6,
-      "passed": 266,
+      "passed": 267,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -863,8 +863,8 @@
         "verification/tests/test_adjudicate.py": 4,
         "verification/tests/test_e2e_stub.py": 2
       },
-      "seconds": 36.85,
-      "raw_tail": "FAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous - AssertionError: assert '否决' == '不可判定'\n  \n  - 不可判定\n  + 否决\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided - AssertionError: E1 在没跑端到端时没判不可判定\nassert '否决' == '不可判定'\n  \n  - 不可判定\n  + 否决\nFAILED verification/tests/test_e2e_stub.py::test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree - AssertionError: assert ([{'check': '`roomy_e2e.written_whole` > 0', 'detail': '缺 roomy_e2e.written_whole', 'id': 'E1', 'layer': '端到端', ...}, {...': '`bigtext_e2e.timestamp_pushed` == 0', 'detail': '缺 bigtext_e2e.timestamp_pushed', 'id': 'E5', 'layer': '端到端', ...}] and False)\n +  where False = all(<generator object test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree.<locals>.<genexpr> at 0x0000019E394BE670>)\n6 failed, 266 passed, 55 skipped in 34.89s",
+      "seconds": 35.63,
+      "raw_tail": "FAILED verification/tests/test_adjudicate.py::test_undecided_is_not_counted_as_vacuous - AssertionError: assert '否决' == '不可判定'\n  \n  - 不可判定\n  + 否决\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_makes_that_layer_undecided - AssertionError: E1 在没跑端到端时没判不可判定\nassert '否决' == '不可判定'\n  \n  - 不可判定\n  + 否决\nFAILED verification/tests/test_e2e_stub.py::test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree - AssertionError: assert ([{'check': '`roomy_e2e.written_whole` > 0', 'detail': '缺 roomy_e2e.written_whole', 'id': 'E1', 'layer': '端到端', ...}, {...': '`bigtext_e2e.timestamp_pushed` == 0', 'detail': '缺 bigtext_e2e.timestamp_pushed', 'id': 'E5', 'layer': '端到端', ...}] and False)\n +  where False = all(<generator object test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree.<locals>.<genexpr> at 0x000002469D23E8E0>)\n6 failed, 267 passed, 55 skipped in 33.71s",
       "failed_in_target": 4,
       "failed_in_target_raw": 4,
       "baseline_in_target": 0,
@@ -892,7 +892,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 2,
-      "passed": 270,
+      "passed": 271,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -902,8 +902,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 2
       },
-      "seconds": 35.84,
-      "raw_tail": "  \n  Full diff:\n    [\n  -     '恒真',\n  +     '可翻面',\n    ]\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous - AssertionError: 把 B.z 改成 0 → 由 通过 变为 通过\nassert '可翻面' == '恒真'\n  \n  - 恒真\n  + 可翻面\n2 failed, 270 passed, 55 skipped in 33.88s",
+      "seconds": 35.75,
+      "raw_tail": "  \n  Full diff:\n    [\n  -     '恒真',\n  +     '可翻面',\n    ]\nFAILED verification/tests/test_adjudicate.py::test_a_claim_whose_falsifier_does_not_bite_is_vacuous - AssertionError: 把 B.z 改成 0 → 由 通过 变为 通过\nassert '可翻面' == '恒真'\n  \n  - 恒真\n  + 可翻面\n2 failed, 271 passed, 55 skipped in 33.82s",
       "failed_in_target": 2,
       "failed_in_target_raw": 2,
       "baseline_in_target": 0,
@@ -931,7 +931,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -940,8 +940,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 35.8,
-      "raw_tail": "..........s.........Fsssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green - AssertionError: 判据恒真时退出码是 0 —— 该是 1（表生成了，但有东西白写）\nassert 0 == 1\n1 failed, 271 passed, 55 skipped in 33.86s",
+      "seconds": 35.34,
+      "raw_tail": "..........s.........Fsssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_vacuous_claim_makes_the_table_refuse_to_exit_green - AssertionError: 判据恒真时退出码是 0 —— 该是 1（表生成了，但有东西白写）\nassert 0 == 1\n1 failed, 272 passed, 55 skipped in 33.39s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -969,7 +969,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -978,8 +978,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 37.0,
-      "raw_tail": "..........s......F...sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback - AssertionError: 报告不在时退出码是 1 —— 该是「没测到」的 2\nassert 1 == 2\n1 failed, 271 passed, 55 skipped in 34.87s",
+      "seconds": 35.95,
+      "raw_tail": "..........s......F...sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_no_report_is_undecided_and_gets_no_traceback - AssertionError: 报告不在时退出码是 1 —— 该是「没测到」的 2\nassert 1 == 2\n1 failed, 272 passed, 55 skipped in 34.03s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1007,7 +1007,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1016,8 +1016,8 @@
       "failed_by_file": {
         "verification/tests/test_camel_guards.py": 1
       },
-      "seconds": 41.0,
-      "raw_tail": "  \n  Right contains one more item: (<function dump_counters at 0x000002316AA30220>, 'somewhere/guard_counters.json')\n  \n  Full diff:\n  + []\n  - [\n  -     (\n  -         <function dump_counters at 0x000002316AA30220>,\n  -         'somewhere/guard_counters.json',\n  -     ),\n  - ]\n1 failed, 271 passed, 55 skipped in 38.93s",
+      "seconds": 35.51,
+      "raw_tail": "  \n  Right contains one more item: (<function dump_counters at 0x00000246842E0220>, 'somewhere/guard_counters.json')\n  \n  Full diff:\n  + []\n  - [\n  -     (\n  -         <function dump_counters at 0x00000246842E0220>,\n  -         'somewhere/guard_counters.json',\n  -     ),\n  - ]\n1 failed, 272 passed, 55 skipped in 33.56s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1045,7 +1045,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1054,8 +1054,8 @@
       "failed_by_file": {
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 34.57,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss......................F.... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception - AssertionError: assert {'results': [{'readings': {'boundaries': [], 'readings': {'bigtext_e2e': {'db_posts': 1, 'still_sliced': 1, 'timestamp...: 1, 'written_whole': 1}, 'two_e2e': {'db_posts': 2, 'still_sliced': 0, 'timestamp_pushed': 1, 'written_whole': 2}}}}]} is None\n1 failed, 271 passed, 55 skipped in 32.38s",
+      "seconds": 35.63,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss......................F... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_a_missing_e2e_report_is_none_not_an_exception - AssertionError: assert {'results': [{'readings': {'boundaries': [], 'readings': {'bigtext_e2e': {'db_posts': 1, 'still_sliced': 1, 'timestamp...: 1, 'written_whole': 1}, 'two_e2e': {'db_posts': 2, 'still_sliced': 0, 'timestamp_pushed': 1, 'written_whole': 2}}}}]} is None\n1 failed, 272 passed, 55 skipped in 33.69s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1083,7 +1083,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 279,
+      "passed": 280,
       "skipped": 47,
       "errors": 0,
       "failed_ids": [
@@ -1092,8 +1092,8 @@
       "failed_by_file": {
         "verification/tests/test_environment_pins.py": 1
       },
-      "seconds": 36.64,
-      "raw_tail": "  \n  Full diff:\n    [\n        (\n  -         '==',\n  ?          ^\n  +         '>=',\n  ?          ^\n            '0.1',\n        ),\n    ]\n1 failed, 279 passed, 47 skipped in 34.65s",
+      "seconds": 38.35,
+      "raw_tail": "  \n  Full diff:\n    [\n        (\n  -         '==',\n  ?          ^\n  +         '>=',\n  ?          ^\n            '0.1',\n        ),\n    ]\n1 failed, 280 passed, 47 skipped in 36.42s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1121,7 +1121,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 2,
-      "passed": 278,
+      "passed": 279,
       "skipped": 47,
       "errors": 0,
       "failed_ids": [
@@ -1132,8 +1132,8 @@
         "verification/tests/test_docs_claims.py": 1,
         "verification/tests/test_upstream_baseline.py": 1
       },
-      "seconds": 36.56,
-      "raw_tail": "..........................................F............................. [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.F.....................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_docs_claims.py::test_the_diff_numbers_match_a_live_diff - AssertionError: 对上游的改动数目对不上了：\n    backend/requirements.txt：清单写 16 插入 / 0 删除，现场是 15 插入 / 0 删除\n  量法写在表头：`git diff --numstat --ignore-all-space <基线>`。\nassert not ['  backend/requirements.txt：清单写 16 插入 / 0 删除，现场是 15 插入 / 0 删除']\nFAILED verification/tests/test_upstream_baseline.py::test_notice_states_the_same_numbers_as_the_inventory - AssertionError: 《清单》说 `backend/requirements.txt` 是 `+16`，而 `NOTICE` 里找不到这个数 —— 两份副本分家了，改一处必须改另一处。\nassert '`+16`' in 'mirofish-verifiable —— MiroFish 的可验证性 fork\\n================================================\\n本项目基于开源项目 MiroFish 进行二次...\\n\\n本仓库另新增一份 `NOTICE`（即本文件）。改动均在本 fork 的工作期内完成（2026-09-16 起）；\\n上表「最后改动」一栏是各文件最后一次改动的提交日期（`git log -1 --date=short`）。\\n'\n2 failed, 278 passed, 47 skipped in 34.64s",
+      "seconds": 38.33,
+      "raw_tail": "...........................................F............................ [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n..F.....................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_docs_claims.py::test_the_diff_numbers_match_a_live_diff - AssertionError: 对上游的改动数目对不上了：\n    backend/requirements.txt：清单写 16 插入 / 0 删除，现场是 15 插入 / 0 删除\n  量法写在表头：`git diff --numstat --ignore-all-space <基线>`。\nassert not ['  backend/requirements.txt：清单写 16 插入 / 0 删除，现场是 15 插入 / 0 删除']\nFAILED verification/tests/test_upstream_baseline.py::test_notice_states_the_same_numbers_as_the_inventory - AssertionError: 《清单》说 `backend/requirements.txt` 是 `+16`，而 `NOTICE` 里找不到这个数 —— 两份副本分家了，改一处必须改另一处。\nassert '`+16`' in 'mirofish-verifiable —— MiroFish 的可验证性 fork\\n================================================\\n本项目基于开源项目 MiroFish 进行二次...\\n\\n本仓库另新增一份 `NOTICE`（即本文件）。改动均在本 fork 的工作期内完成（2026-09-16 起）；\\n上表「最后改动」一栏是各文件最后一次改动的提交日期（`git log -1 --date=short`）。\\n'\n2 failed, 279 passed, 47 skipped in 36.35s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1161,7 +1161,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 267,
+      "passed": 268,
       "skipped": 59,
       "errors": 0,
       "failed_ids": [
@@ -1170,8 +1170,8 @@
       "failed_by_file": {
         "verification/tests/test_upstream_baseline.py": 1
       },
-      "seconds": 37.55,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s..........................ssF [ 88%]\n..ss...................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_upstream_baseline.py::test_the_repo_check_is_not_vacuous - AssertionError: 本仓（D:\\open_source\\B-装置\\mirofish-verifiable）居然被判成「不是 git 仓库」——那么上面那条祖先检查在**本仓里也永远是跳过的**，等于没跑。\nassert False\n +  where False = _is_repo()\n1 failed, 267 passed, 59 skipped in 35.55s",
+      "seconds": 33.43,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s..........................ss [ 87%]\nF..ss...................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_upstream_baseline.py::test_the_repo_check_is_not_vacuous - AssertionError: 本仓（D:\\open_source\\B-装置\\mirofish-verifiable）居然被判成「不是 git 仓库」——那么上面那条祖先检查在**本仓里也永远是跳过的**，等于没跑。\nassert False\n +  where False = _is_repo()\n1 failed, 268 passed, 59 skipped in 31.48s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1199,7 +1199,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1208,8 +1208,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 84.82,
-      "raw_tail": "    \n      3/3 条达到预期\n      √ 达到预期       对账（两份材料报的是不是同一组数）\n    \n      以上都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。\n      （前提是分词器那份静态编码表拿得到 —— 仓库里带了一份，外部缓存有表时让位给外部，两边都没有才要联网下一份。）\n      取不到时上面会明确写「没测到」，**不会**把没跑成的记成「没达到预期」 —— 缺读数不是结论。\n      对账单独列在汇总里，**不并进那个 x/3** —— 它不是第四个复现，\n      它管的是「装置和准备发出去的草稿有没有走岔」。\n    \n    ○ 没测到：报告写不下去（FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\pytest-of-user\\\\pytest-2501\\\\test_run_all_refuses_a_bad_out0\\\\没有这个目录\\\\x.md'）—— 三条复现的判定都在上面，但**这一份报告没落成**。\n1 failed, 271 passed, 55 skipped in 82.64s (0:01:22)",
+      "seconds": 78.55,
+      "raw_tail": "    \n      3/3 条达到预期\n      √ 达到预期       对账（两份材料报的是不是同一组数）\n    \n      以上都是无 LLM 调用、无 API key、结果确定 —— 换台机器结论应当一样。\n      （前提是分词器那份静态编码表拿得到 —— 仓库里带了一份，外部缓存有表时让位给外部，两边都没有才要联网下一份。）\n      取不到时上面会明确写「没测到」，**不会**把没跑成的记成「没达到预期」 —— 缺读数不是结论。\n      对账单独列在汇总里，**不并进那个 x/3** —— 它不是第四个复现，\n      它管的是「装置和准备发出去的草稿有没有走岔」。\n    \n    ○ 没测到：报告写不下去（FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\pytest-of-user\\\\pytest-2561\\\\test_run_all_refuses_a_bad_out0\\\\没有这个目录\\\\x.md'）—— 三条复现的判定都在上面，但**这一份报告没落成**。\n1 failed, 272 passed, 55 skipped in 76.61s (0:01:16)",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1237,7 +1237,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1246,8 +1246,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 38.76,
-      "raw_tail": "..........s..........sssssss...sssssF................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute - AssertionError: 得说清是**落点**的问题，不是读数的问题\nassert '落点' in \"\\n○ 没测到：判定写不下去（FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\pytest-of-user\\\\\\\\pytest-2502\\\\\\\\test_a_bad_place_stops_both_en0\\\\\\\\没有这个目录\\\\\\\\x'）—— 表算出来了，但**这一份产物没落成**。\\n\"\n1 failed, 271 passed, 55 skipped in 36.76s",
+      "seconds": 35.64,
+      "raw_tail": "..........s..........sssssss...sssssF................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute - AssertionError: 得说清是**落点**的问题，不是读数的问题\nassert '落点' in '\\n○ 没测到：**报告不是用这棵树跑的**：报告记的结束指纹是 `178799f798e0…`，现在这棵树是 `fd9d83aee82f…`。变的是：README.md。\\n  重跑一次 `python -m verification.run_all` 再判。如果你**就是要**判那份旧报告（比如核对归档），加 `--allow-source-mismatch` —— 那是显式地在说「我知道它不是这棵树」。\\n'\n1 failed, 272 passed, 55 skipped in 33.70s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1275,7 +1275,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1284,8 +1284,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 38.14,
-      "raw_tail": "..........s..........sssssss...sssss.F.................................. [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_write_that_fails_anyway_is_still_not_measured - AssertionError: 裁决：写不下去时退了 `1` —— 该退 `2`（没测到）\nassert 1 == 2\n1 failed, 271 passed, 55 skipped in 36.08s",
+      "seconds": 35.61,
+      "raw_tail": "..........s..........sssssss...sssss.F.................................. [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_write_that_fails_anyway_is_still_not_measured - AssertionError: 裁决：写不下去时退了 `1` —— 该退 `2`（没测到）\nassert 1 == 2\n1 failed, 272 passed, 55 skipped in 33.69s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1313,7 +1313,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1322,8 +1322,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 38.05,
-      "raw_tail": "..........s..........sssssss...sssssF................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute - KeyError: 'meta'\n1 failed, 271 passed, 55 skipped in 35.96s",
+      "seconds": 35.48,
+      "raw_tail": "..........s..........sssssss...sssssF................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_bad_place_stops_both_entry_points_before_they_compute - KeyError: 'meta'\n1 failed, 272 passed, 55 skipped in 33.50s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1351,7 +1351,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1360,8 +1360,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 37.38,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s...F......................... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too - AssertionError: 门在动手之前就该退 —— 它不该被走到\n1 failed, 271 passed, 55 skipped in 35.30s",
+      "seconds": 35.53,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s...F........................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too - AssertionError: 门在动手之前就该退 —— 它不该被走到\n1 failed, 272 passed, 55 skipped in 33.60s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1389,7 +1389,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1398,8 +1398,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 36.96,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s...F......................... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too - AssertionError: 门在动手之前就该退 —— 它不该被走到\n1 failed, 271 passed, 55 skipped in 34.98s",
+      "seconds": 37.21,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s...F........................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too - AssertionError: 门在动手之前就该退 —— 它不该被走到\n1 failed, 272 passed, 55 skipped in 35.24s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1427,7 +1427,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1436,8 +1436,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 36.48,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s...F......................... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too - AssertionError: 门在动手之前就该退 —— 它不该被走到\n1 failed, 271 passed, 55 skipped in 34.53s",
+      "seconds": 36.63,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s...F........................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_other_three_entry_points_refuse_a_bad_out_place_too - AssertionError: 门在动手之前就该退 —— 它不该被走到\n1 failed, 272 passed, 55 skipped in 34.49s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1465,7 +1465,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1474,8 +1474,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 35.75,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n.........................................Fs............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_an_out_of_contract_exit_code_is_not_measured - AssertionError: 契约外的退出码 `7` 被译成了 `7` —— 「没跑完」必须是 `2`\nassert 7 == 2\n1 failed, 271 passed, 55 skipped in 33.80s",
+      "seconds": 37.17,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n..........................................Fs............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_an_out_of_contract_exit_code_is_not_measured - AssertionError: 契约外的退出码 `7` 被译成了 `7` —— 「没跑完」必须是 `2`\nassert 7 == 2\n1 failed, 272 passed, 55 skipped in 35.09s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1503,7 +1503,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1512,8 +1512,8 @@
       "failed_by_file": {
         "verification/tests/test_e2e_stub.py": 1
       },
-      "seconds": 36.03,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss...........F............... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_an_arm_that_never_finished_is_undecided_not_failed - AssertionError: 信号杀死\nassert 1 == 2\n +  where 2 = E.ARM_UNMEASURED\n1 failed, 271 passed, 55 skipped in 34.09s",
+      "seconds": 36.38,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss...........F.............. [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_an_arm_that_never_finished_is_undecided_not_failed - AssertionError: 信号杀死\nassert 1 == 2\n +  where 2 = E.ARM_UNMEASURED\n1 failed, 272 passed, 55 skipped in 34.30s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1541,7 +1541,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1550,8 +1550,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 38.48,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s.....F....................... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch - AssertionError: 退了 `1`。有一项**根本没量到**时必须退 `2`：`1` 的意思是「量到了但对不上」，读者会去找一个并不存在的对不上\nassert 1 == 2\n1 failed, 271 passed, 55 skipped in 36.37s",
+      "seconds": 37.52,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s.....F...................... [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch - AssertionError: 退了 `1`。有一项**根本没量到**时必须退 `2`：`1` 的意思是「量到了但对不上」，读者会去找一个并不存在的对不上\nassert 1 == 2\n1 failed, 272 passed, 55 skipped in 35.47s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1579,7 +1579,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1588,8 +1588,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 39.81,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s.....F....................... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch - AssertionError: 两处不一致，正文却只说了「没测到」—— 更硬的那个事实不该被盖住\nassert '对不上' in '                装置      草稿      对账\\n  ------------  --------  --------  ---------\\n  ① 新增记录数  277       277       √ 一...  999       × **不一致**\\n  ② 同拍违反数  0         ○ 抽不到  ○ 没测到\\n\\n  ○ 这几项有一边抽不出来：② 同拍违反数（草稿） —— **这不是「一致」，是没测到**。多半是输出格式改过了。'\n1 failed, 271 passed, 55 skipped in 37.69s",
+      "seconds": 36.34,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s.....F...................... [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_a_missing_number_does_not_disappear_behind_a_mismatch - AssertionError: 两处不一致，正文却只说了「没测到」—— 更硬的那个事实不该被盖住\nassert '对不上' in '                装置      草稿      对账\\n  ------------  --------  --------  ---------\\n  ① 新增记录数  277       277       √ 一...  999       × **不一致**\\n  ② 同拍违反数  0         ○ 抽不到  ○ 没测到\\n\\n  ○ 这几项有一边抽不出来：② 同拍违反数（草稿） —— **这不是「一致」，是没测到**。多半是输出格式改过了。'\n1 failed, 272 passed, 55 skipped in 34.35s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1617,7 +1617,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1626,8 +1626,8 @@
       "failed_by_file": {
         "verification/tests/test_repro_verdicts.py": 1
       },
-      "seconds": 36.87,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s......F...................... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_verdict_wording_lives_in_exactly_one_table - AssertionError: `0/1/2 → 措辞` 的表有 2 张：[['达到预期', '没达到预期', '没测到'], ['达到预期', '没达到预期', '没达到预期']] —— 同一份语义抄了第二遍。屏幕和产物会各说各的，而且不会报错\nassert 2 == 1\n +  where 2 = len([['达到预期', '没达到预期', '没测到'], ['达到预期', '没达到预期', '没达到预期']])\n1 failed, 271 passed, 55 skipped in 34.86s",
+      "seconds": 37.23,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s......F..................... [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_repro_verdicts.py::test_the_verdict_wording_lives_in_exactly_one_table - AssertionError: `0/1/2 → 措辞` 的表有 2 张：[['达到预期', '没达到预期', '没测到'], ['达到预期', '没达到预期', '没达到预期']] —— 同一份语义抄了第二遍。屏幕和产物会各说各的，而且不会报错\nassert 2 == 1\n +  where 2 = len([['达到预期', '没达到预期', '没测到'], ['达到预期', '没达到预期', '没达到预期']])\n1 failed, 272 passed, 55 skipped in 35.19s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1655,7 +1655,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1664,8 +1664,8 @@
       "failed_by_file": {
         "verification/tests/test_adjudicate.py": 1
       },
-      "seconds": 36.93,
-      "raw_tail": "..........s........F.sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused - Failed: DID NOT RAISE <class 'verification.adjudicate.AdjudicationError'>\n1 failed, 271 passed, 55 skipped in 34.95s",
+      "seconds": 36.56,
+      "raw_tail": "..........s........F.sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_adjudicate.py::test_a_report_that_is_readable_json_but_wrongly_shaped_is_refused - Failed: DID NOT RAISE <class 'verification.adjudicate.AdjudicationError'>\n1 failed, 272 passed, 55 skipped in 34.51s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1693,7 +1693,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 2,
-      "passed": 270,
+      "passed": 271,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1703,8 +1703,8 @@
       "failed_by_file": {
         "verification/tests/test_viewer.py": 2
       },
-      "seconds": 37.34,
-      "raw_tail": "  \n  Full diff:\n    {\n  -     '不可判定',\n  +     '否决',\n    }\nFAILED verification/tests/test_viewer.py::test_the_verdict_on_screen_matches_the_verdict_in_the_artifact - AssertionError: B5 产物里是「不可判定」，行内那格印的是「否决」\nassert '否决' == '不可判定'\n  \n  - 不可判定\n  + 否决\n2 failed, 270 passed, 55 skipped in 35.28s",
+      "seconds": 36.49,
+      "raw_tail": "  \n  Full diff:\n    {\n  -     '不可判定',\n  +     '否决',\n    }\nFAILED verification/tests/test_viewer.py::test_the_verdict_on_screen_matches_the_verdict_in_the_artifact - AssertionError: B5 产物里是「不可判定」，行内那格印的是「否决」\nassert '否决' == '不可判定'\n  \n  - 不可判定\n  + 否决\n2 failed, 271 passed, 55 skipped in 34.52s",
       "failed_in_target": 2,
       "failed_in_target_raw": 2,
       "baseline_in_target": 0,
@@ -1737,7 +1737,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1746,8 +1746,8 @@
       "failed_by_file": {
         "verification/tests/test_viewer.py": 1
       },
-      "seconds": 36.81,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n...........................F...........                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_a_falsifier_kind_outside_the_one_table_is_refused - Failed: DID NOT RAISE <class 'verification.viewer.ViewerError'>\n1 failed, 271 passed, 55 skipped in 34.83s",
+      "seconds": 37.09,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n............................F...........                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_a_falsifier_kind_outside_the_one_table_is_refused - Failed: DID NOT RAISE <class 'verification.viewer.ViewerError'>\n1 failed, 272 passed, 55 skipped in 34.98s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1775,7 +1775,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1784,8 +1784,8 @@
       "failed_by_file": {
         "verification/tests/test_viewer.py": 1
       },
-      "seconds": 37.08,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n............................F..........                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_a_case_that_lands_in_no_grid_is_refused - Failed: DID NOT RAISE <class 'verification.viewer.ViewerError'>\n1 failed, 271 passed, 55 skipped in 35.05s",
+      "seconds": 36.86,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n.............................F..........                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_a_case_that_lands_in_no_grid_is_refused - Failed: DID NOT RAISE <class 'verification.viewer.ViewerError'>\n1 failed, 272 passed, 55 skipped in 34.85s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1813,7 +1813,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1822,8 +1822,8 @@
       "failed_by_file": {
         "verification/tests/test_viewer.py": 1
       },
-      "seconds": 38.04,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n..........................F............                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_a_cell_the_renderer_reads_is_a_cell_the_gate_checks - Failed: DID NOT RAISE <class 'verification.viewer.ViewerError'>\n1 failed, 271 passed, 55 skipped in 35.99s",
+      "seconds": 37.69,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n...........................F............                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_a_cell_the_renderer_reads_is_a_cell_the_gate_checks - Failed: DID NOT RAISE <class 'verification.viewer.ViewerError'>\n1 failed, 272 passed, 55 skipped in 35.62s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1851,7 +1851,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1860,8 +1860,8 @@
       "failed_by_file": {
         "verification/tests/test_viewer.py": 1
       },
-      "seconds": 38.13,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.............................F.........                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_an_unforeseen_shape_is_not_measured_not_a_finding - KeyError: '某一格'\n1 failed, 271 passed, 55 skipped in 36.00s",
+      "seconds": 36.33,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n..............................F.........                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_an_unforeseen_shape_is_not_measured_not_a_finding - KeyError: '某一格'\n1 failed, 272 passed, 55 skipped in 34.33s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1889,7 +1889,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1898,8 +1898,8 @@
       "failed_by_file": {
         "verification/tests/test_viewer.py": 1
       },
-      "seconds": 43.49,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n..............................F........                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_the_page_says_both_counts_when_one_case_lands_in_two_grids - AssertionError: 页面上没交代「一例可以落两格」\nassert '一例同时落了两格' in '<!doctype html>\\n<html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,ini...染，整页<strong>没有一行 JavaScript、没有一个外部引用</strong>；不判定、不重跑、不发任何请求。它是<strong>展示层</strong>，不是装置的一部分。</footer></body></html>\\n'\n1 failed, 271 passed, 55 skipped in 41.38s",
+      "seconds": 39.81,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n...............................F........                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_viewer.py::test_the_page_says_both_counts_when_one_case_lands_in_two_grids - AssertionError: 页面上没交代「一例可以落两格」\nassert '一例同时落了两格' in '<!doctype html>\\n<html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,ini...染，整页<strong>没有一行 JavaScript、没有一个外部引用</strong>；不判定、不重跑、不发任何请求。它是<strong>展示层</strong>，不是装置的一部分。</footer></body></html>\\n'\n1 failed, 272 passed, 55 skipped in 37.69s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -1927,7 +1927,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 3,
-      "passed": 269,
+      "passed": 270,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1938,8 +1938,8 @@
       "failed_by_file": {
         "verification/tests/test_tokenizer_cache.py": 3
       },
-      "seconds": 38.46,
-      "raw_tail": ".....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s..................FF...F..... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_ignores_empty_external_dir - AssertionError: assert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2520/test_resolver_ignores_empty_ex0') == WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken')\n +  where WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken') = T.VENDOR_DIR\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_reports_missing_when_neither_side_has_it - AssertionError: assert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2520/test_resolver_reports_missing_0') is None\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_rejects_an_external_table_whose_content_is_wrong - AssertionError: 内容不对的外部表也被让位了\nassert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2520/test_resolver_rejects_an_exter0') == WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken')\n +  where WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken') = T.VENDOR_DIR\n3 failed, 269 passed, 55 skipped in 36.37s",
+      "seconds": 40.67,
+      "raw_tail": "......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s..................FF...F.... [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_ignores_empty_external_dir - AssertionError: assert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2580/test_resolver_ignores_empty_ex0') == WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken')\n +  where WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken') = T.VENDOR_DIR\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_reports_missing_when_neither_side_has_it - AssertionError: assert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2580/test_resolver_reports_missing_0') is None\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_rejects_an_external_table_whose_content_is_wrong - AssertionError: 内容不对的外部表也被让位了\nassert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2580/test_resolver_rejects_an_exter0') == WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken')\n +  where WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken') = T.VENDOR_DIR\n3 failed, 270 passed, 55 skipped in 38.53s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -1967,7 +1967,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -1976,8 +1976,8 @@
       "failed_by_file": {
         "verification/tests/test_tokenizer_cache.py": 1
       },
-      "seconds": 40.94,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s.......................F..... [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_rejects_an_external_table_whose_content_is_wrong - AssertionError: 内容不对的外部表也被让位了\nassert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2521/test_resolver_rejects_an_exter0') == WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken')\n +  where WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken') = T.VENDOR_DIR\n1 failed, 271 passed, 55 skipped in 38.77s",
+      "seconds": 40.9,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s.......................F.... [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_tokenizer_cache.py::test_resolver_rejects_an_external_table_whose_content_is_wrong - AssertionError: 内容不对的外部表也被让位了\nassert WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2581/test_resolver_rejects_an_exter0') == WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken')\n +  where WindowsPath('D:/open_source/B-装置/mirofish-verifiable/backend/verification/vendor/tiktoken') = T.VENDOR_DIR\n1 failed, 272 passed, 55 skipped in 38.65s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -2005,7 +2005,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 3,
-      "passed": 269,
+      "passed": 270,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -2016,8 +2016,8 @@
       "failed_by_file": {
         "verification/tests/test_run_all_fingerprint.py": 3
       },
-      "seconds": 39.18,
-      "raw_tail": ".....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s...........F.FF.............. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_run_all_fingerprint.py::test_a_tree_that_moves_under_the_run_writes_a_null_fingerprint - AssertionError: 读数集在跑的过程中变了，却退了 0 —— 该退 2（没测到）\nassert 0 == 2\nFAILED verification/tests/test_run_all_fingerprint.py::test_an_incomplete_tree_never_counts_as_stable[None] - AssertionError: 一开始就取不全，却按稳定退了一个码\nassert 0 == 2\nFAILED verification/tests/test_run_all_fingerprint.py::test_an_incomplete_tree_never_counts_as_stable[cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc] - AssertionError: 一开始就取不全，却按稳定退了一个码\nassert 0 == 2\n3 failed, 269 passed, 55 skipped in 37.08s",
+      "seconds": 37.7,
+      "raw_tail": "......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s...........F.FF............. [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_run_all_fingerprint.py::test_a_tree_that_moves_under_the_run_writes_a_null_fingerprint - AssertionError: 读数集在跑的过程中变了，却退了 0 —— 该退 2（没测到）\nassert 0 == 2\nFAILED verification/tests/test_run_all_fingerprint.py::test_an_incomplete_tree_never_counts_as_stable[None] - AssertionError: 一开始就取不全，却按稳定退了一个码\nassert 0 == 2\nFAILED verification/tests/test_run_all_fingerprint.py::test_an_incomplete_tree_never_counts_as_stable[cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc] - AssertionError: 一开始就取不全，却按稳定退了一个码\nassert 0 == 2\n3 failed, 270 passed, 55 skipped in 35.62s",
       "failed_in_target": 3,
       "failed_in_target_raw": 3,
       "baseline_in_target": 0,
@@ -2045,7 +2045,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 2,
-      "passed": 270,
+      "passed": 271,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -2055,8 +2055,8 @@
       "failed_by_file": {
         "verification/tests/test_e2e_stub.py": 2
       },
-      "seconds": 38.16,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\nFF.............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree - AssertionError: assert ({'environment': {}, 'results': []} is None)\nFAILED verification/tests/test_e2e_stub.py::test_a_stale_e2e_report_names_the_changed_file - AssertionError: assert ({'environment': {'device_sources_sha256': {'attach.py': 'a80595e52ffc8b0b6f0f61518fae2fb5be839e735a6ee9fd9b25738c93ec2...source': 'vendor', 'table_sha256': '446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d'}}, 'results': []} is None)\n2 failed, 270 passed, 55 skipped in 36.07s",
+      "seconds": 36.23,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n.FF.............sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n=========================== short test summary info ===========================\nFAILED verification/tests/test_e2e_stub.py::test_an_old_e2e_report_is_undecidable_and_says_rerun_on_this_tree - AssertionError: assert ({'environment': {}, 'results': []} is None)\nFAILED verification/tests/test_e2e_stub.py::test_a_stale_e2e_report_names_the_changed_file - AssertionError: assert ({'environment': {'device_sources_sha256': {'attach.py': 'a80595e52ffc8b0b6f0f61518fae2fb5be839e735a6ee9fd9b25738c93ec2...source': 'vendor', 'table_sha256': '446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d'}}, 'results': []} is None)\n2 failed, 271 passed, 55 skipped in 34.23s",
       "failed_in_target": 2,
       "failed_in_target_raw": 2,
       "baseline_in_target": 0,
@@ -2084,7 +2084,7 @@
       "timed_out": false,
       "measured": true,
       "failed": 1,
-      "passed": 271,
+      "passed": 272,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [
@@ -2093,8 +2093,8 @@
       "failed_by_file": {
         "verification/tests/test_mutation_harness.py": 1
       },
-      "seconds": 40.8,
-      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_mutation_harness.py::test_newly_red_counts_ids_not_counts - AssertionError: assert ['t.py::test_...t.py::test_y'] == ['t.py::test_y']\n  \n  At index 0 diff: 't.py::test_x' != 't.py::test_y'\n  Left contains one more item: 't.py::test_y'\n  \n  Full diff:\n    [\n  +     't.py::test_x',\n        't.py::test_y',\n    ]\n1 failed, 271 passed, 55 skipped in 38.54s",
+      "seconds": 37.47,
+      "raw_tail": "=========================== short test summary info ===========================\nFAILED verification/tests/test_mutation_harness.py::test_newly_red_counts_ids_not_counts - AssertionError: assert ['t.py::test_...t.py::test_y'] == ['t.py::test_y']\n  \n  At index 0 diff: 't.py::test_x' != 't.py::test_y'\n  Left contains one more item: 't.py::test_y'\n  \n  Full diff:\n    [\n  +     't.py::test_x',\n        't.py::test_y',\n    ]\n1 failed, 272 passed, 55 skipped in 35.36s",
       "failed_in_target": 1,
       "failed_in_target_raw": 1,
       "baseline_in_target": 0,
@@ -2122,13 +2122,13 @@
       "timed_out": false,
       "measured": true,
       "failed": 0,
-      "passed": 272,
+      "passed": 273,
       "skipped": 55,
       "errors": 0,
       "failed_ids": [],
       "failed_by_file": {},
-      "seconds": 38.9,
-      "raw_tail": "..........s..........sssssss...sssss.................................... [ 22%]\n.....................................ssssssss........................... [ 44%]\n...............sssssssssssssss.......ssssssssssssssssss................. [ 66%]\n..........................................s............................. [ 88%]\n.......................................                                  [100%]\n272 passed, 55 skipped in 36.80s",
+      "seconds": 38.47,
+      "raw_tail": "..........s..........sssssss...sssss.................................... [ 21%]\n......................................ssssssss.......................... [ 43%]\n................sssssssssssssss.......ssssssssssssssssss................ [ 65%]\n...........................................s............................ [ 87%]\n........................................                                 [100%]\n273 passed, 55 skipped in 36.35s",
       "failed_in_target": 0,
       "failed_in_target_raw": 0,
       "baseline_in_target": 0,

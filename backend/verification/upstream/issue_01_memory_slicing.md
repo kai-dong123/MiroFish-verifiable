@@ -1,7 +1,4 @@
-# [草稿] 新 issue ①：记忆写入把一条消息切成 270 块，token 实增 18.5 倍
-
-> 标题建议：
-> **记忆写入：一条只占窗口 7% 的消息被切成一块一个 token，记忆膨胀 18.5 倍**
+# 记忆写入：一条只占窗口 7% 的消息被切成一块一个 token，记忆膨胀 18.5 倍
 
 ---
 
@@ -13,6 +10,10 @@
 | camel-ai | `0.2.78`（`backend/requirements.txt` pin 的就是这个） |
 | camel-oasis | `0.2.5` |
 | Python | 3.11.9 · Windows 11 |
+
+> 另在 `main` 的 `7657031a` 上核过：`backend/requirements.txt` 仍 pin
+> `camel-ai==0.2.78`、`camel-oasis==0.2.5`；三个 `run_*_simulation.py` 与
+> `39d8491` 逐字节相同（SHA256 一致）。
 
 ## 症状
 
@@ -36,6 +37,16 @@ WARNING - Message with 277 tokens exceeds remaining budget of 133. Slicing into 
 > 说明：这个 issue 里**没有端到端跑过 MiroFish**（那需要 `LLM_API_KEY` 和真实额度）。
 > 机制与离线复现是实打实测出来的，上面两条用户可见后果是据此推断的。如果维护者
 > 需要端到端证据，我们可以配合补。
+
+## 运行前置
+
+```bash
+pip install "camel-ai==0.2.78" "mcp<2" "tiktoken==0.7.0"
+```
+
+- 上游 `backend/requirements.txt` 没有 `mcp<2`；如果 `import camel` 停在
+  `cannot import name 'FastMCP'`，那是 mcp 2.x 的解析问题，加上 `mcp<2` 再试。
+- 首次运行会下一张几 MB 的 `o200k_base` 编码表（tiktoken 的静态数据），不是 LLM 调用。
 
 ## 最小复现（自包含，不发 LLM 请求、不要 API key、几秒跑完）
 
@@ -103,6 +114,10 @@ print(f"写入前 记录数/实际 token     {before_n} / {before_t}")
 print(f"写入后 记录数/实际 token     {after_n} / {after_t}")
 print(f"→ 一条消息变成 {after_n - before_n} 条记录，"
       f"token 实增 {after_t - before_t}（{(after_t - before_t) / max(own, 1):.1f} 倍）")
+print("→ 原文还找得回连续片段吗：",
+      "找得到" if text[:40] in "".join(
+          r.memory_record.message.content or "" for r in agent.memory.retrieve()
+      ) else "**找不到了**")
 ```
 
 ### 实测输出
@@ -124,6 +139,11 @@ chunk_body_limit            1
 → 一条消息变成 270 条记录，token 实增 5130（18.5 倍）
 → 原文还找得回连续片段吗： **找不到了**
 ```
+
+> **干净环境复现**：在只 `pip install` 了那三个包的 venv 里重跑本脚本，上面那几行数值与之一致；
+> 告警行的时间戳与截断日志是运行时的，每次不同（本次 `before=6907 / after=3867 / 277 / 270 / 5130` 全部复现）。
+
+**同一份 `repro_min_01_slicing.py` 的前后对照**：打补丁前 270 条记录 / +5130 token（18.5×）/ 原文找不到；打补丁后 **1 条记录 / +277 token（1.0×）/ 原文找得回** —— 两臂的「写入前」读数不同（178/6907 vs 26/4160），因为守卫连填料的写入一起改了。
 
 ## 根因
 
@@ -181,10 +201,15 @@ num_chunks = math.ceil(len(all_token_ids) / chunk_body_limit)  # 951
 
 ## 我们这边的处置
 
-我们在自己的 fork 里包了一层**运行时守卫**，不改 `site-packages`：写入前先算这条
-消息自己值多少 token，**≤ 上限就整条写入**；只有它自己就超上限时才交回原方法去切。
-同一份输入下 270 条 / 5130 token 变成 **1 条 / 277 token**，原文完整。
+一条不改 `site-packages` 的最小补丁在公开分支：
 
-守卫与它的离线复现（就是上面这份，加上前提自检和单点扰动）都在
-`backend/verification/`，一条命令跑完，不需要 API key。如果维护者想要，我们可以
-把它整理成一个 PR；如果不想要，这个 issue 本身也够定位问题了。
+https://github.com/kai-dong123/MiroFish-verifiable/tree/fix/camel-runtime-guards
+
+- 5 个文件、145 行插入（`git diff --stat 7657031a..fix/camel-runtime-guards` 的实测值）：
+  一个守卫模块、一个入口引导，三个 `run_*_simulation.py` 各 6–8 行；
+- **三个入口都装**（`run_parallel_simulation.py` / `run_reddit_simulation.py` /
+  `run_twitter_simulation.py`），不是只装一个；
+- **装不上就退出，不裸奔**；确实要关掉，显式加 `--no-guards`；
+- `install()` 幂等，`uninstall()` 可完整还原，不伸手改 `site-packages`。
+
+需要的话我可以提 PR；如果你更希望向上游 camel 反馈，这份补丁也可以直接作为反馈材料。
